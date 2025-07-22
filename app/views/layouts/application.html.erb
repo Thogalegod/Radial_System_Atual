@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AuthApp</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <style>
+      body { background: #f8fafc; font-family: 'Segoe UI', Arial, sans-serif; }
+      .container { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+      h1 { text-align: center; margin-bottom: 24px; }
+      .form-group { margin-bottom: 16px; }
+      .form-control { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+      .btn { display: inline-block; padding: 8px 16px; border-radius: 4px; border: none; background: #2563eb; color: #fff; cursor: pointer; text-decoration: none; }
+      .btn-primary { background: #2563eb; }
+      .btn-danger { background: #dc2626; }
+      .alert { padding: 12px; border-radius: 4px; margin-bottom: 16px; }
+      .alert-danger { background: #fee2e2; color: #b91c1c; }
+      .actions { text-align: center; }
+      p { text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <% if notice %>
+        <div class="alert alert-success"><%= notice %></div>
+      <% end %>
+      <% if alert %>
+        <div class="alert alert-danger"><%= alert %></div>
+      <% end %>
+      <%= yield %>
+    </div>
+  </body>
+</html>
