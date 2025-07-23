@@ -1,0 +1,319 @@
+<div class="content-header">
+  <h1 class="page-title">Gerenciamento de Clientes</h1>
+  <p class="page-subtitle">Gerencie seus clientes de forma simples e eficiente</p>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Lista de Clientes</h2>
+    <button class="btn btn-primary" onclick="openModal('clientModal')">
+      <span>+</span>
+      <span>Adicionar Cliente</span>
+    </button>
+  </div>
+
+  <% if @clients.any? %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Documento</th>
+          <th>Endereço</th>
+          <th>Contato Principal</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @clients.each do |client| %>
+          <tr>
+            <td><strong><%= client.name %></strong></td>
+            <td><%= "#{client.document_type}: #{client.document_number}" %></td>
+            <td><%= client.address %></td>
+            <td>
+              <% if client.main_contact %>
+                <div class="contact-info">
+                  <div class="contact-name"><%= client.main_contact.name %></div>
+                  <div class="contact-details">
+                    <%= client.main_contact.email %><br>
+                    <%= client.main_contact.phone %>
+                  </div>
+                  <% if client.has_multiple_contacts? %>
+                    <div class="contact-indicator">
+                      <span>👥</span>
+                      <span>+<%= client.contacts.count - 1 %> contatos</span>
+                    </div>
+                  <% end %>
+                </div>
+              <% else %>
+                <span style="color: #6b7280;">Sem contato</span>
+              <% end %>
+            </td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-icon" onclick="openEditModal('<%= client.id %>')" title="Editar">
+                  ✏️
+                </button>
+                <%= form_with url: client_path(client), method: :delete, local: true, style: "display: inline;", html: { onsubmit: "return confirmDelete('#{client.name}')" } do |form| %>
+                  <%= form.submit '🗑️', class: 'btn btn-danger btn-icon', title: 'Excluir' %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <div style="text-align: center; padding: 48px 24px; color: #6b7280;">
+      <div style="font-size: 48px; margin-bottom: 16px;">👥</div>
+      <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Nenhum cliente cadastrado</h3>
+      <p style="margin-bottom: 24px;">Comece cadastrando seu primeiro cliente</p>
+      <button class="btn btn-primary" onclick="openModal('clientModal')">
+        <span>+</span>
+        <span>Adicionar Cliente</span>
+      </button>
+    </div>
+  <% end %>
+</div>
+
+<!-- Modal para Adicionar/Editar Cliente -->
+<div id="clientModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Adicionar Cliente</h3>
+      <button class="modal-close" onclick="closeModal('clientModal')">&times;</button>
+    </div>
+    
+    <%= form_with model: Client.new, local: true, html: { id: 'clientForm' } do |form| %>
+      <div class="modal-body">
+        <!-- Informações do Cliente -->
+        <div class="form-group">
+          <%= form.label :name, 'Nome / Razão Social', class: 'form-label' %>
+          <%= form.text_field :name, class: 'form-control', placeholder: 'Digite o nome ou razão social' %>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <%= form.label :document_type, 'Tipo de Documento', class: 'form-label' %>
+            <%= form.select :document_type, [['CPF', 'CPF'], ['CNPJ', 'CNPJ']], { selected: 'CNPJ' }, class: 'form-control', onchange: 'updateDocumentPlaceholder()' %>
+          </div>
+          <div class="form-group">
+            <%= form.label :document_number, 'Número do Documento', class: 'form-label' %>
+            <%= form.text_field :document_number, class: 'form-control', id: 'document_number', placeholder: '00.000.000/0000-00', oninput: 'formatDocument(this.value)' %>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <%= form.label :zip_code, 'CEP', class: 'form-label' %>
+            <%= form.text_field :zip_code, class: 'form-control', id: 'zip_code', placeholder: '00000-000', oninput: 'formatZipCode(this.value)' %>
+          </div>
+          <div class="form-group">
+            <%= form.label :state_registration, 'Inscrição Estadual', class: 'form-label' %>
+            <%= form.text_field :state_registration, class: 'form-control', id: 'state_registration', placeholder: '000.000.000.000', oninput: 'formatStateRegistration(this.value)' %>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :address, 'Endereço Completo', class: 'form-label' %>
+          <%= form.text_area :address, class: 'form-control', rows: 2, placeholder: 'Rua, número, bairro, cidade, estado' %>
+        </div>
+
+        <!-- Seção de Contatos -->
+        <div class="contact-section">
+          <div class="contact-header">
+            <h4 class="contact-title">Pessoas de Contato</h4>
+            <button type="button" class="btn btn-primary" onclick="addContact()">
+              <span>+</span>
+              <span>Adicionar Contato</span>
+            </button>
+          </div>
+          
+          <div id="contacts-container">
+            <div class="contact-item">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Nome</label>
+                  <input type="text" name="client[contacts_attributes][0][name]" class="form-control" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Email</label>
+                  <input type="email" name="client[contacts_attributes][0][email]" class="form-control" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">Telefone</label>
+                  <input type="tel" name="client[contacts_attributes][0][phone]" class="form-control" placeholder="(00) 00000-0000" oninput="formatPhone(this.value)" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Cargo</label>
+                  <input type="text" name="client[contacts_attributes][0][position]" class="form-control" required>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top: 12px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="radio" name="client[contacts_attributes][0][is_primary]" value="1" checked style="margin: 0;" onclick="setPrimaryContact(this)">
+                  <span>Contato Principal</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('clientModal')">Cancelar</button>
+        <%= form.submit 'Salvar', class: 'btn btn-primary' %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+function confirmDelete(clientName) {
+  return confirm(`Tem certeza que deseja excluir o cliente "${clientName}"?\n\nEsta ação não pode ser desfeita.`);
+}
+
+function openEditModal(clientId) {
+  window.location.href = `/clients/${clientId}/edit`;
+}
+
+// Formatação automática
+function formatZipCode(value) {
+  const input = document.getElementById('zip_code');
+  let formatted = value.replace(/\D/g, '');
+  if (formatted.length > 5) {
+    formatted = formatted.substring(0, 5) + '-' + formatted.substring(5, 8);
+  }
+  input.value = formatted;
+}
+
+function formatStateRegistration(value) {
+  const input = document.getElementById('state_registration');
+  let formatted = value.replace(/\D/g, '');
+  if (formatted.length > 3) {
+    formatted = formatted.substring(0, 3) + '.' + formatted.substring(3);
+  }
+  if (formatted.length > 7) {
+    formatted = formatted.substring(0, 7) + '.' + formatted.substring(7);
+  }
+  if (formatted.length > 11) {
+    formatted = formatted.substring(0, 11) + '.' + formatted.substring(11);
+  }
+  input.value = formatted;
+}
+
+function formatDocument(value) {
+  const input = document.getElementById('document_number');
+  const documentType = document.querySelector('select[name="client[document_type]"]').value;
+  let formatted = value.replace(/\D/g, '');
+  
+  if (documentType === 'CPF') {
+    if (formatted.length > 3) {
+      formatted = formatted.substring(0, 3) + '.' + formatted.substring(3);
+    }
+    if (formatted.length > 7) {
+      formatted = formatted.substring(0, 7) + '.' + formatted.substring(7);
+    }
+    if (formatted.length > 11) {
+      formatted = formatted.substring(0, 11) + '-' + formatted.substring(11);
+    }
+  } else if (documentType === 'CNPJ') {
+    if (formatted.length > 2) {
+      formatted = formatted.substring(0, 2) + '.' + formatted.substring(2);
+    }
+    if (formatted.length > 6) {
+      formatted = formatted.substring(0, 6) + '.' + formatted.substring(6);
+    }
+    if (formatted.length > 10) {
+      formatted = formatted.substring(0, 10) + '/' + formatted.substring(10);
+    }
+    if (formatted.length > 15) {
+      formatted = formatted.substring(0, 15) + '-' + formatted.substring(15);
+    }
+  }
+  
+  input.value = formatted;
+}
+
+function formatPhone(value) {
+  const input = event.target;
+  let formatted = value.replace(/\D/g, '');
+  
+  if (formatted.length > 0) {
+    formatted = '(' + formatted;
+  }
+  if (formatted.length > 3) {
+    formatted = formatted.substring(0, 3) + ') ' + formatted.substring(3);
+  }
+  if (formatted.length > 10) {
+    formatted = formatted.substring(0, 10) + '-' + formatted.substring(10, 14);
+  }
+  
+  input.value = formatted;
+}
+
+function updateDocumentPlaceholder() {
+  const documentType = document.querySelector('select[name="client[document_type]"]').value;
+  const input = document.getElementById('document_number');
+  
+  if (documentType === 'CPF') {
+    input.placeholder = '000.000.000-00';
+  } else if (documentType === 'CNPJ') {
+    input.placeholder = '00.000.000/0000-00';
+  }
+  
+  input.value = '';
+}
+
+function setPrimaryContact(radioButton) {
+  // Desmarca todos os outros radio buttons
+  const allRadios = document.querySelectorAll('input[type="radio"][name*="[is_primary]"]');
+  allRadios.forEach(radio => {
+    if (radio !== radioButton) {
+      radio.checked = false;
+    }
+  });
+}
+
+function addContact() {
+  const contactContainer = document.getElementById('contacts-container');
+  const contactIndex = contactContainer.children.length;
+  const contactHtml = `
+    <div class="contact-item">
+      <button type="button" class="contact-remove" onclick="removeContact(this)">×</button>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nome</label>
+          <input type="text" name="client[contacts_attributes][${contactIndex}][name]" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" name="client[contacts_attributes][${contactIndex}][email]" class="form-control" required>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Telefone</label>
+          <input type="tel" name="client[contacts_attributes][${contactIndex}][phone]" class="form-control" placeholder="(00) 00000-0000" oninput="formatPhone(this.value)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cargo</label>
+          <input type="text" name="client[contacts_attributes][${contactIndex}][position]" class="form-control" required>
+        </div>
+      </div>
+      <div class="form-group" style="margin-top: 12px;">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="radio" name="client[contacts_attributes][${contactIndex}][is_primary]" value="1" style="margin: 0;" onclick="setPrimaryContact(this)">
+          <span>Contato Principal</span>
+        </label>
+      </div>
+    </div>
+  `;
+  contactContainer.insertAdjacentHTML('beforeend', contactHtml);
+}
+
+function removeContact(button) {
+  button.closest('.contact-item').remove();
+}
+</script>

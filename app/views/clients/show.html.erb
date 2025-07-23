@@ -1,0 +1,62 @@
+<div class="content-header">
+  <h1 class="page-title"><%= @client.name %></h1>
+  <p class="page-subtitle">Detalhes do cliente</p>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Informações do Cliente</h2>
+    <div style="display: flex; gap: 8px;">
+      <%= link_to 'Editar', edit_client_path(@client), class: 'btn btn-secondary' %>
+      <%= link_to 'Voltar', clients_path, class: 'btn btn-secondary' %>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+    <div>
+      <div class="form-group">
+        <label class="form-label">Nome Completo</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <%= @client.name %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <%= @client.email %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Telefone</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <%= @client.phone %>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="form-group">
+        <label class="form-label">CPF/CNPJ</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <%= @client.cpf_cnpj %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Endereço</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; min-height: 60px;">
+          <%= @client.address.presence || 'Não informado' %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Data de Cadastro</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <%= @client.created_at.strftime('%d/%m/%Y às %H:%M') %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
