@@ -1,0 +1,162 @@
+<div class="content-header">
+  <h1 class="page-title">Controle de Estoque</h1>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Equipamentos em Estoque</h2>
+    <button class="btn btn-primary" onclick="openModal('equipmentModal')">
+      <span>+</span>
+      <span>Adicionar Equipamento</span>
+    </button>
+  </div>
+
+  <% if @equipment.any? %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Número</th>
+          <th>Status</th>
+          <th>Potência</th>
+          <th>Tensão</th>
+          <th>Localização</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @equipment.each do |equipment| %>
+          <tr>
+            <td>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <div style="width: 12px; height: 12px; border-radius: 50%; background-color: <%= equipment.category.color %>;"></div>
+                <span style="font-size: 14px; color: #6b7280;"><%= equipment.category.name %></span>
+              </div>
+            </td>
+            <td><strong><%= equipment.number %></strong></td>
+            <td>
+              <span class="badge <%= equipment.status_badge_class %>">
+                <%= equipment.status %>
+              </span>
+            </td>
+            <td><%= equipment.power_display %></td>
+            <td><%= equipment.voltage_display %></td>
+            <td><%= equipment.location %></td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-icon" onclick="openEditModal('<%= equipment.id %>')" title="Editar">
+                  ✏️
+                </button>
+                <%= form_with url: equipment_path(equipment), method: :delete, local: true, style: "display: inline;", html: { onsubmit: "return confirmDelete('#{equipment.display_name}')" } do |form| %>
+                  <%= form.submit '🗑️', class: 'btn btn-danger btn-icon', title: 'Excluir' %>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <div style="text-align: center; padding: 48px 24px; color: #6b7280;">
+      <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+      <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Nenhum equipamento em estoque</h3>
+      <p style="margin-bottom: 24px;">Comece cadastrando seu primeiro equipamento</p>
+      <button class="btn btn-primary" onclick="openModal('equipmentModal')">
+        <span>+</span>
+        <span>Adicionar Equipamento</span>
+      </button>
+    </div>
+  <% end %>
+</div>
+
+<!-- Modal para Adicionar/Editar Equipamento -->
+<div id="equipmentModal" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">Adicionar Equipamento</h3>
+      <button class="modal-close" onclick="closeModal('equipmentModal')">&times;</button>
+    </div>
+    
+    <%= form_with model: Equipment.new, local: true, html: { id: 'equipmentForm' } do |form| %>
+      <div class="modal-body">
+        <div class="form-group">
+          <%= form.label :category_id, "Categoria", class: "form-label" %>
+          <%= form.collection_select :category_id, 
+              Category.all.order(:name), 
+              :id, 
+              :name, 
+              { prompt: "Selecione uma categoria" }, 
+              { class: "form-select", required: true } %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :number, "Número do Equipamento", class: "form-label" %>
+          <%= form.text_field :number, class: "form-input", placeholder: "Ex: TR-001" %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :status, "Status", class: "form-label" %>
+          <%= form.select :status, 
+              options_for_select([
+                ['Ativo', 'Ativo'],
+                ['Em Manutenção', 'Em Manutenção'],
+                ['Inativo', 'Inativo'],
+                ['Fora de Serviço', 'Fora de Serviço']
+              ], nil), 
+              {}, 
+              { class: "form-select" } %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :power, "Potência (kVA)", class: "form-label" %>
+          <%= form.text_field :power, class: "form-input", placeholder: "Ex: 15, 30, 45" %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :voltage, "Tensão (kV)", class: "form-label" %>
+          <%= form.text_field :voltage, class: "form-input", placeholder: "Ex: 13.8, 34.5" %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :location, "Localização", class: "form-label" %>
+          <%= form.text_field :location, class: "form-input", placeholder: "Ex: Subestação Central" %>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('equipmentModal')">Cancelar</button>
+        <%= form.submit "Salvar", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+function openModal(modalId) {
+  document.getElementById(modalId).style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+  document.getElementById(modalId).style.display = 'none';
+  document.body.style.overflow = 'auto';
+}
+
+function openEditModal(equipmentId) {
+  // Aqui você pode implementar a lógica para carregar os dados do equipamento
+  // Por enquanto, vamos redirecionar para a página de edição
+  window.location.href = `/equipment/${equipmentId}/edit`;
+}
+
+function confirmDelete(equipmentName) {
+  return confirm(`Tem certeza que deseja excluir o equipamento "${equipmentName}"?`);
+}
+
+// Fechar modal ao clicar fora dele
+document.addEventListener('click', function(event) {
+  if (event.target.classList.contains('modal-overlay')) {
+    event.target.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+});
+</script>

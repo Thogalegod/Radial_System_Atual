@@ -15,4 +15,7 @@ Rails.application.routes.draw do
       get :contacts
     end
   end
+
+  resources :equipment
+  resources :categories
 end

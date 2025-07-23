@@ -10,9 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_22_234230) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_23_221657) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "categories", force: :cascade do |t|
+    t.string "name"
+    t.text "description"
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "clients", force: :cascade do |t|
     t.string "name"
@@ -39,6 +47,28 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_234230) do
     t.datetime "updated_at", null: false
     t.boolean "is_primary", default: false
     t.index ["client_id"], name: "index_contacts_on_client_id"
+  end
+
+  create_table "equipment", force: :cascade do |t|
+    t.string "name"
+    t.string "status"
+    t.date "purchase_date"
+    t.decimal "acquisition_price"
+    t.text "observation"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "number"
+    t.string "location"
+    t.date "acquisition_date"
+    t.text "observations"
+    t.string "category"
+    t.string "subcategory"
+    t.bigint "power_option_id"
+    t.string "power"
+    t.string "voltage"
+    t.bigint "category_id"
+    t.index ["category_id"], name: "index_equipment_on_category_id"
+    t.index ["power_option_id"], name: "index_equipment_on_power_option_id"
   end
 
   create_table "equipment_categories", force: :cascade do |t|
@@ -76,6 +106,14 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_234230) do
     t.index ["rental_id"], name: "index_financial_transactions_on_rental_id"
   end
 
+  create_table "power_options", force: :cascade do |t|
+    t.integer "value"
+    t.string "name"
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "rentals", force: :cascade do |t|
     t.bigint "client_id", null: false
     t.bigint "equipment_id", null: false
@@ -105,6 +143,19 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_234230) do
     t.index ["created_by_id"], name: "index_tasks_on_created_by_id"
   end
 
+  create_table "transformer_mts", force: :cascade do |t|
+    t.bigint "equipment_id", null: false
+    t.string "voltage_level"
+    t.string "capacity"
+    t.string "manufacturer"
+    t.string "model"
+    t.date "installation_date"
+    t.string "location"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["equipment_id"], name: "index_transformer_mts_on_equipment_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "name"
     t.string "email"
@@ -115,10 +166,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_22_234230) do
   end
 
   add_foreign_key "contacts", "clients"
+  add_foreign_key "equipment", "categories"
+  add_foreign_key "equipment", "power_options"
   add_foreign_key "equipments", "equipment_categories"
   add_foreign_key "financial_transactions", "rentals"
   add_foreign_key "rentals", "clients"
   add_foreign_key "rentals", "equipments"
   add_foreign_key "tasks", "users", column: "assigned_to_id"
   add_foreign_key "tasks", "users", column: "created_by_id"
+  add_foreign_key "transformer_mts", "equipment"
 end

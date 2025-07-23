@@ -1,0 +1,45 @@
+<div class="content-header">
+  <h1 class="page-title">Nova Categoria</h1>
+</div>
+
+<div class="card">
+  <div style="margin-bottom: 24px;">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Cadastrar Categoria de Equipamentos</h2>
+  </div>
+
+  <%= form_with model: @category, local: true do |form| %>
+    <% if @category.errors.any? %>
+      <div class="alert alert-danger">
+        <h4>Erro ao salvar categoria:</h4>
+        <ul>
+          <% @category.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-group">
+      <%= form.label :name, "Nome da Categoria", class: "form-label" %>
+      <%= form.text_field :name, class: "form-input", placeholder: "Ex: Transformador MT" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :description, "Descrição", class: "form-label" %>
+      <%= form.text_area :description, class: "form-input", rows: 3, placeholder: "Descrição da categoria..." %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :color, "Cor", class: "form-label" %>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <%= form.color_field :color, class: "form-input", style: "width: 60px; height: 40px; padding: 4px;" %>
+        <span style="font-size: 14px; color: #6b7280;">Escolha uma cor para identificar esta categoria</span>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <%= link_to "Cancelar", categories_path, class: "btn btn-secondary" %>
+      <%= form.submit "Salvar Categoria", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

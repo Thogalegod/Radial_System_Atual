@@ -1,0 +1,70 @@
+<div class="content-header">
+  <h1 class="page-title">Editar Equipamento</h1>
+</div>
+
+<div class="card">
+  <div style="margin-bottom: 24px;">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Editar <%= @equipment.display_name %></h2>
+  </div>
+
+  <%= form_with model: @equipment, local: true do |form| %>
+    <% if @equipment.errors.any? %>
+      <div class="alert alert-danger">
+        <h4>Erro ao atualizar equipamento:</h4>
+        <ul>
+          <% @equipment.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-group">
+      <%= form.label :category_id, "Categoria", class: "form-label" %>
+      <%= form.collection_select :category_id, 
+          Category.all.order(:name), 
+          :id, 
+          :name, 
+          { selected: @equipment.category_id }, 
+          { class: "form-select", required: true } %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :number, "Número do Equipamento", class: "form-label" %>
+      <%= form.text_field :number, class: "form-input", placeholder: "Ex: TR-001" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :status, "Status", class: "form-label" %>
+      <%= form.select :status, 
+          options_for_select([
+            ['Ativo', 'Ativo'],
+            ['Em Manutenção', 'Em Manutenção'],
+            ['Inativo', 'Inativo'],
+            ['Fora de Serviço', 'Fora de Serviço']
+          ], @equipment.status), 
+          {}, 
+          { class: "form-select" } %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :power, "Potência (kVA)", class: "form-label" %>
+      <%= form.text_field :power, class: "form-input", placeholder: "Ex: 15, 30, 45" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :voltage, "Tensão (kV)", class: "form-label" %>
+      <%= form.text_field :voltage, class: "form-input", placeholder: "Ex: 13.8, 34.5" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :location, "Localização", class: "form-label" %>
+      <%= form.text_field :location, class: "form-input", placeholder: "Ex: Subestação Central" %>
+    </div>
+
+    <div class="form-actions">
+      <%= link_to "Cancelar", equipment_index_path, class: "btn btn-secondary" %>
+      <%= form.submit "Atualizar Equipamento", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

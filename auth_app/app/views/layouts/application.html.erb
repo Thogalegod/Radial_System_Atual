@@ -445,9 +445,14 @@
             <span>Clientes</span>
           </a>
           
-          <a href="#" class="nav-item">
-            <div class="nav-icon">🔧</div>
-            <span>Equipamentos</span>
+          <a href="<%= equipment_index_path %>" class="nav-item <%= 'active' if controller_name == 'equipment' %>">
+            <div class="nav-icon">📦</div>
+            <span>Controle de Estoque</span>
+          </a>
+          
+          <a href="<%= categories_path %>" class="nav-item <%= 'active' if controller_name == 'categories' %>">
+            <div class="nav-icon">📂</div>
+            <span>Categorias</span>
           </a>
           
           <a href="#" class="nav-item">
