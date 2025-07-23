@@ -2,7 +2,7 @@
 service: auth_app
 
 # Name of the container image.
-image: tal170987/kamal-deploy
+image: auth_app:latest
 
 # Deploy to these servers.
 servers:
@@ -21,8 +21,6 @@ servers:
 # Credentials for your image host.
 registry:
   username: tal170987
-  password:
-    - KAMAL_REGISTRY_PASSWORD
   # Specify the registry server, if you're not using Docker Hub
   # server: registry.digitalocean.com / ghcr.io / ...
   # username: your-user
