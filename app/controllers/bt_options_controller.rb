@@ -1,6 +1,10 @@
 class BtOptionsController < ApplicationController
   def index
     @bt_options = BtOption.order(:value)
+    respond_to do |format|
+      format.html
+      format.json { render json: @bt_options }
+    end
   end
 
   def new
@@ -10,9 +14,15 @@ class BtOptionsController < ApplicationController
   def create
     @bt_option = BtOption.new(bt_option_params)
     if @bt_option.save
-      redirect_to params[:redirect_to] || bt_options_path, notice: 'Opção de BT criada com sucesso!'
+      respond_to do |format|
+        format.html { redirect_to params[:redirect_to] || bt_options_path, notice: 'Opção de BT criada com sucesso!' }
+        format.json { render json: { id: @bt_option.id, value: @bt_option.value, color: @bt_option.color } }
+      end
     else
-      render :new, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :new, status: :unprocessable_entity }
+        format.json { render json: { errors: @bt_option.errors.full_messages }, status: :unprocessable_entity }
+      end
     end
   end
 
