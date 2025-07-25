@@ -1,0 +1,24 @@
+pt-BR:
+  errors:
+    messages:
+      restrict_dependent_destroy:
+        has_many: "Não é possível excluir o registro pois existem %{record} dependentes"
+        has_one: "Não é possível excluir o registro pois existe um %{record} dependente"
+        belongs_to: "Não é possível excluir o registro pois existe um %{record} dependente"
+        has_and_belongs_to_many: "Não é possível excluir o registro pois existem %{record} dependentes"
+  
+  activerecord:
+    errors:
+      models:
+        bt_option:
+          attributes:
+            base:
+              restrict_dependent_destroy: "Não é possível excluir esta tensão pois está sendo usada por transformadores"
+        location:
+          attributes:
+            base:
+              restrict_dependent_destroy: "Não é possível excluir esta localização pois está sendo usada por transformadores"
+        status:
+          attributes:
+            base:
+              restrict_dependent_destroy: "Não é possível excluir este status pois está sendo usado por transformadores" 

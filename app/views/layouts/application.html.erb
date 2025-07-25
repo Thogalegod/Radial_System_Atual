@@ -85,6 +85,39 @@
         border-right: 3px solid #3b82f6;
       }
 
+      .submenu {
+        margin-left: 32px;
+        margin-top: 8px;
+        display: none;
+      }
+
+      .nav-item:hover .submenu,
+      .nav-item.active .submenu {
+        display: block;
+      }
+
+      .submenu-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 16px;
+        color: #6b7280;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-size: 14px;
+        border-radius: 6px;
+        margin: 2px 0;
+      }
+
+      .submenu-item:hover {
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      .submenu-item.active {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
       .nav-icon {
         width: 20px;
         height: 20px;
@@ -93,6 +126,10 @@
         align-items: center;
         justify-content: center;
       }
+
+
+
+
 
       /* Main Content */
       .main-content {
@@ -230,13 +267,67 @@
         letter-spacing: 0.5px;
       }
 
-      /* Modal */
+      /* Badges */
+      .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .badge-success {
+        background: #10b981;
+        color: white;
+      }
+
+      .badge-warning {
+        background: #f59e0b;
+        color: white;
+      }
+
+      .badge-danger {
+        background: #ef4444;
+        color: white;
+      }
+
+      .badge-secondary {
+        background: #6b7280;
+        color: white;
+      }
+
+      /* Alerts */
+      .alert {
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+        font-size: 14px;
+      }
+
+      .alert-success {
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+      }
+
+      .alert-danger {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+        padding: 12px 16px;
+        border-radius: 6px;
+        margin-bottom: 16px;
+      }
+
+      /* Modal styles */
       .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        bottom: 0;
+        width: 100%;
+        height: 100%;
         background: rgba(0, 0, 0, 0.5);
         display: none;
         align-items: center;
@@ -250,44 +341,26 @@
 
       .modal {
         background: white;
-        border-radius: 12px;
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        width: 90%;
-        max-width: 800px;
-        max-height: 90vh;
-        overflow-y: auto;
-        position: relative;
+        border-radius: 8px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        width: 100%;
+        max-width: 500px;
+        margin: 20px;
       }
 
       .modal-header {
-        padding: 24px 24px 0 24px;
+        padding: 20px 24px;
+        border-bottom: 1px solid #e5e7eb;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 16px;
       }
 
-      .modal-title {
-        font-size: 20px;
+      .modal-header h3 {
+        margin: 0;
+        font-size: 18px;
         font-weight: 600;
         color: #1f2937;
-      }
-
-      .modal-close {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        color: #6b7280;
-        padding: 4px;
-        border-radius: 4px;
-        transition: all 0.2s;
-      }
-
-      .modal-close:hover {
-        background: #f3f4f6;
-        color: #374151;
       }
 
       .modal-body {
@@ -295,11 +368,27 @@
       }
 
       .modal-footer {
-        padding: 16px 24px 24px 24px;
+        padding: 20px 24px;
+        border-top: 1px solid #e5e7eb;
         display: flex;
         justify-content: flex-end;
         gap: 12px;
-        border-top: 1px solid #e5e7eb;
+      }
+
+      .btn-icon {
+        background: none;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        color: #6b7280;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s;
+      }
+
+      .btn-icon:hover {
+        background: #f3f4f6;
+        color: #374151;
       }
 
       /* Contact Section */
@@ -378,25 +467,6 @@
         margin-top: 4px;
       }
 
-      /* Alerts */
-      .alert {
-        padding: 12px 16px;
-        border-radius: 6px;
-        margin-bottom: 16px;
-      }
-
-      .alert-success {
-        background: #d1fae5;
-        color: #065f46;
-        border: 1px solid #a7f3d0;
-      }
-
-      .alert-danger {
-        background: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fecaca;
-      }
-
       /* Responsive */
       @media (max-width: 768px) {
         .sidebar {
@@ -445,15 +515,28 @@
             <span>Clientes</span>
           </a>
           
-          <a href="<%= equipment_index_path %>" class="nav-item <%= 'active' if controller_name == 'equipment' %>">
-            <div class="nav-icon">📦</div>
-            <span>Controle de Estoque</span>
-          </a>
-          
-          <a href="<%= categories_path %>" class="nav-item <%= 'active' if controller_name == 'categories' %>">
-            <div class="nav-icon">📂</div>
-            <span>Categorias</span>
-          </a>
+          <div class="nav-item <%= 'active' if ['medium_voltage_transformers', 'bt_options', 'locations', 'statuses'].include?(controller_name) %>">
+            <div class="nav-icon">⚡</div>
+            <span>Transformador MT</span>
+            <div class="submenu">
+              <a href="<%= medium_voltage_transformers_path %>" class="submenu-item <%= 'active' if controller_name == 'medium_voltage_transformers' %>">
+                <div class="nav-icon">📋</div>
+                <span>Lista de Transformadores</span>
+              </a>
+              <a href="<%= bt_options_path %>" class="submenu-item <%= 'active' if controller_name == 'bt_options' %>">
+                <div class="nav-icon">⚡</div>
+                <span>Categorias de Tensão</span>
+              </a>
+              <a href="<%= locations_path %>" class="submenu-item <%= 'active' if controller_name == 'locations' %>">
+                <div class="nav-icon">📍</div>
+                <span>Categorias de Localização</span>
+              </a>
+              <a href="<%= statuses_path %>" class="submenu-item <%= 'active' if controller_name == 'statuses' %>">
+                <div class="nav-icon">🏷️</div>
+                <span>Categorias de Status</span>
+              </a>
+            </div>
+          </div>
           
           <a href="#" class="nav-item">
             <div class="nav-icon">🚚</div>

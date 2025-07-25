@@ -1,0 +1,598 @@
+<div class="content-header">
+  <h1 class="page-title">Editar Transformador MT</h1>
+</div>
+
+<div class="card">
+  <%= form_with model: @medium_voltage_transformer, local: true do |form| %>
+    <% if @medium_voltage_transformer.errors.any? %>
+      <div class="alert alert-danger">
+        <h4>Erro ao salvar:</h4>
+        <ul>
+          <% @medium_voltage_transformer.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-group">
+      <%= form.label :serial_number, 'Número de Série', class: 'form-label' %>
+      <%= form.text_field :serial_number, class: 'form-control', required: true %>
+    </div>
+
+
+
+    <div class="form-group">
+      <%= form.label :bt_option_id, 'Tensão Secundária (V)', class: 'form-label' %>
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+        <%= form.collection_select :bt_option_id, 
+            BtOption.order(:value), 
+            :id, 
+            :value, 
+            { prompt: "Selecione uma tensão secundária" }, 
+            { class: "form-control", required: true, style: "flex: 1;" } %>
+        <button type="button" class="btn btn-secondary" onclick="openVoltageModal()">
+          <span>+</span>
+          <span>Adicionar</span>
+        </button>
+      </div>
+      
+      <!-- Lista de tensões existentes -->
+      <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 8px;">
+        <h4 style="font-size: 14px; margin-bottom: 8px; color: #374151;">Tensões disponíveis:</h4>
+        <div id="voltage-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <% BtOption.order(:value).each do |voltage| %>
+            <div class="voltage-item" data-id="<%= voltage.id %>">
+              <span style="display: inline-block; padding: 4px 12px; border-radius: 6px; background: <%= voltage.color %>; color: #fff; font-weight: 600; font-size: 12px;">
+                <%= voltage.value %> V
+              </span>
+              <button type="button" class="btn btn-danger btn-icon" style="margin-left: 4px; padding: 2px 6px; font-size: 10px;" onclick="deleteVoltage(<%= voltage.id %>)" title="Remover">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3,6 5,6 21,6"/>
+                  <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+
+
+    <div class="form-group">
+      <%= form.label :location_id, 'Localização', class: 'form-label' %>
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+        <%= form.collection_select :location_id, 
+            Location.order(:value), 
+            :id, 
+            :value, 
+            { prompt: "Selecione uma localização" }, 
+            { class: "form-control", style: "flex: 1;" } %>
+        <button type="button" class="btn btn-secondary" onclick="openLocationModal()">
+          <span>+</span>
+          <span>Adicionar</span>
+        </button>
+      </div>
+      
+      <!-- Lista de localizações existentes -->
+      <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 8px;">
+        <h4 style="font-size: 14px; margin-bottom: 8px; color: #374151;">Localizações disponíveis:</h4>
+        <div id="location-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <% Location.order(:value).each do |location| %>
+            <div class="location-item" data-id="<%= location.id %>">
+              <span style="display: inline-block; padding: 4px 12px; border-radius: 6px; background: <%= location.color %>; color: #fff; font-weight: 600; font-size: 12px;">
+                <%= location.value %>
+              </span>
+              <button type="button" class="btn btn-danger btn-icon" style="margin-left: 4px; padding: 2px 6px; font-size: 10px;" onclick="deleteLocation(<%= location.id %>)" title="Remover">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3,6 5,6 21,6"/>
+                  <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :status_id, 'Status', class: 'form-label' %>
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+        <%= form.collection_select :status_id, 
+            Status.order(:value), 
+            :id, 
+            :value, 
+            { prompt: "Selecione um status" }, 
+            { class: "form-control", style: "flex: 1;" } %>
+        <button type="button" class="btn btn-secondary" onclick="openStatusModal()">
+          <span>+</span>
+          <span>Adicionar</span>
+        </button>
+      </div>
+      
+      <!-- Lista de status existentes -->
+      <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 8px;">
+        <h4 style="font-size: 14px; margin-bottom: 8px; color: #374151;">Status disponíveis:</h4>
+        <div id="status-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <% Status.order(:value).each do |status| %>
+            <div class="status-item" data-id="<%= status.id %>">
+              <span style="display: inline-block; padding: 4px 12px; border-radius: 6px; background: <%= status.color %>; color: #fff; font-weight: 600; font-size: 12px;">
+                <%= status.value %>
+              </span>
+              <button type="button" class="btn btn-danger btn-icon" style="margin-left: 4px; padding: 2px 6px; font-size: 10px;" onclick="deleteStatus(<%= status.id %>)" title="Remover">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="3,6 5,6 21,6"/>
+                  <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :notes, 'Observações', class: 'form-label' %>
+      <%= form.text_area :notes, class: 'form-control', rows: 3 %>
+    </div>
+
+    <div style="margin-top: 24px; display: flex; gap: 12px;">
+      <%= form.submit 'Salvar', class: 'btn btn-primary' %>
+      <%= link_to 'Cancelar', medium_voltage_transformers_path, class: 'btn btn-secondary' %>
+    </div>
+  <% end %>
+</div>
+
+
+
+<!-- Modal para adicionar tensão -->
+<div id="voltageModal" class="modal-overlay">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3>Adicionar Tensão Secundária</h3>
+      <button type="button" class="btn btn-icon" onclick="closeVoltageModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Valor (V)</label>
+        <input type="number" id="newVoltageValue" class="form-control" min="1" required>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeVoltageModal()">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="addVoltage()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para adicionar localização -->
+<div id="locationModal" class="modal-overlay">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3>Adicionar Localização</h3>
+      <button type="button" class="btn btn-icon" onclick="closeLocationModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nome da Localização</label>
+        <input type="text" id="newLocationValue" class="form-control" required>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeLocationModal()">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="addLocation()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para adicionar status -->
+<div id="statusModal" class="modal-overlay">
+  <div class="modal" style="max-width: 400px;">
+    <div class="modal-header">
+      <h3>Adicionar Status</h3>
+      <button type="button" class="btn btn-icon" onclick="closeStatusModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nome do Status</label>
+        <input type="text" id="newStatusValue" class="form-control" required>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" onclick="closeStatusModal()">Cancelar</button>
+      <button type="button" class="btn btn-primary" onclick="addStatus()">Adicionar</button>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+
+
+function openVoltageModal() {
+  document.getElementById('voltageModal').classList.add('show');
+}
+
+function closeVoltageModal() {
+  document.getElementById('voltageModal').classList.remove('show');
+  document.getElementById('newVoltageValue').value = '';
+}
+
+
+
+function addVoltage() {
+  const value = document.getElementById('newVoltageValue').value;
+  if (!value) {
+    alert('Por favor, insira um valor');
+    return;
+  }
+  
+  console.log('Tentando adicionar tensão:', value);
+  
+  // Criar um formulário temporário para enviar os dados
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = '/bt_options';
+  
+  // Adicionar CSRF token
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const csrfInput = document.createElement('input');
+  csrfInput.type = 'hidden';
+  csrfInput.name = 'authenticity_token';
+  csrfInput.value = csrfToken;
+  form.appendChild(csrfInput);
+  
+  // Adicionar valor da tensão
+  const valueInput = document.createElement('input');
+  valueInput.type = 'hidden';
+  valueInput.name = 'bt_option[value]';
+  valueInput.value = value;
+  form.appendChild(valueInput);
+  
+  // Adicionar redirecionamento de volta
+  const redirectInput = document.createElement('input');
+  redirectInput.type = 'hidden';
+  redirectInput.name = 'redirect_to';
+  redirectInput.value = window.location.href;
+  form.appendChild(redirectInput);
+  
+  // Adicionar ao DOM e submeter
+  document.body.appendChild(form);
+  form.submit();
+}
+
+
+
+function deleteVoltage(id) {
+  if (!confirm('Tem certeza que deseja remover esta tensão?')) return;
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  
+  fetch(`/bt_options/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRF-Token': csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      redirect_to: window.location.href
+    })
+  })
+  .then(response => {
+    if (response.redirected) {
+      window.location.href = response.url;
+    } else {
+      return response.text();
+    }
+  })
+  .then(html => {
+    if (html) {
+      // Extrair mensagem de erro da resposta
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const alert = doc.querySelector('.alert');
+      if (alert) {
+        alert(alert.textContent.trim());
+      } else {
+        window.location.reload();
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Erro:', error);
+    alert('Erro ao remover tensão. Tente novamente.');
+  });
+}
+
+function openLocationModal() {
+  document.getElementById('locationModal').classList.add('show');
+}
+
+function closeLocationModal() {
+  document.getElementById('locationModal').classList.remove('show');
+  document.getElementById('newLocationValue').value = '';
+}
+
+function openStatusModal() {
+  document.getElementById('statusModal').classList.add('show');
+}
+
+function closeStatusModal() {
+  document.getElementById('statusModal').classList.remove('show');
+  document.getElementById('newStatusValue').value = '';
+}
+
+function addLocation() {
+  const value = document.getElementById('newLocationValue').value;
+  if (!value) {
+    alert('Por favor, insira um valor');
+    return;
+  }
+  
+  console.log('Tentando adicionar localização:', value);
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  
+  fetch('/locations', {
+    method: 'POST',
+    headers: {
+      'X-CSRF-Token': csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      location: { value: value },
+      redirect_to: window.location.href
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error('Erro ao adicionar localização');
+    }
+  })
+  .then(data => {
+    // Fechar modal
+    closeLocationModal();
+    
+    // Adicionar nova localização à lista
+    const locationList = document.getElementById('location-list');
+    const newLocationDiv = document.createElement('div');
+    newLocationDiv.className = 'location-item';
+    newLocationDiv.setAttribute('data-id', data.id);
+    
+    newLocationDiv.innerHTML = `
+      <span style="display: inline-block; padding: 4px 12px; border-radius: 6px; background: ${data.color}; color: #fff; font-weight: 600; font-size: 12px;">
+        ${data.value}
+      </span>
+      <button type="button" class="btn btn-danger btn-icon" style="margin-left: 4px; padding: 2px 6px; font-size: 10px;" onclick="deleteLocation(${data.id})" title="Remover">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3,6 5,6 21,6"/>
+          <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+          <line x1="10" y1="11" x2="10" y2="17"/>
+          <line x1="14" y1="11" x2="14" y2="17"/>
+        </svg>
+      </button>
+    `;
+    
+    locationList.appendChild(newLocationDiv);
+    
+    // Adicionar ao select
+    const locationSelect = document.querySelector('select[name="medium_voltage_transformer[location_id]"]');
+    const option = document.createElement('option');
+    option.value = data.id;
+    option.textContent = data.value;
+    locationSelect.appendChild(option);
+    
+    // Ordenar opções
+    const options = Array.from(locationSelect.options);
+    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+    locationSelect.innerHTML = '';
+    options.forEach(option => locationSelect.appendChild(option));
+    
+    alert('Localização adicionada com sucesso!');
+  })
+  .catch(error => {
+    console.error('Erro:', error);
+    alert('Erro ao adicionar localização. Tente novamente.');
+  });
+}
+
+function addStatus() {
+  const value = document.getElementById('newStatusValue').value;
+  if (!value) {
+    alert('Por favor, insira um valor');
+    return;
+  }
+  
+  console.log('Tentando adicionar status:', value);
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  
+  fetch('/statuses', {
+    method: 'POST',
+    headers: {
+      'X-CSRF-Token': csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      status: { value: value },
+      redirect_to: window.location.href
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      return response.json();
+    } else {
+      throw new Error('Erro ao adicionar status');
+    }
+  })
+  .then(data => {
+    // Fechar modal
+    closeStatusModal();
+    
+    // Adicionar novo status à lista
+    const statusList = document.getElementById('status-list');
+    const newStatusDiv = document.createElement('div');
+    newStatusDiv.className = 'status-item';
+    newStatusDiv.setAttribute('data-id', data.id);
+    
+    newStatusDiv.innerHTML = `
+      <span style="display: inline-block; padding: 4px 12px; border-radius: 6px; background: ${data.color}; color: #fff; font-weight: 600; font-size: 12px;">
+        ${data.value}
+      </span>
+      <button type="button" class="btn btn-danger btn-icon" style="margin-left: 4px; padding: 2px 6px; font-size: 10px;" onclick="deleteStatus(${data.id})" title="Remover">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3,6 5,6 21,6"/>
+          <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+          <line x1="10" y1="11" x2="10" y2="17"/>
+          <line x1="14" y1="11" x2="14" y2="17"/>
+        </svg>
+      </button>
+    `;
+    
+    statusList.appendChild(newStatusDiv);
+    
+    // Adicionar ao select
+    const statusSelect = document.querySelector('select[name="medium_voltage_transformer[status_id]"]');
+    const option = document.createElement('option');
+    option.value = data.id;
+    option.textContent = data.value;
+    statusSelect.appendChild(option);
+    
+    // Ordenar opções
+    const options = Array.from(statusSelect.options);
+    options.sort((a, b) => a.textContent.localeCompare(b.textContent));
+    statusSelect.innerHTML = '';
+    options.forEach(option => statusSelect.appendChild(option));
+    
+    alert('Status adicionado com sucesso!');
+  })
+  .catch(error => {
+    console.error('Erro:', error);
+    alert('Erro ao adicionar status. Tente novamente.');
+  });
+}
+
+function deleteLocation(id) {
+  if (!confirm('Tem certeza que deseja remover esta localização?')) return;
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  
+  fetch(`/locations/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRF-Token': csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      redirect_to: window.location.href
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      // Remover item da lista
+      const locationItem = document.querySelector(`.location-item[data-id="${id}"]`);
+      if (locationItem) {
+        locationItem.remove();
+      }
+      
+      // Remover do select
+      const locationSelect = document.querySelector('select[name="medium_voltage_transformer[location_id]"]');
+      const option = locationSelect.querySelector(`option[value="${id}"]`);
+      if (option) {
+        option.remove();
+      }
+      
+      alert('Localização removida com sucesso!');
+    } else {
+      return response.text();
+    }
+  })
+  .then(html => {
+    if (html) {
+      // Extrair mensagem de erro da resposta
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const alert = doc.querySelector('.alert');
+      if (alert) {
+        alert(alert.textContent.trim());
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Erro:', error);
+    alert('Erro ao remover localização. Tente novamente.');
+  });
+}
+
+function deleteStatus(id) {
+  if (!confirm('Tem certeza que deseja remover este status?')) return;
+  
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  
+  fetch(`/statuses/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRF-Token': csrfToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      redirect_to: window.location.href
+    })
+  })
+  .then(response => {
+    if (response.ok) {
+      // Remover item da lista
+      const statusItem = document.querySelector(`.status-item[data-id="${id}"]`);
+      if (statusItem) {
+        statusItem.remove();
+      }
+      
+      // Remover do select
+      const statusSelect = document.querySelector('select[name="medium_voltage_transformer[status_id]"]');
+      const option = statusSelect.querySelector(`option[value="${id}"]`);
+      if (option) {
+        option.remove();
+      }
+      
+      alert('Status removido com sucesso!');
+    } else {
+      return response.text();
+    }
+  })
+  .then(html => {
+    if (html) {
+      // Extrair mensagem de erro da resposta
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const alert = doc.querySelector('.alert');
+      if (alert) {
+        alert(alert.textContent.trim());
+      }
+    }
+  })
+  .catch(error => {
+    console.error('Erro:', error);
+    alert('Erro ao remover status. Tente novamente.');
+  });
+}
+
+
+
+
+
+
+
+
+</script>
+
+

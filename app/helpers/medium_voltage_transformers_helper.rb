@@ -1,0 +1,2 @@
+module MediumVoltageTransformersHelper
+end

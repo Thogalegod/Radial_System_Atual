@@ -1,0 +1,74 @@
+<div class="content-header">
+  <h1 class="page-title"><%= @medium_voltage_transformer.display_name %></h1>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Detalhes do Transformador</h2>
+    <div style="display: flex; gap: 8px;">
+      <%= link_to edit_medium_voltage_transformer_path(@medium_voltage_transformer), class: 'btn btn-secondary btn-icon', title: 'Editar' do %>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        <span>Editar</span>
+      <% end %>
+      <%= link_to medium_voltage_transformers_path, class: 'btn btn-secondary btn-icon', title: 'Voltar' do %>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6"/>
+        </svg>
+        <span>Voltar</span>
+      <% end %>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+    <div>
+      <h3 style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 12px;">Informações Básicas</h3>
+      <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+        <div style="margin-bottom: 12px;">
+          <strong>Número de Série:</strong>
+          <span style="margin-left: 8px;"><%= @medium_voltage_transformer.serial_number %></span>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <strong>Localização:</strong>
+          <% if @medium_voltage_transformer.location %>
+            <span style="display: inline-block; margin-left: 8px; padding: 4px 12px; border-radius: 6px; background: <%= @medium_voltage_transformer.location.color %>; color: #fff; font-weight: 600;">
+              <%= @medium_voltage_transformer.location.value %>
+            </span>
+          <% else %>
+            <span style="margin-left: 8px; color: #6b7280;">Não definida</span>
+          <% end %>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <strong>Status:</strong>
+          <% if @medium_voltage_transformer.status %>
+            <span style="display: inline-block; margin-left: 8px; padding: 4px 12px; border-radius: 6px; background: <%= @medium_voltage_transformer.status.color %>; color: #fff; font-weight: 600;">
+              <%= @medium_voltage_transformer.status.value %>
+            </span>
+          <% else %>
+            <span style="margin-left: 8px; color: #6b7280;">Não definido</span>
+          <% end %>
+        </div>
+        <% if @medium_voltage_transformer.notes.present? %>
+          <div>
+            <strong>Observações:</strong>
+            <p style="margin: 8px 0 0 0; color: #6b7280;"><%= @medium_voltage_transformer.notes %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="font-size: 16px; font-weight: 600; color: #374151; margin-bottom: 12px;">Especificações Técnicas</h3>
+      <div style="background: #f9fafb; padding: 16px; border-radius: 8px;">
+        <div>
+          <strong>Tensão Secundária:</strong>
+          <span style="display: inline-block; margin-left: 8px; padding: 4px 12px; border-radius: 6px; background: <%= @medium_voltage_transformer.bt_option.color %>; color: #fff; font-weight: 600;">
+            <%= @medium_voltage_transformer.voltage_display %>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

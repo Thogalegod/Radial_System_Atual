@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  resources :medium_voltage_transformers
+  resources :bt_options
+  resources :locations
+  resources :statuses
   root 'sessions#new'
 
   get    'login',  to: 'sessions#new'
@@ -15,7 +19,4 @@ Rails.application.routes.draw do
       get :contacts
     end
   end
-
-  resources :equipment
-  resources :categories
 end

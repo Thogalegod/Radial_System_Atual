@@ -1,0 +1,91 @@
+<div class="content-header">
+  <h1 class="page-title">Transformador MT</h1>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Transformadores MT em Estoque</h2>
+    <%= link_to new_medium_voltage_transformer_path, class: 'btn btn-primary' do %>
+      <span>+</span>
+      <span>Adicionar Transformador</span>
+    <% end %>
+  </div>
+
+  <% if @medium_voltage_transformers.any? %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Número</th>
+          <th>Tensão Secundária</th>
+          <th>Localização</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @medium_voltage_transformers.each do |transformer| %>
+          <tr>
+            <td><strong><%= transformer.serial_number %></strong></td>
+            <td>
+              <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.bt_option.color %>; color: #fff; font-weight: 600;">
+                <%= transformer.voltage_display %>
+              </span>
+            </td>
+            <td>
+              <% if transformer.location %>
+                <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.location.color %>; color: #fff; font-weight: 600;">
+                  <%= transformer.location.value %>
+                </span>
+              <% else %>
+                <span style="color: #6b7280;">Não definida</span>
+              <% end %>
+            </td>
+            <td>
+              <% if transformer.status %>
+                <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.status.color %>; color: #fff; font-weight: 600;">
+                  <%= transformer.status.value %>
+                </span>
+              <% else %>
+                <span style="color: #6b7280;">Não definido</span>
+              <% end %>
+            </td>
+            <td>
+              <div style="display: flex; gap: 8px;">
+                <%= link_to medium_voltage_transformer_path(transformer), class: 'btn btn-secondary btn-icon', title: 'Visualizar' do %>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                <% end %>
+                <%= link_to edit_medium_voltage_transformer_path(transformer), class: 'btn btn-secondary btn-icon', title: 'Editar' do %>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                <% end %>
+                <%= link_to medium_voltage_transformer_path(transformer), method: :delete, data: { confirm: 'Tem certeza?' }, class: 'btn btn-danger btn-icon', title: 'Excluir' do %>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3,6 5,6 21,6"/>
+                    <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                    <line x1="10" y1="11" x2="10" y2="17"/>
+                    <line x1="14" y1="11" x2="14" y2="17"/>
+                  </svg>
+                <% end %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <div style="text-align: center; padding: 48px 24px; color: #6b7280;">
+      <div style="font-size: 48px; margin-bottom: 16px;">⚡</div>
+      <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Nenhum transformador MT em estoque</h3>
+      <p style="margin-bottom: 24px;">Comece cadastrando seu primeiro transformador MT</p>
+      <%= link_to new_medium_voltage_transformer_path, class: 'btn btn-primary' do %>
+        <span>+</span>
+        <span>Adicionar Transformador</span>
+      <% end %>
+    </div>
+  <% end %>
+</div>
