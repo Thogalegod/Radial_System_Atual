@@ -3,7 +3,11 @@ Rails.application.routes.draw do
   resources :flag_options
   resources :installation_options
   resources :power_options
-  resources :medium_voltage_transformers
+  resources :medium_voltage_transformers do
+    collection do
+      get :filter
+    end
+  end
   resources :bt_options
   resources :locations
   resources :statuses

@@ -54,3 +54,240 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
+
+/* Modal de Filtros - Design Notion-like */
+.filter-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.filter-modal-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+.filter-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+}
+
+.filter-modal-overlay.show .filter-modal {
+  transform: scale(1);
+}
+
+.filter-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.filter-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.filter-btn-secondary {
+  background: white;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.filter-btn-secondary:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.filter-btn-primary {
+  background: #8b5cf6;
+  color: white;
+}
+
+.filter-btn-primary:hover {
+  background: #7c3aed;
+}
+
+.filter-modal-body {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.filter-section {
+  margin-bottom: 24px;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.filter-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 6px;
+}
+
+.filter-option:hover {
+  background: #f9fafb;
+}
+
+.filter-option:last-child {
+  margin-bottom: 0;
+}
+
+.filter-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+
+.filter-label {
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  flex: 1;
+}
+
+.filter-radio {
+  width: 18px;
+  height: 18px;
+  margin-right: 12px;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+
+.sort-direction {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.sort-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #6b7280;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.sort-btn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+  color: #374151;
+}
+
+.sort-btn.active {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+  color: white;
+}
+
+.sort-btn.active:hover {
+  background: #7c3aed;
+  border-color: #7c3aed;
+}
+
+/* Responsividade */
+@media (max-width: 640px) {
+  .filter-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .filter-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .filter-modal-body {
+    padding: 20px;
+  }
+  
+  .filter-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-width: 70px;
+  }
+}
+
+/* Animações suaves */
+.filter-modal-overlay * {
+  transition: all 0.2s ease;
+}
+
+/* Scrollbar customizada */
+.filter-modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-modal-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.filter-modal-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.filter-modal-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
