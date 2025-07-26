@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_25_225046) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_26_001746) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -47,6 +47,27 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_25_225046) do
     t.index ["client_id"], name: "index_contacts_on_client_id"
   end
 
+  create_table "cooling_options", force: :cascade do |t|
+    t.string "value"
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "flag_options", force: :cascade do |t|
+    t.string "value"
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "installation_options", force: :cascade do |t|
+    t.string "value"
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "locations", force: :cascade do |t|
     t.string "value"
     t.string "color"
@@ -63,9 +84,24 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_25_225046) do
     t.datetime "updated_at", null: false
     t.bigint "location_id"
     t.bigint "status_id"
+    t.bigint "power_option_id"
+    t.bigint "cooling_option_id"
+    t.bigint "flag_option_id"
+    t.bigint "installation_option_id"
     t.index ["bt_option_id"], name: "index_medium_voltage_transformers_on_bt_option_id"
+    t.index ["cooling_option_id"], name: "index_medium_voltage_transformers_on_cooling_option_id"
+    t.index ["flag_option_id"], name: "index_medium_voltage_transformers_on_flag_option_id"
+    t.index ["installation_option_id"], name: "index_medium_voltage_transformers_on_installation_option_id"
     t.index ["location_id"], name: "index_medium_voltage_transformers_on_location_id"
+    t.index ["power_option_id"], name: "index_medium_voltage_transformers_on_power_option_id"
     t.index ["status_id"], name: "index_medium_voltage_transformers_on_status_id"
+  end
+
+  create_table "power_options", force: :cascade do |t|
+    t.integer "value"
+    t.string "color"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "statuses", force: :cascade do |t|
@@ -86,6 +122,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_25_225046) do
 
   add_foreign_key "contacts", "clients"
   add_foreign_key "medium_voltage_transformers", "bt_options"
+  add_foreign_key "medium_voltage_transformers", "cooling_options"
+  add_foreign_key "medium_voltage_transformers", "flag_options"
+  add_foreign_key "medium_voltage_transformers", "installation_options"
   add_foreign_key "medium_voltage_transformers", "locations"
+  add_foreign_key "medium_voltage_transformers", "power_options"
   add_foreign_key "medium_voltage_transformers", "statuses"
 end

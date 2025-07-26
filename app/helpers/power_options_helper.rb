@@ -1,0 +1,2 @@
+module PowerOptionsHelper
+end

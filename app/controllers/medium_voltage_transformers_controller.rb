@@ -1,6 +1,6 @@
 class MediumVoltageTransformersController < ApplicationController
   def index
-    @medium_voltage_transformers = MediumVoltageTransformer.includes(:bt_option, :location, :status).order(:serial_number)
+    @medium_voltage_transformers = MediumVoltageTransformer.includes(:bt_option, :power_option, :location, :status, :cooling_option, :flag_option, :installation_option).order(:serial_number)
   end
 
   def show
@@ -47,6 +47,6 @@ class MediumVoltageTransformersController < ApplicationController
   private
 
   def medium_voltage_transformer_params
-    params.require(:medium_voltage_transformer).permit(:serial_number, :location_id, :status_id, :notes, :bt_option_id)
+    params.require(:medium_voltage_transformer).permit(:serial_number, :location_id, :status_id, :notes, :bt_option_id, :power_option_id, :cooling_option_id, :flag_option_id, :installation_option_id)
   end
 end

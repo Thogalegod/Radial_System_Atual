@@ -17,8 +17,12 @@
         <tr>
           <th>Número</th>
           <th>Tensão Secundária</th>
+          <th>Potência</th>
           <th>Localização</th>
           <th>Status</th>
+          <th>Refrigeração</th>
+          <th>Bandeira</th>
+          <th>Instalação</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -30,6 +34,15 @@
               <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.bt_option.color %>; color: #fff; font-weight: 600;">
                 <%= transformer.voltage_display %>
               </span>
+            </td>
+            <td>
+              <% if transformer.power_option %>
+                <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.power_option.color %>; color: #fff; font-weight: 600;">
+                  <%= transformer.power_display %>
+                </span>
+              <% else %>
+                <span style="color: #6b7280;">Não definida</span>
+              <% end %>
             </td>
             <td>
               <% if transformer.location %>
@@ -47,6 +60,33 @@
                 </span>
               <% else %>
                 <span style="color: #6b7280;">Não definido</span>
+              <% end %>
+            </td>
+            <td>
+              <% if transformer.cooling_option %>
+                <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.cooling_option.color %>; color: #fff; font-weight: 600;">
+                  <%= transformer.cooling_display %>
+                </span>
+              <% else %>
+                <span style="color: #6b7280;">Não definida</span>
+              <% end %>
+            </td>
+            <td>
+              <% if transformer.flag_option %>
+                <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.flag_option.color %>; color: #fff; font-weight: 600;">
+                  <%= transformer.flag_display %>
+                </span>
+              <% else %>
+                <span style="color: #6b7280;">Não definida</span>
+              <% end %>
+            </td>
+            <td>
+              <% if transformer.installation_option %>
+                <span style="display: inline-block; padding: 6px 16px; border-radius: 8px; background: <%= transformer.installation_option.color %>; color: #fff; font-weight: 600;">
+                  <%= transformer.installation_display %>
+                </span>
+              <% else %>
+                <span style="color: #6b7280;">Não definida</span>
               <% end %>
             </td>
             <td>
