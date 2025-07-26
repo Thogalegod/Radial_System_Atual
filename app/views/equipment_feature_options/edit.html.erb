@@ -1,0 +1,488 @@
+<div class="container">
+  <div class="header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-edit"></i>
+        Editar Opção
+      </h1>
+      <div class="header-actions">
+        <%= link_to equipment_feature_path(@equipment_feature), class: "btn btn-secondary" do %>
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Voltar para Característica</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <%= form_with(model: [@equipment_type, @equipment_feature, @equipment_feature_option], local: true, class: "form") do |form| %>
+      <%= render 'shared/form_errors', object: @equipment_feature_option %>
+
+      <div class="form-grid">
+        <div class="form-section">
+          <h2><i class="fas fa-info-circle"></i> Informações da Opção</h2>
+          
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature_option,
+              field: :value, 
+              label: 'Valor da Opção',
+              placeholder: 'Ex: Verde, 220V, Ativo',
+              required: true,
+              help_text: 'Este é o valor que será armazenado e exibido' %>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature_option,
+              field: :label, 
+              label: 'Rótulo (Opcional)',
+              placeholder: 'Ex: Bandeira Verde, Tensão 220V, Status Ativo',
+              help_text: 'Texto descritivo opcional. Se não preenchido, será usado o valor' %>
+
+          <div class="form-group">
+            <%= form.label :color, "Cor de Identificação", class: "form-label" %>
+            <div class="color-selector">
+              <%= form.color_field :color, 
+                  class: "form-control form-control-color", 
+                  id: "color-picker" %>
+              <div class="color-presets">
+                <h4>🎨 Cores Sugeridas:</h4>
+                <div class="color-grid">
+                  <button type="button" class="color-preset" data-color="#10B981" style="background-color: #10B981;" title="Verde"></button>
+                  <button type="button" class="color-preset" data-color="#3B82F6" style="background-color: #3B82F6;" title="Azul"></button>
+                  <button type="button" class="color-preset" data-color="#F59E0B" style="background-color: #F59E0B;" title="Amarelo"></button>
+                  <button type="button" class="color-preset" data-color="#EF4444" style="background-color: #EF4444;" title="Vermelho"></button>
+                  <button type="button" class="color-preset" data-color="#8B5CF6" style="background-color: #8B5CF6;" title="Roxo"></button>
+                  <button type="button" class="color-preset" data-color="#F97316" style="background-color: #F97316;" title="Laranja"></button>
+                  <button type="button" class="color-preset" data-color="#EC4899" style="background-color: #EC4899;" title="Rosa"></button>
+                  <button type="button" class="color-preset" data-color="#6B7280" style="background-color: #6B7280;" title="Cinza"></button>
+                  <button type="button" class="color-preset" data-color="#000000" style="background-color: #000000;" title="Preto"></button>
+                  <button type="button" class="color-preset" data-color="#FFFFFF" style="background-color: #FFFFFF; border: 1px solid #d1d5db;" title="Branco"></button>
+                </div>
+                <small class="form-help">
+                  <strong>💡 Dica:</strong> Clique em uma cor sugerida ou use o seletor acima para escolher qualquer cor.
+                  <br>• <strong>Verde:</strong> Operacional, funcionando
+                  <br>• <strong>Azul:</strong> Em manutenção, técnico
+                  <br>• <strong>Amarelo:</strong> Atenção, cuidado
+                  <br>• <strong>Vermelho:</strong> Parado, defeito, emergência
+                  <br>• <strong>Roxo:</strong> Especial, projeto
+                  <br>• <strong>Laranja:</strong> Aguardando, pendente
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature_option,
+              field: :icon_class, 
+              label: 'Ícone (Opcional)',
+              placeholder: 'Ex: fas fa-check, fas fa-times, fas fa-warning',
+              help_text: 'Classe CSS do ícone Font Awesome (ex: fas fa-check)' %>
+        </div>
+
+        <div class="form-section">
+          <h2><i class="fas fa-cog"></i> Configurações</h2>
+          
+          <div class="form-group">
+            <%= form.label :active, class: "form-label" do %>
+              <i class="fas fa-toggle-on"></i>
+              Ativo
+            <% end %>
+            <div class="checkbox-wrapper">
+              <%= form.check_box :active, class: "form-checkbox" %>
+              <label for="equipment_feature_option_active" class="checkbox-label">
+                Esta opção está ativa e pode ser selecionada
+              </label>
+            </div>
+            <small class="form-help">
+              <strong>✅ Ativo:</strong> Se marcado, esta opção aparecerá nas listas de seleção.
+              <br>Exemplo: Opção "Verde" ativa aparece quando você escolhe a bandeira de um equipamento.
+            </small>
+          </div>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature_option,
+              field: :sort_order, 
+              type: 'number',
+              label: 'Ordem de Exibição',
+              placeholder: '0',
+              help_text: 'Número para definir a ordem de exibição (menor = primeiro)' %>
+
+          <div class="info-card">
+            <h3><i class="fas fa-info-circle"></i> Informações</h3>
+            <div class="info-content">
+              <p><strong>Característica:</strong> <%= @equipment_feature.name %></p>
+              <p><strong>Tipo de Equipamento:</strong> <%= @equipment_type.name %></p>
+              <p><strong>Uso Atual:</strong> <%= @equipment_feature_option.usage_count %> equipamento(s)</p>
+              <% if @equipment_feature_option.is_used? %>
+                <div class="warning-message">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>Esta opção está sendo usada por equipamentos e não pode ser excluída.</span>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "Salvar Alterações", class: "btn btn-primary" %>
+        <%= link_to "Cancelar", equipment_feature_path(@equipment_feature), class: "btn btn-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.form-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border: 1px solid #e1e5e9;
+}
+
+.form {
+  padding: 30px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.form-section h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #3b82f6;
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.form-help {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.info-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.info-card h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-content p {
+  margin: 8px 0;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.warning-message {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.color-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-control-color {
+  width: 80px;
+  height: 50px;
+  padding: 0.25rem;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.form-control-color:hover {
+  border-color: #3b82f6;
+  transform: scale(1.05);
+}
+
+.color-presets {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.color-presets h4 {
+  margin: 0 0 15px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.color-preset {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.color-preset:hover {
+  transform: scale(1.1);
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.color-preset.selected {
+  border-color: #3b82f6;
+  border-width: 3px;
+  transform: scale(1.1);
+}
+
+.color-preset::after {
+  content: attr(title);
+  position: absolute;
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #374151;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.color-preset:hover::after {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .color-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const colorPicker = document.getElementById('color-picker');
+  const colorPresets = document.querySelectorAll('.color-preset');
+  
+  // Função para atualizar a cor selecionada
+  function updateSelectedColor(color) {
+    colorPicker.value = color;
+    
+    // Remove a classe 'selected' de todos os presets
+    colorPresets.forEach(preset => {
+      preset.classList.remove('selected');
+    });
+    
+    // Adiciona a classe 'selected' ao preset correspondente
+    colorPresets.forEach(preset => {
+      if (preset.dataset.color === color) {
+        preset.classList.add('selected');
+      }
+    });
+  }
+  
+  // Adiciona evento de clique aos presets
+  colorPresets.forEach(preset => {
+    preset.addEventListener('click', function() {
+      const color = this.dataset.color;
+      updateSelectedColor(color);
+      
+      // Feedback visual
+      this.style.transform = 'scale(1.2)';
+      setTimeout(() => {
+        this.style.transform = 'scale(1.1)';
+      }, 150);
+    });
+  });
+  
+  // Adiciona evento de mudança ao color picker
+  colorPicker.addEventListener('change', function() {
+    updateSelectedColor(this.value);
+  });
+  
+  // Inicializa com a cor atual
+  updateSelectedColor(colorPicker.value);
+});
+</script>

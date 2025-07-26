@@ -1,0 +1,382 @@
+<div class="container">
+  <div class="header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-edit"></i>
+        Editar Característica
+      </h1>
+      <div class="header-actions">
+        <%= link_to equipment_feature_path(@equipment_feature), class: "btn btn-secondary" do %>
+          <i class="fas fa-eye" aria-hidden="true"></i>
+          <span>Ver Detalhes</span>
+        <% end %>
+        <%= link_to equipment_features_path, class: "btn btn-outline" do %>
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Voltar</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <%= form_with(model: @equipment_feature, local: true, class: "form") do |form| %>
+      <%= render 'shared/form_errors', object: @equipment_feature %>
+
+      <div class="form-grid">
+        <div class="form-section">
+          <h2><i class="fas fa-info-circle"></i> Informações Básicas</h2>
+          
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature,
+              field: :name, 
+              label: 'Nome da Característica',
+              placeholder: 'Ex: Potência, Tensão, Fabricante',
+              required: true %>
+
+          <% if @equipment_types.present? %>
+            <div class="form-group">
+              <%= form.label :equipment_type_id, "Tipo de Equipamento", class: "form-label" %>
+              <%= form.select :equipment_type_id, 
+                  options_from_collection_for_select(@equipment_types, :id, :name, @equipment_feature.equipment_type_id),
+                  { prompt: "Selecione um tipo de equipamento" },
+                  { class: "form-select", required: true } %>
+            </div>
+          <% end %>
+
+          <div class="form-group">
+            <%= form.label :data_type, "Tipo de Dado", class: "form-label" %>
+            <%= form.select :data_type, 
+                [
+                  ['📝 Texto - Palavras e frases (ex: "Siemens", "Made in Germany")', 'string'],
+                  ['🔢 Número Inteiro - Números sem vírgula (ex: 100, 500, 1000)', 'integer'],
+                  ['📊 Número Decimal - Números com vírgula (ex: 100.5, 500.75)', 'float'],
+                  ['✅ Booleano - Sim ou Não (ex: Ativo/Inativo)', 'boolean'],
+                  ['📅 Data - Dia, mês e ano (ex: 15/03/2024)', 'date'],
+                  ['📋 Seleção - Lista de opções predefinidas (ex: 220V, 380V, 440V)', 'select']
+                ],
+                { prompt: "Escolha o tipo de dado mais adequado" },
+                { class: "form-select", required: true } %>
+            <small class="form-help">
+              <strong>💡 Dica:</strong> Escolha o tipo que melhor representa o valor que será armazenado.
+              <br>• <strong>Texto:</strong> Para nomes, descrições, fabricantes
+              <br>• <strong>Número Inteiro:</strong> Para potência em kW, tensão em V
+              <br>• <strong>Número Decimal:</strong> Para medidas precisas como temperatura
+              <br>• <strong>Booleano:</strong> Para status como ativo/inativo
+              <br>• <strong>Data:</strong> Para datas de fabricação, instalação
+              <br>• <strong>Seleção:</strong> Para valores fixos como tensões padrão
+            </small>
+          </div>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature,
+              field: :unit, 
+              label: 'Unidade de Medida',
+              placeholder: 'Ex: kW, V, A, Hz',
+              help_text: 'Opcional - unidade de medida da característica' %>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature,
+              field: :description, 
+              type: 'textarea',
+              label: 'Descrição',
+              placeholder: 'Descrição detalhada da característica',
+              help_text: 'Opcional - descrição para ajudar na identificação' %>
+        </div>
+
+        <div class="form-section">
+          <h2><i class="fas fa-cog"></i> Configurações</h2>
+          
+          <div class="form-group">
+            <%= form.label :required, class: "form-label" do %>
+              <i class="fas fa-exclamation-triangle"></i>
+              Obrigatório
+            <% end %>
+            <div class="checkbox-wrapper">
+              <%= form.check_box :required, class: "form-checkbox" %>
+              <label for="equipment_feature_required" class="checkbox-label">
+                Esta característica é obrigatória para equipamentos deste tipo
+              </label>
+            </div>
+            <small class="form-help">
+              <strong>🔴 Obrigatório:</strong> Se marcado, esta característica DEVE ser preenchida ao cadastrar qualquer equipamento deste tipo.
+              <br>Exemplo: "Potência" é obrigatória para transformadores, pois todo transformador tem uma potência.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :filterable, class: "form-label" do %>
+              <i class="fas fa-filter"></i>
+              Filtrável
+            <% end %>
+            <div class="checkbox-wrapper">
+              <%= form.check_box :filterable, class: "form-checkbox" %>
+              <label for="equipment_feature_filterable" class="checkbox-label">
+                Permitir filtrar equipamentos por esta característica
+              </label>
+            </div>
+            <small class="form-help">
+              <strong>🔍 Filtrável:</strong> Se marcado, esta característica aparecerá nos filtros da listagem de equipamentos.
+              <br>Exemplo: "Tensão" é filtrável, pois você pode querer ver apenas transformadores de 220V.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :searchable, class: "form-label" do %>
+              <i class="fas fa-search"></i>
+              Pesquisável
+            <% end %>
+            <div class="checkbox-wrapper">
+              <%= form.check_box :searchable, class: "form-checkbox" %>
+              <label for="equipment_feature_searchable" class="checkbox-label">
+                Permitir pesquisar equipamentos por esta característica
+              </label>
+            </div>
+            <small class="form-help">
+              <strong>🔎 Pesquisável:</strong> Se marcado, esta característica será incluída na busca geral de equipamentos.
+              <br>Exemplo: "Fabricante" é pesquisável, pois você pode querer encontrar todos os equipamentos da Siemens.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :sortable, class: "form-label" do %>
+              <i class="fas fa-sort"></i>
+              Ordenável
+            <% end %>
+            <div class="checkbox-wrapper">
+              <%= form.check_box :sortable, class: "form-checkbox" %>
+              <label for="equipment_feature_sortable" class="checkbox-label">
+                Permitir ordenar equipamentos por esta característica
+              </label>
+            </div>
+            <small class="form-help">
+              <strong>📊 Ordenável:</strong> Se marcado, esta característica aparecerá nas opções de ordenação da listagem.
+              <br>Exemplo: "Potência" é ordenável, pois você pode querer ver os equipamentos ordenados por potência (menor para maior).
+            </small>
+          </div>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature,
+              field: :color, 
+              type: 'color',
+              label: 'Cor de Identificação',
+              help_text: 'Escolha uma cor para identificar esta característica' %>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment_feature,
+              field: :sort_order, 
+              type: 'number',
+              label: 'Ordem de Exibição',
+              placeholder: '0',
+              help_text: 'Número para definir a ordem de exibição (menor = primeiro)' %>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "Salvar Alterações", class: "btn btn-primary" %>
+        <%= link_to "Cancelar", equipment_feature_path(@equipment_feature), class: "btn btn-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.form-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border: 1px solid #e1e5e9;
+}
+
+.form {
+  padding: 30px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.form-section h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  transition: all 0.2s;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #3b82f6;
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.form-help {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+</style>

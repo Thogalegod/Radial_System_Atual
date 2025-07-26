@@ -1,0 +1,638 @@
+<div class="container">
+  <div class="header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-cog" style="color: <%= @equipment_type.color %>;"></i>
+        <%= @equipment_type.name %>
+      </h1>
+      <div class="header-actions">
+        <%= link_to edit_equipment_type_path(@equipment_type), class: "btn btn-outline" do %>
+          <i class="fas fa-edit" aria-hidden="true"></i>
+          <span>Editar</span>
+        <% end %>
+        <%= link_to equipment_types_path, class: "btn btn-secondary" do %>
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Voltar</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-grid">
+    <!-- Informações Básicas -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-info-circle"></i> Informações Básicas</h2>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <label>Nome:</label>
+            <span><%= @equipment_type.name %></span>
+          </div>
+          <div class="info-item">
+            <label>Cor:</label>
+            <span>
+              <div class="color-preview" style="background-color: <%= @equipment_type.color %>;"></div>
+              <%= @equipment_type.color %>
+            </span>
+          </div>
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="status-badge <%= @equipment_type.active? ? 'active' : 'inactive' %>">
+              <%= @equipment_type.active? ? 'Ativo' : 'Inativo' %>
+            </span>
+          </div>
+          <div class="info-item">
+            <label>Criado em:</label>
+            <span><%= @equipment_type.created_at.strftime('%d/%m/%Y às %H:%M') %></span>
+          </div>
+          <div class="info-item">
+            <label>Atualizado em:</label>
+            <span><%= @equipment_type.updated_at.strftime('%d/%m/%Y às %H:%M') %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="card">
+      <div class="card-header">
+        <h2><i class="fas fa-chart-bar"></i> Estatísticas</h2>
+      </div>
+      <div class="card-body">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number"><%= @equipment_type.equipments.count %></div>
+            <div class="stat-label">Equipamentos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number"><%= @equipment_type.equipment_features.count %></div>
+            <div class="stat-label">Características</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Características -->
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-list"></i> Características (<%= @equipment_type.equipment_features.count %>)</h2>
+      <div class="card-actions">
+        <%= link_to new_equipment_type_equipment_feature_path(@equipment_type), class: "btn btn-primary btn-sm" do %>
+          <i class="fas fa-plus" aria-hidden="true"></i>
+          <span>Nova Característica</span>
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if @equipment_type.equipment_features.any? %>
+        <div class="features-grid">
+          <% @equipment_type.equipment_features.ordered.each do |feature| %>
+            <div class="feature-card">
+              <div class="feature-header">
+                <h3><%= feature.name %></h3>
+                <div class="feature-actions">
+                  <%= link_to edit_equipment_feature_path(feature), class: "btn-icon" do %>
+                    <i class="fas fa-edit" aria-hidden="true"></i>
+                  <% end %>
+                </div>
+              </div>
+              <div class="feature-details">
+                <div class="feature-info">
+                  <span class="badge badge-<%= feature.data_type %>"><%= feature.data_type.humanize %></span>
+                  <% if feature.required? %>
+                    <span class="badge badge-required">Obrigatório</span>
+                  <% end %>
+                  <% if feature.filterable? %>
+                    <span class="badge badge-filter">Filtrável</span>
+                  <% end %>
+                </div>
+                <% if feature.description.present? %>
+                  <p class="feature-description"><%= feature.description %></p>
+                <% end %>
+                <% if feature.equipment_feature_options.any? %>
+                  <div class="feature-options">
+                    <strong>Opções:</strong>
+                    <div class="options-list">
+                      <% feature.equipment_feature_options.each do |option| %>
+                        <span class="option-item">
+                          <div class="color-dot" style="background-color: <%= option.color %>;"></div>
+                          <%= option.value %>
+                        </span>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <i class="fas fa-list-alt"></i>
+          <h3>Nenhuma característica cadastrada</h3>
+          <p>Adicione características para definir as propriedades deste tipo de equipamento.</p>
+          <%= link_to new_equipment_type_equipment_feature_path(@equipment_type), class: "btn btn-primary" do %>
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            <span>Adicionar Primeira Característica</span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Equipamentos -->
+  <div class="card">
+    <div class="card-header">
+      <h2><i class="fas fa-tools"></i> Equipamentos (<%= @equipment_type.equipments.count %>)</h2>
+      <div class="card-actions">
+        <%= link_to new_equipment_path(equipment_type_id: @equipment_type.id), class: "btn btn-primary btn-sm" do %>
+          <i class="fas fa-plus" aria-hidden="true"></i>
+          <span>Novo Equipamento</span>
+        <% end %>
+      </div>
+    </div>
+    <div class="card-body">
+      <% if @equipment_type.equipments.any? %>
+        <div class="equipments-grid">
+          <% @equipment_type.equipments.limit(6).each do |equipment| %>
+            <div class="equipment-card">
+              <div class="equipment-header">
+                <h3><%= equipment.serial_number %></h3>
+                <span class="status-badge <%= equipment.status %>"><%= equipment.status_display %></span>
+              </div>
+              <div class="equipment-details">
+                <p><strong>Fabricante:</strong> <%= equipment.manufacturer %></p>
+                <p><strong>Modelo:</strong> <%= equipment.model %></p>
+                <p><strong>Localização:</strong> <%= equipment.location %></p>
+              </div>
+              <div class="equipment-actions">
+                <%= link_to equipment_path(equipment), class: "btn btn-outline btn-sm" do %>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
+                  <span>Ver</span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <% if @equipment_type.equipments.count > 6 %>
+            <div class="view-more">
+              <%= link_to equipments_path(equipment_type_id: @equipment_type.id), class: "btn btn-outline" do %>
+                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                <span>Ver Todos (<%= @equipment_type.equipments.count %>)</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <i class="fas fa-tools"></i>
+          <h3>Nenhum equipamento cadastrado</h3>
+          <p>Adicione equipamentos deste tipo para começar a gerenciar.</p>
+          <%= link_to new_equipment_path(equipment_type_id: @equipment_type.id), class: "btn btn-primary" do %>
+            <i class="fas fa-plus" aria-hidden="true"></i>
+            <span>Adicionar Primeiro Equipamento</span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border: 1px solid #e1e5e9;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px 25px;
+  border-bottom: 1px solid #e1e5e9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.card-body {
+  padding: 25px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  color: #2c3e50;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-preview {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #e1e5e9;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-badge.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+}
+
+.stat-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.feature-card {
+  background: #f8f9fa;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.feature-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.feature-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.feature-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.feature-info {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-string { background: #e3f2fd; color: #1976d2; }
+.badge-integer { background: #f3e5f5; color: #7b1fa2; }
+.badge-float { background: #e8f5e8; color: #388e3c; }
+.badge-boolean { background: #fff3e0; color: #f57c00; }
+.badge-required { background: #ffebee; color: #d32f2f; }
+.badge-filter { background: #e0f2f1; color: #00796b; }
+
+.feature-description {
+  color: #6c757d;
+  font-style: italic;
+  margin: 0;
+}
+
+.feature-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.equipments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.equipment-card {
+  background: #f8f9fa;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.equipment-card:hover {
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.equipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.equipment-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.equipment-details {
+  margin-bottom: 15px;
+}
+
+.equipment-details p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.equipment-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.view-more {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 20px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+}
+
+.empty-state p {
+  margin: 0 0 20px 0;
+  font-size: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-outline:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  color: #6c757d;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+@media (max-width: 768px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .features-grid,
+  .equipments-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

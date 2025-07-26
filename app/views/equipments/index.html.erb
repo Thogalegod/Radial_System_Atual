@@ -1,0 +1,731 @@
+<div class="equipments-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Equipamentos</h1>
+      <p>Gerencie todos os equipamentos do sistema</p>
+    </div>
+    <div class="header-actions">
+      <%= link_to new_equipment_path, class: "btn btn-primary" do %>
+        <i class="fas fa-plus" aria-hidden="true"></i>
+        <span>Novo Equipamento</span>
+      <% end %>
+      <%= link_to export_csv_equipments_path(format: :csv), class: "btn btn-outline" do %>
+        <i class="fas fa-download" aria-hidden="true"></i>
+        <span>Exportar CSV</span>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filters-header">
+      <h3>Filtros</h3>
+      <button class="btn btn-sm btn-outline" onclick="toggleFilters()">
+        <i class="fas fa-filter"></i>
+        Mostrar/Ocultar
+      </button>
+    </div>
+    
+    <div class="filters-content" id="filtersContent">
+      <%= form_with url: equipments_path, method: :get, local: true, class: "filters-form" do |form| %>
+        <div class="filters-grid">
+          <!-- Filtros básicos -->
+          <div class="filter-group">
+            <label class="filter-label" for="search">Buscar</label>
+            <%= form.text_field :search, 
+                value: params[:search], 
+                placeholder: "Número de série, fabricante, modelo...", 
+                class: "form-control",
+                id: "search",
+                "aria-describedby" => "search-help" %>
+            <div id="search-help" class="sr-only">Digite para buscar por número de série, fabricante ou modelo</div>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="equipment_type_id">Tipo de Equipamento</label>
+            <%= form.select :equipment_type_id, 
+                options_from_collection_for_select(@equipment_types, :id, :name, params[:equipment_type_id]), 
+                { prompt: "Todos os tipos" }, 
+                { class: "form-control", id: "equipment_type_id" } %>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="status">Status</label>
+            <%= form.select :status, 
+                options_for_select([
+                  ['Ativo', 'active'],
+                  ['Inativo', 'inactive'],
+                  ['Manutenção', 'maintenance'],
+                  ['Aposentado', 'retired']
+                ], params[:status]), 
+                { prompt: "Todos os status" }, 
+                { class: "form-control", id: "status" } %>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="location">Localização</label>
+            <%= form.text_field :location, 
+                value: params[:location], 
+                placeholder: "Digite a localização", 
+                class: "form-control",
+                id: "location" %>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="manufacturer">Fabricante</label>
+            <%= form.text_field :manufacturer, 
+                value: params[:manufacturer], 
+                placeholder: "Digite o fabricante", 
+                class: "form-control",
+                id: "manufacturer" %>
+          </div>
+
+          <div class="filter-group">
+            <label class="filter-label" for="installation_date_from">Data de Instalação</label>
+            <div class="date-range">
+              <%= form.date_field :installation_date_from, 
+                  value: params[:installation_date_from], 
+                  class: "form-control",
+                  id: "installation_date_from",
+                  "aria-label" => "Data de instalação de" %>
+              <span aria-hidden="true">até</span>
+              <%= form.date_field :installation_date_to, 
+                  value: params[:installation_date_to], 
+                  class: "form-control",
+                  id: "installation_date_to",
+                  "aria-label" => "Data de instalação até" %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filtros de características dinâmicas -->
+        <% EquipmentType.active.each do |equipment_type| %>
+          <% equipment_type.equipment_features.filterable.each do |feature| %>
+            <div class="filter-group">
+              <label class="filter-label"><%= feature.name %></label>
+              <% if feature.data_type == 'select' %>
+                <%= form.select "feature_filters[#{feature.name}]", 
+                    options_from_collection_for_select(feature.equipment_feature_options.active, :value, :label, params.dig(:feature_filters, feature.name)), 
+                    { prompt: "Todas as opções" }, 
+                    { class: "form-control" } %>
+              <% else %>
+                <%= form.text_field "feature_filters[#{feature.name}]", 
+                    value: params.dig(:feature_filters, feature.name), 
+                    placeholder: "Digite o valor", 
+                    class: "form-control" %>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <div class="filters-actions">
+          <%= form.submit "Aplicar Filtros", class: "btn btn-primary" %>
+          <%= link_to "Limpar Filtros", equipments_path, class: "btn btn-outline" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Lista de Equipamentos -->
+  <div class="equipments-section">
+    <div class="section-header">
+      <div class="results-info">
+        <h3>Resultados (<%= @equipments.count %> equipamentos)</h3>
+      </div>
+      <div class="section-actions">
+        <div class="sort-controls">
+          <label>Ordenar por:</label>
+          <%= form_with url: equipments_path, method: :get, local: true, class: "sort-form" do |form| %>
+            <%= form.hidden_field :search, value: params[:search] %>
+            <%= form.hidden_field :equipment_type_id, value: params[:equipment_type_id] %>
+            <%= form.hidden_field :status, value: params[:status] %>
+            <%= form.hidden_field :location, value: params[:location] %>
+            <%= form.hidden_field :manufacturer, value: params[:manufacturer] %>
+            
+            <%= form.select :sort_field, 
+                options_for_select([
+                  ['Número de Série', 'serial_number'],
+                  ['Tipo de Equipamento', 'equipment_type'],
+                  ['Status', 'status'],
+                  ['Localização', 'location'],
+                  ['Fabricante', 'manufacturer'],
+                  ['Data de Criação', 'created_at'],
+                  ['Última Atualização', 'updated_at']
+                ], params[:sort_field]), 
+                {}, 
+                { class: "form-control form-control-sm", onchange: "this.form.submit()" } %>
+            
+            <%= form.select :sort_direction, 
+                options_for_select([
+                  ['Crescente', 'asc'],
+                  ['Decrescente', 'desc']
+                ], params[:sort_direction]), 
+                {}, 
+                { class: "form-control form-control-sm", onchange: "this.form.submit()" } %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="equipments-grid">
+      <% if @equipments.any? %>
+        <% @equipments.each do |equipment| %>
+          <div class="equipment-card">
+            <div class="card-header">
+              <div class="equipment-icon">
+                <i class="<%= equipment.equipment_type.icon_class %>"></i>
+              </div>
+              <div class="equipment-info">
+                <h4><%= equipment.serial_number %></h4>
+                <p><%= equipment.equipment_type.name %></p>
+              </div>
+              <div class="equipment-status">
+                <span class="status-badge" style="background-color: <%= equipment.status_color %>">
+                  <%= equipment.status_display %>
+                </span>
+              </div>
+            </div>
+
+            <div class="card-details">
+              <% if equipment.location.present? %>
+                <div class="detail-item">
+                  <span class="detail-label">Localização:</span>
+                  <span class="detail-value"><%= equipment.location %></span>
+                </div>
+              <% end %>
+              
+              <% if equipment.manufacturer.present? %>
+                <div class="detail-item">
+                  <span class="detail-label">Fabricante:</span>
+                  <span class="detail-value"><%= equipment.manufacturer %></span>
+                </div>
+              <% end %>
+              
+              <% if equipment.model.present? %>
+                <div class="detail-item">
+                  <span class="detail-label">Modelo:</span>
+                  <span class="detail-value"><%= equipment.model %></span>
+                </div>
+              <% end %>
+            </div>
+
+            <!-- Características dinâmicas -->
+            <% equipment.feature_values.each do |feature_name, value_record| %>
+              <% if value_record.has_value? %>
+                <div class="feature-item">
+                  <span class="feature-label"><%= feature_name %>:</span>
+                  <span class="feature-value" style="color: <%= value_record.option_color %>">
+                    <%= value_record.formatted_value %>
+                  </span>
+                </div>
+              <% end %>
+            <% end %>
+
+            <div class="card-actions">
+              <%= link_to equipment_path(equipment), class: "btn btn-sm btn-outline" do %>
+                <i class="fas fa-eye"></i>
+                Ver
+              <% end %>
+              
+              <%= link_to edit_equipment_path(equipment), class: "btn btn-sm btn-outline" do %>
+                <i class="fas fa-edit"></i>
+                Editar
+              <% end %>
+              
+              <button onclick="deleteEquipment(<%= equipment.id %>, '<%= equipment.serial_number %>')" 
+                      class="btn btn-sm btn-danger">
+                <i class="fas fa-trash"></i>
+                Excluir
+              </button>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="empty-state">
+          <div class="empty-icon">⚡</div>
+          <h3>Nenhum equipamento encontrado</h3>
+          <p>Tente ajustar os filtros ou cadastre o primeiro equipamento.</p>
+          <%= link_to new_equipment_path, class: "btn btn-primary" do %>
+            <i class="fas fa-plus"></i>
+            Cadastrar Equipamento
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+.equipments-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  gap: 2rem;
+}
+
+.header-content h1 {
+  font-size: 2.5rem;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.header-content p {
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.header-actions {
+  flex-shrink: 0;
+}
+
+.filters-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filters-header h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.filters-content {
+  display: none;
+}
+
+.filters-content.show {
+  display: block;
+}
+
+.filters-form {
+  space-y: 1rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
+.date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-range span {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.filters-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.equipments-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.results-info h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sort-controls label {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.sort-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.equipments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.equipment-card {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.equipment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+  border-color: #3b82f6;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.equipment-icon {
+  width: 40px;
+  height: 40px;
+  background: #3b82f6;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.equipment-info {
+  flex: 1;
+}
+
+.equipment-info h4 {
+  margin: 0 0 0.25rem 0;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.equipment-info p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.equipment-status {
+  flex-shrink: 0;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.card-details {
+  margin-bottom: 1rem;
+  space-y: 0.5rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: #1f2937;
+  font-size: 0.9rem;
+}
+
+.feature-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.feature-item:last-child {
+  border-bottom: none;
+}
+
+.feature-label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.feature-value {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  border: 1px solid #d1d5db;
+  color: #374151;
+  background: white;
+}
+
+.btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin: 0 0 2rem 0;
+  font-size: 1.1rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Melhorar foco para navegação por teclado */
+.btn:focus,
+.form-control:focus,
+select:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Melhorar contraste para acessibilidade */
+.status-badge {
+  font-weight: 600;
+}
+
+/* Skip link para acessibilidade */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #3b82f6;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+@media (max-width: 768px) {
+  .equipments-page {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .equipments-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .card-actions {
+    justify-content: center;
+  }
+}
+</style>
+
+<script>
+function toggleFilters() {
+  const filtersContent = document.getElementById('filtersContent');
+  filtersContent.classList.toggle('show');
+}
+
+function deleteEquipment(equipmentId, serialNumber) {
+  if (confirm('Tem certeza que deseja excluir o equipamento ' + serialNumber + '?')) {
+    // Criar um formulário temporário para enviar a requisição DELETE
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/equipments/' + equipmentId;
+    
+    // Adicionar o token CSRF
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'authenticity_token';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    // Adicionar campo para simular método DELETE
+    const methodInput = document.createElement('input');
+    methodInput.type = 'hidden';
+    methodInput.name = '_method';
+    methodInput.value = 'DELETE';
+    form.appendChild(methodInput);
+    
+    // Adicionar formulário ao DOM e enviar
+    document.body.appendChild(form);
+    form.submit();
+  }
+}
+</script>

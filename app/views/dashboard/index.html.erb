@@ -1,0 +1,602 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h1>Dashboard</h1>
+    <p>Visão geral do sistema de gerenciamento de equipamentos</p>
+  </div>
+
+  <!-- Cards de Estatísticas -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">🏷️</div>
+      <div class="stat-content">
+        <h3><%= @total_equipment_types %></h3>
+        <p>Tipos de Equipamento</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">⚡</div>
+      <div class="stat-content">
+        <h3><%= @total_equipments %></h3>
+        <p>Equipamentos Cadastrados</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🔧</div>
+      <div class="stat-content">
+        <h3><%= @total_features %></h3>
+        <p>Características Definidas</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">📋</div>
+      <div class="stat-content">
+        <h3><%= @total_options %></h3>
+        <p>Opções de Características</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos e Estatísticas -->
+  <div class="dashboard-grid">
+    <!-- Equipamentos por Status -->
+    <div class="dashboard-card">
+      <h3>Equipamentos por Status</h3>
+      <div class="chart-container">
+        <canvas id="statusChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Equipamentos por Tipo -->
+    <div class="dashboard-card">
+      <h3>Equipamentos por Tipo</h3>
+      <div class="chart-container">
+        <canvas id="typeChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listas Recentes -->
+  <div class="dashboard-grid">
+    <!-- Equipamentos Recentes -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>Equipamentos Recentes</h3>
+        <%= link_to "Ver Todos", equipments_path, class: "btn btn-sm btn-outline" %>
+      </div>
+      <div class="recent-list">
+        <% if @recent_equipments.any? %>
+          <% @recent_equipments.each do |equipment| %>
+            <div class="recent-item">
+              <div class="recent-icon">⚡</div>
+              <div class="recent-content">
+                <h4><%= equipment.serial_number %></h4>
+                <p><%= equipment.equipment_type.name %></p>
+                <span class="recent-date"><%= equipment.created_at.strftime('%d/%m/%Y') %></span>
+              </div>
+              <div class="recent-status" style="background-color: <%= equipment.status_color %>">
+                <%= equipment.status_display %>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="empty-state">Nenhum equipamento cadastrado ainda.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Equipamentos em Manutenção -->
+    <div class="dashboard-card">
+      <div class="card-header">
+        <h3>Em Manutenção</h3>
+        <%= link_to "Ver Todos", equipments_path(status: 'maintenance'), class: "btn btn-sm btn-outline" %>
+      </div>
+      <div class="maintenance-list">
+        <% if @maintenance_equipments.any? %>
+          <% @maintenance_equipments.each do |equipment| %>
+            <div class="maintenance-item">
+              <div class="maintenance-icon">🔧</div>
+              <div class="maintenance-content">
+                <h4><%= equipment.serial_number %></h4>
+                <p><%= equipment.equipment_type.name %></p>
+                <span class="maintenance-location"><%= equipment.location %></span>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <p class="empty-state">Nenhum equipamento em manutenção.</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manutenções Próximas -->
+  <div class="dashboard-card">
+    <div class="card-header">
+      <h3>Manutenções Próximas (30 dias)</h3>
+      <%= link_to "Ver Todos", equipments_path, class: "btn btn-sm btn-outline" %>
+    </div>
+    <div class="upcoming-list">
+      <% if @upcoming_maintenance.any? %>
+        <% @upcoming_maintenance.each do |equipment| %>
+          <div class="upcoming-item">
+            <div class="upcoming-icon">📅</div>
+            <div class="upcoming-content">
+              <h4><%= equipment.serial_number %></h4>
+              <p><%= equipment.equipment_type.name %></p>
+              <span class="upcoming-date">
+                Próxima manutenção: <%= equipment.next_maintenance_date.strftime('%d/%m/%Y') %>
+              </span>
+            </div>
+            <div class="upcoming-days">
+              <% days_until = (equipment.next_maintenance_date - Date.current).to_i %>
+              <span class="days-badge <%= days_until <= 7 ? 'urgent' : days_until <= 14 ? 'warning' : 'normal' %>">
+                <%= days_until %> dias
+              </span>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <p class="empty-state">Nenhuma manutenção agendada para os próximos 30 dias.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Ações Rápidas -->
+  <div class="quick-actions">
+    <h3>Ações Rápidas</h3>
+    <div class="actions-grid">
+      <%= link_to new_equipment_path, class: "action-card" do %>
+        <div class="action-icon">➕</div>
+        <h4>Novo Equipamento</h4>
+        <p>Cadastrar um novo equipamento</p>
+      <% end %>
+
+      <%= link_to equipment_types_path, class: "action-card" do %>
+        <div class="action-icon">🏷️</div>
+        <h4>Tipos de Equipamento</h4>
+        <p>Gerenciar tipos e características</p>
+      <% end %>
+
+      <%= link_to equipments_path, class: "action-card" do %>
+        <div class="action-icon">📋</div>
+        <h4>Lista de Equipamentos</h4>
+        <p>Visualizar todos os equipamentos</p>
+      <% end %>
+
+      <%= link_to clients_path, class: "action-card" do %>
+        <div class="action-icon">👥</div>
+        <h4>Clientes</h4>
+        <p>Gerenciar clientes</p>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<script>
+// Gráfico de Status
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusData = {
+  labels: <%= raw @equipments_by_status.keys.map { |status| Equipment.new(status: status).status_display }.to_json %>,
+  datasets: [{
+    data: <%= raw @equipments_by_status.values.to_json %>,
+    backgroundColor: [
+      '#10b981', // Ativo - Verde
+      '#f59e0b', // Manutenção - Amarelo
+      '#6b7280', // Inativo - Cinza
+      '#ef4444'  // Aposentado - Vermelho
+    ],
+    borderWidth: 2,
+    borderColor: '#ffffff'
+  }]
+};
+
+new Chart(statusCtx, {
+  type: 'doughnut',
+  data: statusData,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom',
+        labels: {
+          padding: 20,
+          usePointStyle: true
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+            const percentage = ((context.parsed / total) * 100).toFixed(1);
+            return `${context.label}: ${context.parsed} (${percentage}%)`;
+          }
+        }
+      }
+    }
+  }
+});
+
+// Gráfico de Tipos
+const typeCtx = document.getElementById('typeChart').getContext('2d');
+const typeData = {
+  labels: <%= raw @equipments_by_type.keys.to_json %>,
+  datasets: [{
+    label: 'Quantidade de Equipamentos',
+    data: <%= raw @equipments_by_type.values.to_json %>,
+    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+    borderColor: 'rgba(59, 130, 246, 1)',
+    borderWidth: 2,
+    borderRadius: 4
+  }]
+};
+
+new Chart(typeCtx, {
+  type: 'bar',
+  data: typeData,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.parsed.y} equipamentos`;
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1
+        }
+      }
+    }
+  }
+});
+</script>
+
+<style>
+.dashboard {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.dashboard-header h1 {
+  font-size: 2.5rem;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  font-size: 2rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.stat-content h3 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #1f2937;
+  margin: 0;
+}
+
+.stat-content p {
+  color: #6b7280;
+  margin: 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.status-chart, .type-chart {
+  space-y: 1rem;
+}
+
+.status-item, .type-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.status-bar, .type-bar {
+  flex: 1;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.status-fill, .type-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.status-info, .type-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 120px;
+}
+
+.status-label, .type-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.status-count, .type-count {
+  font-weight: bold;
+  color: #1f2937;
+}
+
+.recent-list, .maintenance-list, .upcoming-list {
+  space-y: 0.75rem;
+}
+
+.recent-item, .maintenance-item, .upcoming-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: background-color 0.2s;
+}
+
+.recent-item:hover, .maintenance-item:hover, .upcoming-item:hover {
+  background: #f3f4f6;
+}
+
+.recent-icon, .maintenance-icon, .upcoming-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recent-content, .maintenance-content, .upcoming-content {
+  flex: 1;
+}
+
+.recent-content h4, .maintenance-content h4, .upcoming-content h4 {
+  margin: 0 0 0.25rem 0;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.recent-content p, .maintenance-content p, .upcoming-content p {
+  margin: 0 0 0.25rem 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.recent-date, .maintenance-location, .upcoming-date {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.recent-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.upcoming-days {
+  display: flex;
+  align-items: center;
+}
+
+.days-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.days-badge.urgent {
+  background: #ef4444;
+  color: white;
+}
+
+.days-badge.warning {
+  background: #f59e0b;
+  color: white;
+}
+
+.days-badge.normal {
+  background: #10b981;
+  color: white;
+}
+
+.empty-state {
+  text-align: center;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 2rem;
+}
+
+.quick-actions {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.quick-actions h3 {
+  margin: 0 0 1.5rem 0;
+  color: #1f2937;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.action-card {
+  display: block;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background: #f9fafb;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.action-card:hover {
+  background: #f3f4f6;
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+.action-icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.action-card h4 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.action-card p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-sm {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.btn-outline {
+  border: 1px solid #d1d5db;
+  color: #374151;
+  background: white;
+}
+
+.btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.chart-container {
+  position: relative;
+  height: 300px;
+  margin-top: 1rem;
+}
+
+.chart-container canvas {
+  max-height: 100%;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

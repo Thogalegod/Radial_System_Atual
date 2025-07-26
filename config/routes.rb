@@ -1,16 +1,33 @@
 Rails.application.routes.draw do
-  resources :cooling_options
-  resources :flag_options
-  resources :installation_options
-  resources :power_options
-  resources :medium_voltage_transformers do
-    collection do
-      get :filter
+  get "dashboard/index"
+  # Rotas para o sistema genérico de equipamentos
+  resources :equipment_types do
+    resources :equipment_features, except: [:show] do
+      resources :equipment_feature_options, except: [:show]
+    end
+    member do
+      get :equipment_features, defaults: { format: :json }
     end
   end
-  resources :bt_options
-  resources :locations
-  resources :statuses
+  
+  # Rotas independentes para características
+  resources :equipment_features, only: [:index, :show, :new, :create, :edit, :update, :destroy]
+  
+  resources :equipments do
+    collection do
+      get :filter
+      get :export_csv
+    end
+  end
+  
+  # Rotas para clientes (mantidas do sistema anterior)
+  resources :clients do
+    member do
+      get :contacts
+    end
+  end
+
+  # Rotas de autenticação
   root 'sessions#new'
 
   get    'login',  to: 'sessions#new'
@@ -20,11 +37,5 @@ Rails.application.routes.draw do
   get  'signup', to: 'users#new'
   post 'signup', to: 'users#create'
 
-  get 'dashboard', to: 'users#show'
-
-  resources :clients do
-    member do
-      get :contacts
-    end
-  end
+  get 'dashboard', to: 'dashboard#index'
 end

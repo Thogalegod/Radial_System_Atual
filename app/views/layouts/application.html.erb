@@ -5,7 +5,25 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
+    <meta name="csrf-token" content="<%= form_authenticity_token %>">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    
+    <!-- Chart.js para gráficos interativos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Rails UJS para suporte a method: :delete -->
+    <script src="https://cdn.jsdelivr.net/npm/@rails/ujs@7.1.3/lib/assets/compiled/rails-ujs.min.js"></script>
+    <script>
+      // Inicializar Rails UJS
+      document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Rails !== 'undefined') {
+          Rails.start();
+        }
+      });
+    </script>
+    
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
       * {
         margin: 0;
@@ -515,25 +533,17 @@
             <span>Clientes</span>
           </a>
           
-          <div class="nav-item <%= 'active' if ['medium_voltage_transformers', 'bt_options', 'locations', 'statuses'].include?(controller_name) %>">
+          <div class="nav-item <%= 'active' if ['equipments', 'equipment_types', 'equipment_features'].include?(controller_name) %>">
             <div class="nav-icon">⚡</div>
-            <span>Transformador MT</span>
+            <span>Equipamentos</span>
             <div class="submenu">
-              <a href="<%= medium_voltage_transformers_path %>" class="submenu-item <%= 'active' if controller_name == 'medium_voltage_transformers' %>">
+              <a href="<%= equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' %>">
                 <div class="nav-icon">📋</div>
-                <span>Lista de Transformadores</span>
+                <span>Lista de Equipamentos</span>
               </a>
-              <a href="<%= bt_options_path %>" class="submenu-item <%= 'active' if controller_name == 'bt_options' %>">
-                <div class="nav-icon">⚡</div>
-                <span>Categorias de Tensão</span>
-              </a>
-              <a href="<%= locations_path %>" class="submenu-item <%= 'active' if controller_name == 'locations' %>">
-                <div class="nav-icon">📍</div>
-                <span>Categorias de Localização</span>
-              </a>
-              <a href="<%= statuses_path %>" class="submenu-item <%= 'active' if controller_name == 'statuses' %>">
+              <a href="<%= equipment_types_path %>" class="submenu-item <%= 'active' if controller_name == 'equipment_types' %>">
                 <div class="nav-icon">🏷️</div>
-                <span>Categorias de Status</span>
+                <span>Tipos de Equipamento</span>
               </a>
             </div>
           </div>

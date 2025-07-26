@@ -1,0 +1,698 @@
+<div class="container">
+  <div class="header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-list"></i>
+        Características de Equipamentos
+      </h1>
+      <div class="header-actions">
+        <%= link_to new_equipment_feature_path, class: "btn btn-primary" do %>
+          <i class="fas fa-plus" aria-hidden="true"></i>
+          <span>Nova Característica</span>
+        <% end %>
+        <%= link_to equipment_types_path, class: "btn btn-secondary" do %>
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Tipos de Equipamento</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filters-header">
+      <h2><i class="fas fa-filter"></i> Filtros</h2>
+      <button class="btn btn-outline btn-sm" onclick="toggleFilters()">
+        <i class="fas fa-chevron-down" id="filter-icon"></i>
+        <span>Mostrar/Ocultar</span>
+      </button>
+    </div>
+    
+    <div class="filters-content" id="filters-content">
+      <%= form_with(url: equipment_features_path, method: :get, local: true, class: "filters-form") do |form| %>
+        <div class="filters-grid">
+          <div class="filter-group">
+            <%= form.label :equipment_type_id, "Tipo de Equipamento", class: "filter-label" %>
+            <%= form.select :equipment_type_id, 
+                options_from_collection_for_select(EquipmentType.active, :id, :name, params[:equipment_type_id]),
+                { prompt: "Todos os tipos" },
+                { class: "filter-select" } %>
+          </div>
+          
+          <div class="filter-group">
+            <%= form.label :data_type, "Tipo de Dado", class: "filter-label" %>
+            <%= form.select :data_type,
+                options_for_select([
+                  ['Texto', 'string'],
+                  ['Número Inteiro', 'integer'],
+                  ['Número Decimal', 'float'],
+                  ['Booleano', 'boolean']
+                ], params[:data_type]),
+                { prompt: "Todos os tipos" },
+                { class: "filter-select" } %>
+          </div>
+          
+          <div class="filter-group">
+            <%= form.label :required, "Obrigatório", class: "filter-label" %>
+            <%= form.select :required,
+                options_for_select([
+                  ['Sim', 'true'],
+                  ['Não', 'false']
+                ], params[:required]),
+                { prompt: "Todos" },
+                { class: "filter-select" } %>
+          </div>
+          
+          <div class="filter-group">
+            <%= form.label :filterable, "Filtrável", class: "filter-label" %>
+            <%= form.select :filterable,
+                options_for_select([
+                  ['Sim', 'true'],
+                  ['Não', 'false']
+                ], params[:filterable]),
+                { prompt: "Todos" },
+                { class: "filter-select" } %>
+          </div>
+        </div>
+        
+        <div class="filters-actions">
+          <%= form.submit "Filtrar", class: "btn btn-primary" %>
+          <%= link_to "Limpar", equipment_features_path, class: "btn btn-outline" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Estatísticas -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-list-alt"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= @equipment_features.count %></div>
+          <div class="stat-label">Total de Características</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-cog"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= EquipmentType.active.count %></div>
+          <div class="stat-label">Tipos de Equipamento</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= @equipment_features.where(required: true).count %></div>
+          <div class="stat-label">Obrigatórias</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-filter"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= @equipment_features.where(filterable: true).count %></div>
+          <div class="stat-label">Filtráveis</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de Características -->
+  <div class="features-section">
+    <% if @equipment_features.any? %>
+      <div class="features-grid">
+        <% @equipment_features.each do |feature| %>
+          <div class="feature-card">
+            <div class="feature-header">
+              <div class="feature-title">
+                <h3><%= feature.name %></h3>
+                <span class="equipment-type-badge" style="background-color: <%= feature.equipment_type.color %>;">
+                  <%= feature.equipment_type.name %>
+                </span>
+              </div>
+              <div class="feature-actions">
+                <%= link_to edit_equipment_feature_path(feature), class: "btn-icon" do %>
+                  <i class="fas fa-edit" aria-hidden="true"></i>
+                <% end %>
+                <%= link_to equipment_feature_path(feature), class: "btn-icon" do %>
+                  <i class="fas fa-eye" aria-hidden="true"></i>
+                <% end %>
+              </div>
+            </div>
+            
+            <div class="feature-details">
+              <div class="feature-info">
+                <span class="badge badge-<%= feature.data_type %>"><%= feature.data_type.humanize %></span>
+                <% if feature.required? %>
+                  <span class="badge badge-required">Obrigatório</span>
+                <% end %>
+                <% if feature.filterable? %>
+                  <span class="badge badge-filter">Filtrável</span>
+                <% end %>
+              </div>
+              
+              <% if feature.description.present? %>
+                <p class="feature-description"><%= feature.description %></p>
+              <% end %>
+              
+              <% if feature.equipment_feature_options.any? %>
+                <div class="feature-options">
+                  <strong>Opções:</strong>
+                  <div class="options-list">
+                    <% feature.equipment_feature_options.limit(5).each do |option| %>
+                      <span class="option-item">
+                        <div class="color-dot" style="background-color: <%= option.color %>;"></div>
+                        <%= option.value %>
+                      </span>
+                    <% end %>
+                    <% if feature.equipment_feature_options.count > 5 %>
+                      <span class="option-more">+<%= feature.equipment_feature_options.count - 5 %> mais</span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+              
+              <div class="feature-meta">
+                <small>
+                  <i class="fas fa-calendar"></i>
+                  Criado em <%= feature.created_at.strftime('%d/%m/%Y') %>
+                </small>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="empty-state">
+        <i class="fas fa-list-alt"></i>
+        <h3>Nenhuma característica encontrada</h3>
+        <p>
+          <% if params[:equipment_type_id].present? || params[:data_type].present? || params[:required].present? || params[:filterable].present? %>
+            Tente ajustar os filtros ou
+          <% end %>
+          Crie a primeira característica para começar.
+        </p>
+        <%= link_to new_equipment_feature_path, class: "btn btn-primary" do %>
+          <i class="fas fa-plus" aria-hidden="true"></i>
+          <span>Criar Primeira Característica</span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filters-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+  border: 1px solid #e1e5e9;
+  overflow: hidden;
+}
+
+.filters-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px 25px;
+  border-bottom: 1px solid #e1e5e9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filters-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filters-content {
+  padding: 25px;
+  display: none;
+}
+
+.filters-content.show {
+  display: block;
+}
+
+.filters-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-select {
+  padding: 10px 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.filters-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e1e5e9;
+}
+
+.stats-section {
+  margin-bottom: 30px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 25px;
+  border: 1px solid #e1e5e9;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  color: #6c757d;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.features-section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border: 1px solid #e1e5e9;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+  padding: 25px;
+}
+
+.feature-card {
+  background: #f8f9fa;
+  border: 1px solid #e1e5e9;
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.feature-title {
+  flex: 1;
+}
+
+.feature-title h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  color: #2c3e50;
+}
+
+.equipment-type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.feature-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.feature-details {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.feature-info {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-string { background: #e3f2fd; color: #1976d2; }
+.badge-integer { background: #f3e5f5; color: #7b1fa2; }
+.badge-float { background: #e8f5e8; color: #388e3c; }
+.badge-boolean { background: #fff3e0; color: #f57c00; }
+.badge-required { background: #ffebee; color: #d32f2f; }
+.badge-filter { background: #e0f2f1; color: #00796b; }
+
+.feature-description {
+  color: #6c757d;
+  font-style: italic;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.feature-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.options-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.option-more {
+  color: #6c757d;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.feature-meta {
+  padding-top: 10px;
+  border-top: 1px solid #e1e5e9;
+}
+
+.feature-meta small {
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  margin: 0 0 30px 0;
+  font-size: 1.1rem;
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-outline:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  color: #6c757d;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filters-actions {
+    flex-direction: column;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+    padding: 15px;
+  }
+  
+  .feature-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .feature-actions {
+    align-self: flex-end;
+  }
+}
+</style>
+
+<script>
+function toggleFilters() {
+  const filtersContent = document.getElementById('filters-content');
+  const filterIcon = document.getElementById('filter-icon');
+  
+  filtersContent.classList.toggle('show');
+  
+  if (filtersContent.classList.contains('show')) {
+    filterIcon.className = 'fas fa-chevron-up';
+  } else {
+    filterIcon.className = 'fas fa-chevron-down';
+  }
+}
+
+// Mostrar filtros se houver parâmetros na URL
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.toString()) {
+    toggleFilters();
+  }
+});
+</script>

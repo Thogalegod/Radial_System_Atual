@@ -1,0 +1,50 @@
+<% if object.errors.any? %>
+  <div class="form-errors">
+    <div class="error-header">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span>Encontramos <%= pluralize(object.errors.count, 'erro', 'erros') %>:</span>
+    </div>
+    <ul class="error-list">
+      <% object.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<style>
+.form-errors {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #dc2626;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+}
+
+.error-header i {
+  font-size: 1.1rem;
+}
+
+.error-list {
+  margin: 0;
+  padding-left: 1.5rem;
+  color: #991b1b;
+}
+
+.error-list li {
+  margin-bottom: 0.25rem;
+}
+
+.error-list li:last-child {
+  margin-bottom: 0;
+}
+</style> 

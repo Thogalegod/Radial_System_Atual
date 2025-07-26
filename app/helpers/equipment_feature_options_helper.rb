@@ -1,0 +1,2 @@
+module EquipmentFeatureOptionsHelper
+end

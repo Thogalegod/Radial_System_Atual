@@ -1,0 +1,164 @@
+<div class="form-field">
+  <% if local_assigns[:label] %>
+    <%= form.label field, label, class: "form-label" %>
+  <% else %>
+    <%= form.label field, class: "form-label" %>
+  <% end %>
+  
+  <% field_type = local_assigns[:field_type] || local_assigns[:type] || :text_field %>
+  <% has_error = local_assigns[:object] && local_assigns[:object].errors[field].any? %>
+  <% case field_type %>
+  <% when :text_field %>
+    <%= form.text_field field, 
+        class: "form-control #{'form-control-error' if has_error}",
+        placeholder: local_assigns[:placeholder],
+        required: local_assigns[:required] || false %>
+  
+  <% when :text_area, :textarea %>
+    <%= form.text_area field, 
+        class: "form-control #{'form-control-error' if has_error}",
+        placeholder: local_assigns[:placeholder],
+        rows: local_assigns[:rows] || 3,
+        required: local_assigns[:required] || false %>
+  
+  <% when :select %>
+    <%= form.select field, 
+        options,
+        { prompt: local_assigns[:prompt] },
+        { class: "form-control #{'form-control-error' if has_error}",
+          required: local_assigns[:required] || false } %>
+  
+  <% when :date_field %>
+    <%= form.date_field field, 
+        class: "form-control #{'form-control-error' if has_error}",
+        required: local_assigns[:required] || false %>
+  
+  <% when :color_field, :color %>
+    <%= form.color_field field, 
+        class: "form-control form-control-color #{'form-control-error' if has_error}",
+        required: local_assigns[:required] || false %>
+  
+  <% when :number_field, :number %>
+    <%= form.number_field field, 
+        class: "form-control #{'form-control-error' if has_error}",
+        placeholder: local_assigns[:placeholder],
+        min: local_assigns[:min],
+        max: local_assigns[:max],
+        step: local_assigns[:step],
+        required: local_assigns[:required] || false %>
+  
+  <% when :check_box %>
+    <div class="form-checkbox">
+      <%= form.check_box field, 
+          class: "form-checkbox-input #{'form-checkbox-error' if has_error}",
+          required: local_assigns[:required] || false %>
+      <span class="form-checkbox-label"><%= local_assigns[:check_label] || field.to_s.humanize %></span>
+    </div>
+  
+  <% else %>
+    <%= form.text_field field, 
+        class: "form-control #{'form-control-error' if has_error}",
+        placeholder: local_assigns[:placeholder],
+        required: local_assigns[:required] || false %>
+  <% end %>
+  
+  <% if has_error %>
+    <div class="field-error">
+      <% local_assigns[:object].errors[field].each do |error| %>
+        <span><%= error %></span>
+      <% end %>
+    </div>
+  <% end %>
+  
+  <% if local_assigns[:help_text] %>
+    <div class="field-help">
+      <i class="fas fa-info-circle"></i>
+      <span><%= help_text %></span>
+    </div>
+  <% end %>
+</div>
+
+<style>
+.form-field {
+  margin-bottom: 1.5rem;
+}
+
+.form-label {
+  display: block;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  background: white;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control-error {
+  border-color: #ef4444;
+}
+
+.form-control-error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-control-color {
+  width: 60px;
+  height: 40px;
+  padding: 0.25rem;
+}
+
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-checkbox-input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #3b82f6;
+}
+
+.form-checkbox-label {
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.field-error {
+  margin-top: 0.25rem;
+  color: #ef4444;
+  font-size: 0.8rem;
+}
+
+.field-error span {
+  display: block;
+}
+
+.field-help {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+}
+
+.field-help i {
+  color: #3b82f6;
+}
+</style> 

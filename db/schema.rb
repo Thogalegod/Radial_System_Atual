@@ -10,16 +10,9 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_26_001746) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_26_132750) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
-
-  create_table "bt_options", force: :cascade do |t|
-    t.integer "value"
-    t.string "color"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
 
   create_table "clients", force: :cascade do |t|
     t.string "name"
@@ -47,68 +40,100 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_26_001746) do
     t.index ["client_id"], name: "index_contacts_on_client_id"
   end
 
-  create_table "cooling_options", force: :cascade do |t|
-    t.string "value"
-    t.string "color"
+  create_table "equipment_feature_options", force: :cascade do |t|
+    t.bigint "equipment_feature_id", null: false
+    t.string "value", null: false
+    t.string "label"
+    t.string "color", default: "#6B7280"
+    t.string "icon_class"
+    t.integer "sort_order", default: 0
+    t.boolean "active", default: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_equipment_feature_options_on_active"
+    t.index ["equipment_feature_id", "value"], name: "index_feature_options_on_feature_and_value", unique: true
+    t.index ["equipment_feature_id"], name: "index_equipment_feature_options_on_equipment_feature_id"
+    t.index ["sort_order"], name: "index_equipment_feature_options_on_sort_order"
   end
 
-  create_table "flag_options", force: :cascade do |t|
-    t.string "value"
-    t.string "color"
+  create_table "equipment_features", force: :cascade do |t|
+    t.bigint "equipment_type_id", null: false
+    t.string "name", null: false
+    t.string "data_type", null: false
+    t.string "unit"
+    t.text "description"
+    t.boolean "required", default: false
+    t.boolean "searchable", default: true
+    t.boolean "filterable", default: true
+    t.boolean "sortable", default: true
+    t.string "default_value"
+    t.text "options"
+    t.string "validation_rules"
+    t.string "display_format"
+    t.string "color", default: "#6B7280"
+    t.string "icon_class"
+    t.integer "sort_order", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["data_type"], name: "index_equipment_features_on_data_type"
+    t.index ["equipment_type_id", "name"], name: "index_equipment_features_on_equipment_type_id_and_name", unique: true
+    t.index ["equipment_type_id"], name: "index_equipment_features_on_equipment_type_id"
+    t.index ["filterable"], name: "index_equipment_features_on_filterable"
+    t.index ["required"], name: "index_equipment_features_on_required"
+    t.index ["searchable"], name: "index_equipment_features_on_searchable"
+    t.index ["sort_order"], name: "index_equipment_features_on_sort_order"
+    t.index ["sortable"], name: "index_equipment_features_on_sortable"
   end
 
-  create_table "installation_options", force: :cascade do |t|
-    t.string "value"
-    t.string "color"
+  create_table "equipment_types", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "description"
+    t.string "icon_class", default: "fas fa-cog"
+    t.string "primary_color", default: "#3B82F6"
+    t.string "secondary_color", default: "#1E40AF"
+    t.string "accent_color", default: "#DBEAFE"
+    t.boolean "active", default: true
+    t.integer "sort_order", default: 0
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_equipment_types_on_active"
+    t.index ["name"], name: "index_equipment_types_on_name", unique: true
+    t.index ["sort_order"], name: "index_equipment_types_on_sort_order"
   end
 
-  create_table "locations", force: :cascade do |t|
+  create_table "equipment_values", force: :cascade do |t|
+    t.bigint "equipments_id", null: false
+    t.bigint "equipment_feature_id", null: false
     t.string "value"
-    t.string "color"
+    t.string "color", default: "#6B7280"
+    t.string "style_class"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["color"], name: "index_equipment_values_on_color"
+    t.index ["equipment_feature_id"], name: "index_equipment_values_on_equipment_feature_id"
+    t.index ["equipments_id", "equipment_feature_id"], name: "index_equipment_values_on_equipment_and_feature", unique: true
+    t.index ["equipments_id"], name: "index_equipment_values_on_equipments_id"
+    t.index ["value"], name: "index_equipment_values_on_value"
   end
 
-  create_table "medium_voltage_transformers", force: :cascade do |t|
-    t.string "serial_number"
-    t.string "location"
+  create_table "equipments", force: :cascade do |t|
+    t.string "serial_number", null: false
+    t.bigint "equipment_type_id", null: false
     t.text "notes"
-    t.bigint "bt_option_id", null: false
+    t.string "status", default: "active"
+    t.string "location"
+    t.string "manufacturer"
+    t.string "model"
+    t.date "installation_date"
+    t.date "last_maintenance_date"
+    t.date "next_maintenance_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "location_id"
-    t.bigint "status_id"
-    t.bigint "power_option_id"
-    t.bigint "cooling_option_id"
-    t.bigint "flag_option_id"
-    t.bigint "installation_option_id"
-    t.index ["bt_option_id"], name: "index_medium_voltage_transformers_on_bt_option_id"
-    t.index ["cooling_option_id"], name: "index_medium_voltage_transformers_on_cooling_option_id"
-    t.index ["flag_option_id"], name: "index_medium_voltage_transformers_on_flag_option_id"
-    t.index ["installation_option_id"], name: "index_medium_voltage_transformers_on_installation_option_id"
-    t.index ["location_id"], name: "index_medium_voltage_transformers_on_location_id"
-    t.index ["power_option_id"], name: "index_medium_voltage_transformers_on_power_option_id"
-    t.index ["status_id"], name: "index_medium_voltage_transformers_on_status_id"
-  end
-
-  create_table "power_options", force: :cascade do |t|
-    t.integer "value"
-    t.string "color"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "statuses", force: :cascade do |t|
-    t.string "value"
-    t.string "color"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.index ["equipment_type_id"], name: "index_equipments_on_equipment_type_id"
+    t.index ["location"], name: "index_equipments_on_location"
+    t.index ["manufacturer"], name: "index_equipments_on_manufacturer"
+    t.index ["serial_number"], name: "index_equipments_on_serial_number", unique: true
+    t.index ["status"], name: "index_equipments_on_status"
   end
 
   create_table "users", force: :cascade do |t|
@@ -121,11 +146,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_26_001746) do
   end
 
   add_foreign_key "contacts", "clients"
-  add_foreign_key "medium_voltage_transformers", "bt_options"
-  add_foreign_key "medium_voltage_transformers", "cooling_options"
-  add_foreign_key "medium_voltage_transformers", "flag_options"
-  add_foreign_key "medium_voltage_transformers", "installation_options"
-  add_foreign_key "medium_voltage_transformers", "locations"
-  add_foreign_key "medium_voltage_transformers", "power_options"
-  add_foreign_key "medium_voltage_transformers", "statuses"
+  add_foreign_key "equipment_feature_options", "equipment_features"
+  add_foreign_key "equipment_features", "equipment_types"
+  add_foreign_key "equipment_values", "equipment_features"
+  add_foreign_key "equipment_values", "equipments", column: "equipments_id"
+  add_foreign_key "equipments", "equipment_types"
 end

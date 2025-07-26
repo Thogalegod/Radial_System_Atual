@@ -1,24 +1,182 @@
 pt-BR:
-  errors:
-    messages:
-      restrict_dependent_destroy:
-        has_many: "Não é possível excluir o registro pois existem %{record} dependentes"
-        has_one: "Não é possível excluir o registro pois existe um %{record} dependente"
-        belongs_to: "Não é possível excluir o registro pois existe um %{record} dependente"
-        has_and_belongs_to_many: "Não é possível excluir o registro pois existem %{record} dependentes"
-  
   activerecord:
     errors:
-      models:
-        bt_option:
-          attributes:
-            base:
-              restrict_dependent_destroy: "Não é possível excluir esta tensão pois está sendo usada por transformadores"
-        location:
-          attributes:
-            base:
-              restrict_dependent_destroy: "Não é possível excluir esta localização pois está sendo usada por transformadores"
-        status:
-          attributes:
-            base:
-              restrict_dependent_destroy: "Não é possível excluir este status pois está sendo usado por transformadores" 
+      messages:
+        record_invalid: "A validação falhou: %{errors}"
+        inclusion: "não está incluído na lista"
+        required: "não pode ficar em branco"
+        blank: "não pode ficar em branco"
+        too_short: "é muito curto (mínimo: %{count} caracteres)"
+        too_long: "é muito longo (máximo: %{count} caracteres)"
+        taken: "já está em uso"
+        not_a_number: "não é um número"
+        greater_than: "deve ser maior que %{count}"
+        less_than: "deve ser menor que %{count}"
+        greater_than_or_equal_to: "deve ser maior ou igual a %{count}"
+        less_than_or_equal_to: "deve ser menor ou igual a %{count}"
+        not_an_integer: "deve ser um número inteiro"
+        invalid: "não é válido"
+        confirmation: "não confere com a confirmação"
+        accepted: "deve ser aceito"
+        empty: "não pode ficar vazio"
+        present: "deve estar em branco"
+        model_invalid: "A validação falhou: %{errors}"
+    models:
+      equipment:
+        one: "Equipamento"
+        other: "Equipamentos"
+        attributes:
+          serial_number: "Número de Série"
+          equipment_type: "Tipo de Equipamento"
+          status: "Status"
+          location: "Localização"
+          manufacturer: "Fabricante"
+          model: "Modelo"
+          installation_date: "Data de Instalação"
+          next_maintenance_date: "Próxima Manutenção"
+          notes: "Observações"
+          equipment_type_id: "Tipo de Equipamento"
+      equipment_type:
+        one: "Tipo de Equipamento"
+        other: "Tipos de Equipamento"
+        attributes:
+          name: "Nome"
+          primary_color: "Cor Primária"
+          secondary_color: "Cor Secundária"
+          accent_color: "Cor de Destaque"
+          icon_class: "Classe do Ícone"
+          active: "Ativo"
+      equipment_feature:
+        one: "Característica"
+        other: "Características"
+        attributes:
+          name: "Nome"
+          data_type: "Tipo de Dado"
+          required: "Obrigatório"
+          filterable: "Filtrável"
+          searchable: "Pesquisável"
+          sortable: "Ordenável"
+          description: "Descrição"
+          unit: "Unidade"
+          color: "Cor"
+          icon_class: "Classe do Ícone"
+      equipment_value:
+        one: "Valor de Característica"
+        other: "Valores de Características"
+        attributes:
+          value: "Valor"
+          color: "Cor"
+          style_class: "Classe de Estilo"
+          equipment: "Equipamento"
+          equipment_feature: "Característica"
+      equipment_feature_option:
+        one: "Opção de Característica"
+        other: "Opções de Características"
+        attributes:
+          value: "Valor"
+          label: "Rótulo"
+          color: "Cor"
+          icon_class: "Classe do Ícone"
+          sort_order: "Ordem de Classificação"
+          active: "Ativo"
+          equipment_feature: "Característica"
+    attributes:
+      equipment:
+        serial_number: "Número de Série"
+        equipment_type: "Tipo de Equipamento"
+        status: "Status"
+        location: "Localização"
+        manufacturer: "Fabricante"
+        model: "Modelo"
+        installation_date: "Data de Instalação"
+        next_maintenance_date: "Próxima Manutenção"
+        notes: "Observações"
+        equipment_type_id: "Tipo de Equipamento"
+      equipment_type:
+        name: "Nome"
+        primary_color: "Cor Primária"
+        secondary_color: "Cor Secundária"
+        accent_color: "Cor de Destaque"
+        icon_class: "Classe do Ícone"
+        active: "Ativo"
+      equipment_feature:
+        name: "Nome"
+        data_type: "Tipo de Dado"
+        required: "Obrigatório"
+        filterable: "Filtrável"
+        searchable: "Pesquisável"
+        sortable: "Ordenável"
+        description: "Descrição"
+        unit: "Unidade"
+        color: "Cor"
+        icon_class: "Classe do Ícone"
+      equipment_value:
+        value: "Valor"
+        color: "Cor"
+        style_class: "Classe de Estilo"
+        equipment: "Equipamento"
+        equipment_feature: "Característica"
+      equipment_feature_option:
+        value: "Valor"
+        label: "Rótulo"
+        color: "Cor"
+        icon_class: "Classe do Ícone"
+        sort_order: "Ordem de Classificação"
+        active: "Ativo"
+        equipment_feature: "Característica"
+
+  helpers:
+    select:
+      prompt: "Selecione uma opção"
+    submit:
+      create: "Criar %{model}"
+      update: "Atualizar %{model}"
+      submit: "Salvar %{model}"
+
+  time:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      short: "%d/%m/%Y"
+      long: "%d de %B de %Y às %H:%M"
+
+  date:
+    formats:
+      default: "%d/%m/%Y"
+      short: "%d/%m"
+      long: "%d de %B de %Y"
+
+  datetime:
+    formats:
+      default: "%d/%m/%Y %H:%M"
+      short: "%d/%m %H:%M"
+      long: "%d de %B de %Y às %H:%M"
+
+  number:
+    currency:
+      format:
+        unit: "R$"
+        precision: 2
+        separator: ","
+        delimiter: "."
+        format: "%u %n"
+
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      inclusion: "não está incluído na lista"
+      required: "não pode ficar em branco"
+      blank: "não pode ficar em branco"
+      too_short: "é muito curto (mínimo: %{count} caracteres)"
+      too_long: "é muito longo (máximo: %{count} caracteres)"
+      taken: "já está em uso"
+      not_a_number: "não é um número"
+      greater_than: "deve ser maior que %{count}"
+      less_than: "deve ser menor que %{count}"
+      greater_than_or_equal_to: "deve ser maior ou igual a %{count}"
+      less_than_or_equal_to: "deve ser menor ou igual a %{count}"
+      not_an_integer: "deve ser um número inteiro"
+      invalid: "não é válido"
+      confirmation: "não confere com a confirmação"
+      accepted: "deve ser aceito"
+      empty: "não pode ficar vazio"
+      present: "deve estar em branco" 

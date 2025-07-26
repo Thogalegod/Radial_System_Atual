@@ -1,0 +1,861 @@
+<div class="container">
+  <div class="header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-plus"></i>
+        Cadastrar Novo Equipamento
+      </h1>
+      <div class="header-actions">
+        <%= link_to equipments_path, class: "btn btn-secondary" do %>
+          <i class="fas fa-arrow-left" aria-hidden="true"></i>
+          <span>Voltar para Equipamentos</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <%= form_with(model: @equipment, url: equipments_path, local: true, class: "form") do |form| %>
+      <%= render 'shared/form_errors', object: @equipment %>
+
+      <div class="form-grid">
+        <div class="form-section">
+          <h2><i class="fas fa-info-circle"></i> Informações Básicas</h2>
+          
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment,
+              field: :serial_number, 
+              label: 'Número de Série',
+              placeholder: 'Ex: TR001, DJ002, RL003',
+              required: true,
+              help_text: 'Identificação única do equipamento' %>
+
+          <div class="form-group">
+            <%= form.label :equipment_type_id, "Tipo de Equipamento", class: "form-label" %>
+            <%= form.select :equipment_type_id, 
+                options_from_collection_for_select(@equipment_types, :id, :name, @equipment.equipment_type_id),
+                { prompt: "Selecione o tipo de equipamento" },
+                { class: "form-select", required: true, id: "equipment-type-select" } %>
+            <small class="form-help">
+              <strong>💡 Dica:</strong> Escolha o tipo de equipamento para ver as características específicas.
+            </small>
+          </div>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment,
+              field: :manufacturer, 
+              label: 'Fabricante',
+              placeholder: 'Ex: Siemens, Schneider, ABB',
+              help_text: 'Nome do fabricante do equipamento' %>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment,
+              field: :model, 
+              label: 'Modelo',
+              placeholder: 'Ex: PowerPact, MasterPact, Compact',
+              help_text: 'Modelo específico do equipamento' %>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment,
+              field: :location, 
+              label: 'Localização',
+              placeholder: 'Ex: Subestação A, Quadro 1, Sala Técnica',
+              help_text: 'Local onde o equipamento está instalado' %>
+
+          <div class="form-group">
+            <%= form.label :status, "Status", class: "form-label" %>
+            <%= form.select :status, 
+                [
+                  ['🟢 Ativo - Funcionando normalmente', 'active'],
+                  ['🟡 Manutenção - Em manutenção', 'maintenance'],
+                  ['⚫ Inativo - Temporariamente parado', 'inactive'],
+                  ['🔴 Aposentado - Fora de operação', 'retired']
+                ],
+                { selected: @equipment.status || 'active' },
+                { class: "form-select" } %>
+            <small class="form-help">
+              <strong>Status do Equipamento:</strong>
+              <br>• <strong>Ativo:</strong> Funcionando normalmente
+              <br>• <strong>Manutenção:</strong> Em manutenção ou reparo
+              <br>• <strong>Inativo:</strong> Temporariamente parado
+              <br>• <strong>Aposentado:</strong> Fora de operação permanente
+            </small>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2><i class="fas fa-calendar"></i> Datas</h2>
+          
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment,
+              field: :installation_date, 
+              type: 'date',
+              label: 'Data de Instalação',
+              help_text: 'Data em que o equipamento foi instalado' %>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment,
+              field: :next_maintenance_date, 
+              type: 'date',
+              label: 'Próxima Manutenção',
+              help_text: 'Data da próxima manutenção programada' %>
+
+          <div class="info-card">
+            <h3><i class="fas fa-info-circle"></i> Informações</h3>
+            <div class="info-content">
+              <p><strong>Equipamentos Cadastrados:</strong> <%= Equipment.count %></p>
+              <p><strong>Tipos Disponíveis:</strong> <%= EquipmentType.active.count %></p>
+              <div class="tip-message">
+                <i class="fas fa-lightbulb"></i>
+                <span>Após selecionar o tipo de equipamento, aparecerão as características específicas.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Características Dinâmicas -->
+      <div id="dynamic-features" class="features-section" style="display: none;">
+        <h2><i class="fas fa-cogs"></i> Características do Equipamento</h2>
+        <div id="features-container">
+          <!-- As características serão carregadas dinamicamente via JavaScript -->
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h2><i class="fas fa-sticky-note"></i> Observações</h2>
+        
+        <%= render 'shared/form_field', 
+            form: form, 
+            object: @equipment,
+            field: :notes, 
+            type: 'textarea',
+            label: 'Observações',
+            placeholder: 'Observações adicionais sobre o equipamento...',
+            rows: 4,
+            help_text: 'Informações adicionais, histórico, observações importantes' %>
+      </div>
+
+      <div class="form-actions">
+        <%= form.submit "Cadastrar Equipamento", class: "btn btn-primary" %>
+        <%= link_to "Cancelar", equipments_path, class: "btn btn-outline" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 12px;
+  margin-bottom: 30px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.form-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  overflow: hidden;
+  border: 1px solid #e1e5e9;
+}
+
+.form {
+  padding: 30px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.form-section h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  background: white;
+  transition: all 0.2s;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-help {
+  color: #6b7280;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.info-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.info-card h3 {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-content p {
+  margin: 8px 0;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.tip-message {
+  background: #dbeafe;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e40af;
+  font-size: 0.9rem;
+}
+
+.features-section {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+}
+
+.features-section h2 {
+  margin: 0 0 20px 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feature-field {
+  background: white;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+}
+
+.feature-field label {
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.feature-field input,
+.feature-field select,
+.feature-field textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.feature-field input:focus,
+.feature-field select:focus,
+.feature-field textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.feature-required {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.loading::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 50%;
+  border-top-color: #3b82f6;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const equipmentTypeSelect = document.getElementById('equipment-type-select');
+  const dynamicFeatures = document.getElementById('dynamic-features');
+  const featuresContainer = document.getElementById('features-container');
+
+  // Função para carregar características do tipo de equipamento
+  function loadEquipmentFeatures(equipmentTypeId) {
+    if (!equipmentTypeId) {
+      dynamicFeatures.style.display = 'none';
+      return;
+    }
+
+    // Mostrar loading
+    featuresContainer.innerHTML = '<div class="loading">Carregando características...</div>';
+    dynamicFeatures.style.display = 'block';
+
+    // Tentar carregar via AJAX
+    fetch(`/equipment_types/${equipmentTypeId}/equipment_features`, {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Erro na requisição');
+        }
+        return response.json();
+      })
+      .then(features => {
+        if (features && features.length > 0) {
+          renderFeatures(features);
+        } else {
+          showBasicFeatures();
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao carregar características:', error);
+        // Fallback: mostrar características básicas
+        showBasicFeatures();
+      });
+  }
+
+  // Função para renderizar características
+  function renderFeatures(features) {
+    featuresContainer.innerHTML = '';
+    
+    features.forEach(feature => {
+      const fieldDiv = document.createElement('div');
+      fieldDiv.className = 'feature-field';
+      
+      const label = document.createElement('label');
+      label.textContent = feature.name;
+      if (feature.required) {
+        label.innerHTML += ' <span style="color: #ef4444;">*</span>';
+      }
+      
+      const input = createInputForFeature(feature);
+      
+      fieldDiv.appendChild(label);
+      fieldDiv.appendChild(input);
+      
+      // Adicionar texto de ajuda
+      if (feature.required) {
+        const requiredText = document.createElement('div');
+        requiredText.className = 'feature-required';
+        requiredText.textContent = 'Campo obrigatório';
+        fieldDiv.appendChild(requiredText);
+      }
+      
+      // Adicionar descrição se existir
+      if (feature.description) {
+        const helpText = document.createElement('small');
+        helpText.className = 'form-help';
+        helpText.textContent = feature.description;
+        fieldDiv.appendChild(helpText);
+      }
+      
+      featuresContainer.appendChild(fieldDiv);
+    });
+  }
+
+  // Função para criar input baseado no tipo de dado
+  function createInputForFeature(feature) {
+    let input;
+    
+    switch (feature.data_type) {
+      case 'select':
+        input = document.createElement('select');
+        input.name = `feature_values[${feature.name}]`;
+        input.className = 'form-select';
+        
+        // Adicionar opções se existirem
+        if (feature.options && feature.options.length > 0) {
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.textContent = 'Selecione uma opção';
+          input.appendChild(defaultOption);
+          
+          feature.options.forEach(option => {
+            const optionElement = document.createElement('option');
+            optionElement.value = option.value;
+            optionElement.textContent = option.label || option.value;
+            input.appendChild(optionElement);
+          });
+        } else {
+          // Fallback para select sem opções
+          const defaultOption = document.createElement('option');
+          defaultOption.value = '';
+          defaultOption.textContent = 'Nenhuma opção disponível';
+          input.appendChild(defaultOption);
+        }
+        break;
+        
+      case 'boolean':
+        input = document.createElement('select');
+        input.name = `feature_values[${feature.name}]`;
+        input.className = 'form-select';
+        
+        const options = [
+          { value: '', text: 'Selecione' },
+          { value: 'true', text: 'Sim' },
+          { value: 'false', text: 'Não' }
+        ];
+        
+        options.forEach(option => {
+          const optionElement = document.createElement('option');
+          optionElement.value = option.value;
+          optionElement.textContent = option.text;
+          input.appendChild(optionElement);
+        });
+        break;
+        
+      case 'date':
+        input = document.createElement('input');
+        input.type = 'date';
+        input.name = `feature_values[${feature.name}]`;
+        input.className = 'form-control';
+        break;
+        
+      case 'number':
+        input = document.createElement('input');
+        input.type = 'number';
+        input.name = `feature_values[${feature.name}]`;
+        input.className = 'form-control';
+        input.placeholder = feature.unit ? `Ex: 100 ${feature.unit}` : 'Ex: 100';
+        break;
+        
+      case 'text':
+        input = document.createElement('textarea');
+        input.name = `feature_values[${feature.name}]`;
+        input.className = 'form-control';
+        input.rows = 3;
+        input.placeholder = 'Digite o texto...';
+        break;
+        
+      default: // string
+        input = document.createElement('input');
+        input.type = 'text';
+        input.name = `feature_values[${feature.name}]`;
+        input.className = 'form-control';
+        input.placeholder = 'Digite o valor...';
+        break;
+    }
+    
+    // Adicionar required se necessário
+    if (feature.required) {
+      input.required = true;
+    }
+    
+    return input;
+  }
+
+  // Função fallback para mostrar características básicas
+  function showBasicFeatures() {
+    // Características específicas do Transformador MT (fallback)
+    const basicFeatures = [
+      { 
+        name: 'Potência', 
+        data_type: 'select', 
+        required: true,
+        options: [
+          { value: '30', label: '30 kVA' },
+          { value: '45', label: '45 kVA' },
+          { value: '75', label: '75 kVA' },
+          { value: '112.5', label: '112.5 kVA' },
+          { value: '150', label: '150 kVA' },
+          { value: '225', label: '225 kVA' },
+          { value: '300', label: '300 kVA' },
+          { value: '400', label: '400 kVA' },
+          { value: '500', label: '500 kVA' },
+          { value: '630', label: '630 kVA' },
+          { value: '750', label: '750 kVA' },
+          { value: '1000', label: '1000 kVA' }
+        ]
+      },
+      { 
+        name: 'Tensão BT', 
+        data_type: 'select', 
+        required: true,
+        options: [
+          { value: '220', label: '220 V' },
+          { value: '380', label: '380 V' },
+          { value: '440', label: '440 V' },
+          { value: '480', label: '480 V' }
+        ]
+      },
+      { 
+        name: 'Localização', 
+        data_type: 'select', 
+        required: false,
+        options: [
+          { value: 'subestacao_central', label: 'Subestação Central' },
+          { value: 'subestacao_norte', label: 'Subestação Norte' },
+          { value: 'subestacao_sul', label: 'Subestação Sul' },
+          { value: 'subestacao_leste', label: 'Subestação Leste' },
+          { value: 'subestacao_oeste', label: 'Subestação Oeste' },
+          { value: 'posto_transformacao', label: 'Posto de Transformação' },
+          { value: 'area_industrial', label: 'Área Industrial' },
+          { value: 'area_comercial', label: 'Área Comercial' },
+          { value: 'area_residencial', label: 'Área Residencial' }
+        ]
+      },
+      { 
+        name: 'Status', 
+        data_type: 'select', 
+        required: false,
+        options: [
+          { value: 'ativo', label: 'Ativo' },
+          { value: 'inativo', label: 'Inativo' },
+          { value: 'manutencao', label: 'Em Manutenção' },
+          { value: 'emergencia', label: 'Emergência' },
+          { value: 'desligado', label: 'Desligado' }
+        ]
+      },
+      { 
+        name: 'Bandeira', 
+        data_type: 'select', 
+        required: false,
+        options: [
+          { value: 'verde', label: 'Verde' },
+          { value: 'amarela', label: 'Amarela' },
+          { value: 'vermelha', label: 'Vermelha' },
+          { value: 'azul', label: 'Azul' },
+          { value: 'laranja', label: 'Laranja' },
+          { value: 'roxa', label: 'Roxa' }
+        ]
+      },
+      { 
+        name: 'Observações', 
+        data_type: 'string', 
+        required: false 
+      }
+    ];
+    
+    renderFeatures(basicFeatures);
+    dynamicFeatures.style.display = 'block';
+  }
+
+  // Event listener para mudança no tipo de equipamento
+  equipmentTypeSelect.addEventListener('change', function() {
+    const selectedTypeId = this.value;
+    loadEquipmentFeatures(selectedTypeId);
+  });
+
+  // Carregar características se já houver um tipo selecionado
+  if (equipmentTypeSelect.value) {
+    loadEquipmentFeatures(equipmentTypeSelect.value);
+  }
+
+  // Detectar se é Transformador MT e carregar características específicas
+  function detectAndLoadSpecificFeatures() {
+    const selectedOption = equipmentTypeSelect.options[equipmentTypeSelect.selectedIndex];
+    if (selectedOption && selectedOption.text.includes('Transformador MT')) {
+      // Carregar características específicas do Transformador MT
+      const transformerFeatures = [
+        { 
+          name: 'Potência', 
+          data_type: 'select', 
+          required: true,
+          description: 'Potência nominal do transformador',
+          options: [
+            { value: '30', label: '30 kVA' },
+            { value: '45', label: '45 kVA' },
+            { value: '75', label: '75 kVA' },
+            { value: '112.5', label: '112.5 kVA' },
+            { value: '150', label: '150 kVA' },
+            { value: '225', label: '225 kVA' },
+            { value: '300', label: '300 kVA' },
+            { value: '400', label: '400 kVA' },
+            { value: '500', label: '500 kVA' },
+            { value: '630', label: '630 kVA' },
+            { value: '750', label: '750 kVA' },
+            { value: '1000', label: '1000 kVA' }
+          ]
+        },
+        { 
+          name: 'Tensão BT', 
+          data_type: 'select', 
+          required: true,
+          description: 'Tensão de baixa tensão do transformador',
+          options: [
+            { value: '220', label: '220 V' },
+            { value: '380', label: '380 V' },
+            { value: '440', label: '440 V' },
+            { value: '480', label: '480 V' }
+          ]
+        },
+        { 
+          name: 'Localização', 
+          data_type: 'select', 
+          required: false,
+          description: 'Local onde o transformador está instalado',
+          options: [
+            { value: 'subestacao_central', label: 'Subestação Central' },
+            { value: 'subestacao_norte', label: 'Subestação Norte' },
+            { value: 'subestacao_sul', label: 'Subestação Sul' },
+            { value: 'subestacao_leste', label: 'Subestação Leste' },
+            { value: 'subestacao_oeste', label: 'Subestação Oeste' },
+            { value: 'posto_transformacao', label: 'Posto de Transformação' },
+            { value: 'area_industrial', label: 'Área Industrial' },
+            { value: 'area_comercial', label: 'Área Comercial' },
+            { value: 'area_residencial', label: 'Área Residencial' }
+          ]
+        },
+        { 
+          name: 'Status', 
+          data_type: 'select', 
+          required: true,
+          description: 'Status atual do transformador',
+          options: [
+            { value: 'ativo', label: 'Ativo' },
+            { value: 'inativo', label: 'Inativo' },
+            { value: 'manutencao', label: 'Em Manutenção' },
+            { value: 'emergencia', label: 'Emergência' },
+            { value: 'desligado', label: 'Desligado' }
+          ]
+        },
+        { 
+          name: 'Bandeira', 
+          data_type: 'select', 
+          required: false,
+          description: 'Bandeira de identificação',
+          options: [
+            { value: 'verde', label: 'Verde' },
+            { value: 'amarela', label: 'Amarela' },
+            { value: 'vermelha', label: 'Vermelha' },
+            { value: 'azul', label: 'Azul' },
+            { value: 'laranja', label: 'Laranja' },
+            { value: 'roxa', label: 'Roxa' }
+          ]
+        },
+        { 
+          name: 'Tipo de Refrigeração', 
+          data_type: 'select', 
+          required: false,
+          description: 'Tipo de sistema de refrigeração',
+          options: [
+            { value: 'seco', label: 'Seco' },
+            { value: 'oleo', label: 'Óleo' },
+            { value: 'resfriado_ar', label: 'Resfriado a Ar' },
+            { value: 'resfriado_agua', label: 'Resfriado a Água' },
+            { value: 'resfriado_oleo', label: 'Resfriado a Óleo' }
+          ]
+        },
+        { 
+          name: 'Tipo de Instalação', 
+          data_type: 'select', 
+          required: false,
+          description: 'Tipo de instalação do transformador',
+          options: [
+            { value: 'poste', label: 'Poste' },
+            { value: 'cabine', label: 'Cabine' },
+            { value: 'subterraneo', label: 'Subterrâneo' },
+            { value: 'aereo', label: 'Aéreo' },
+            { value: 'indoor', label: 'Indoor' },
+            { value: 'outdoor', label: 'Outdoor' }
+          ]
+        },
+        { 
+          name: 'Observações', 
+          data_type: 'string', 
+          required: false,
+          description: 'Observações adicionais sobre o equipamento'
+        }
+      ];
+      
+      renderFeatures(transformerFeatures);
+      dynamicFeatures.style.display = 'block';
+      return true;
+    }
+    return false;
+  }
+
+  // Modificar o event listener para usar detecção específica
+  equipmentTypeSelect.addEventListener('change', function() {
+    const selectedTypeId = this.value;
+    if (!detectAndLoadSpecificFeatures()) {
+      loadEquipmentFeatures(selectedTypeId);
+    }
+  });
+
+  // Carregar características se já houver um tipo selecionado
+  if (equipmentTypeSelect.value) {
+    if (!detectAndLoadSpecificFeatures()) {
+      loadEquipmentFeatures(equipmentTypeSelect.value);
+    }
+  }
+});
+</script>
