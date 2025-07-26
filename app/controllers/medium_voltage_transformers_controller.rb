@@ -35,8 +35,13 @@ class MediumVoltageTransformersController < ApplicationController
 
   def destroy
     @medium_voltage_transformer = MediumVoltageTransformer.find(params[:id])
-    @medium_voltage_transformer.destroy
-    redirect_to medium_voltage_transformers_path, notice: 'Transformador MT removido com sucesso!'
+    serial_number = @medium_voltage_transformer.serial_number
+    
+    if @medium_voltage_transformer.destroy
+      redirect_to medium_voltage_transformers_path, notice: "Transformador MT #{serial_number} removido com sucesso!"
+    else
+      redirect_to medium_voltage_transformers_path, alert: "Erro ao remover transformador: #{@medium_voltage_transformer.errors.full_messages.join(', ')}"
+    end
   end
 
   private

@@ -428,21 +428,8 @@ function deleteLocation(id) {
     })
   })
   .then(response => {
-    if (response.ok) {
-      // Remover item da lista
-      const locationItem = document.querySelector(`.location-item[data-id="${id}"]`);
-      if (locationItem) {
-        locationItem.remove();
-      }
-      
-      // Remover do select
-      const locationSelect = document.querySelector('select[name="medium_voltage_transformer[location_id]"]');
-      const option = locationSelect.querySelector(`option[value="${id}"]`);
-      if (option) {
-        option.remove();
-      }
-      
-      alert('Localização removida com sucesso!');
+    if (response.redirected) {
+      window.location.href = response.url;
     } else {
       return response.text();
     }
@@ -455,6 +442,8 @@ function deleteLocation(id) {
       const alert = doc.querySelector('.alert');
       if (alert) {
         alert(alert.textContent.trim());
+      } else {
+        window.location.reload();
       }
     }
   })
@@ -480,21 +469,8 @@ function deleteStatus(id) {
     })
   })
   .then(response => {
-    if (response.ok) {
-      // Remover item da lista
-      const statusItem = document.querySelector(`.status-item[data-id="${id}"]`);
-      if (statusItem) {
-        statusItem.remove();
-      }
-      
-      // Remover do select
-      const statusSelect = document.querySelector('select[name="medium_voltage_transformer[status_id]"]');
-      const option = statusSelect.querySelector(`option[value="${id}"]`);
-      if (option) {
-        option.remove();
-      }
-      
-      alert('Status removido com sucesso!');
+    if (response.redirected) {
+      window.location.href = response.url;
     } else {
       return response.text();
     }
@@ -507,6 +483,8 @@ function deleteStatus(id) {
       const alert = doc.querySelector('.alert');
       if (alert) {
         alert(alert.textContent.trim());
+      } else {
+        window.location.reload();
       }
     }
   })

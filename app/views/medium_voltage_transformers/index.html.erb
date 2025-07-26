@@ -63,14 +63,21 @@
                     <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                   </svg>
                 <% end %>
-                <%= link_to medium_voltage_transformer_path(transformer), method: :delete, data: { confirm: 'Tem certeza?' }, class: 'btn btn-danger btn-icon', title: 'Excluir' do %>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3,6 5,6 21,6"/>
-                    <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
-                    <line x1="10" y1="11" x2="10" y2="17"/>
-                    <line x1="14" y1="11" x2="14" y2="17"/>
-                  </svg>
-                <% end %>
+                <form action="<%= medium_voltage_transformer_path(transformer) %>" method="post" style="display: inline;">
+                  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+                  <%= hidden_field_tag :_method, 'delete' %>
+                  <button type="submit" 
+                          class="btn btn-danger btn-icon" 
+                          title="Excluir"
+                          onclick="return confirm('Tem certeza que deseja excluir o transformador <%= transformer.serial_number %>?')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3,6 5,6 21,6"/>
+                      <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"/>
+                      <line x1="10" y1="11" x2="10" y2="17"/>
+                      <line x1="14" y1="11" x2="14" y2="17"/>
+                    </svg>
+                  </button>
+                </form>
               </div>
             </td>
           </tr>
