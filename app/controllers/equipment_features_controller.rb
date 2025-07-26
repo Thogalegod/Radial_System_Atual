@@ -6,7 +6,7 @@ class EquipmentFeaturesController < ApplicationController
   def index
     if params[:equipment_type_id].present?
       # Listagem por tipo de equipamento específico
-      @equipment_features = @equipment_type.equipment_features.ordered.with_options
+      @equipment_features = @equipment_type.equipment_features.ordered.includes(:equipment_feature_options)
     else
       # Listagem geral com filtros
       @equipment_features = EquipmentFeature.includes(:equipment_type, :equipment_feature_options).all
@@ -19,6 +19,44 @@ class EquipmentFeaturesController < ApplicationController
       
       # Ordenar por nome
       @equipment_features = @equipment_features.order(:name)
+    end
+    
+    respond_to do |format|
+      format.html
+      format.json do
+        Rails.logger.info "Enviando #{@equipment_features.count} features"
+        @equipment_features.each do |feature|
+          Rails.logger.info "Feature #{feature.name}: #{feature.equipment_feature_options.active.count} opções"
+        end
+        
+        json_response = @equipment_features.map do |feature|
+          feature_json = {
+            id: feature.id,
+            name: feature.name,
+            data_type: feature.data_type,
+            required: feature.required,
+            filterable: feature.filterable,
+            searchable: feature.searchable,
+            sortable: feature.sortable,
+            description: feature.description,
+            unit: feature.unit,
+            options: feature.equipment_feature_options.ordered.map do |option|
+              {
+                id: option.id,
+                value: option.value,
+                label: option.label,
+                color: option.color
+              }
+            end
+          }
+          
+          Rails.logger.info "JSON para #{feature.name}: #{feature_json[:options].length} opções"
+          feature_json
+        end
+        
+        Rails.logger.info "JSON final: #{json_response.to_json[0..200]}..."
+        render json: json_response
+      end
     end
   end
 

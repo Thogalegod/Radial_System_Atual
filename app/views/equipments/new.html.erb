@@ -479,6 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return response.json();
       })
       .then(features => {
+        console.log('Features recebidas:', features);
         if (features && features.length > 0) {
           renderFeatures(features);
         } else {
@@ -494,9 +495,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Função para renderizar características
   function renderFeatures(features) {
+    console.log('Renderizando features:', features);
     featuresContainer.innerHTML = '';
     
     features.forEach(feature => {
+      console.log('Processando feature:', feature.name, 'com opções:', feature.options);
       const fieldDiv = document.createElement('div');
       fieldDiv.className = 'feature-field';
       
@@ -537,6 +540,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     switch (feature.data_type) {
       case 'select':
+        console.log('Criando select para:', feature.name, 'com opções:', feature.options);
         input = document.createElement('select');
         input.name = `feature_values[${feature.name}]`;
         input.className = 'form-select';
@@ -589,15 +593,19 @@ document.addEventListener('DOMContentLoaded', function() {
         input.className = 'form-control';
         break;
         
-      case 'number':
+      case 'integer':
+      case 'float':
         input = document.createElement('input');
         input.type = 'number';
         input.name = `feature_values[${feature.name}]`;
         input.className = 'form-control';
         input.placeholder = feature.unit ? `Ex: 100 ${feature.unit}` : 'Ex: 100';
+        if (feature.data_type === 'float') {
+          input.step = '0.01';
+        }
         break;
         
-      case 'text':
+      case 'string':
         input = document.createElement('textarea');
         input.name = `feature_values[${feature.name}]`;
         input.className = 'form-control';
@@ -622,89 +630,9 @@ document.addEventListener('DOMContentLoaded', function() {
     return input;
   }
 
-  // Função fallback para mostrar características básicas
+  // Função fallback para mostrar mensagem de erro
   function showBasicFeatures() {
-    // Características específicas do Transformador MT (fallback)
-    const basicFeatures = [
-      { 
-        name: 'Potência', 
-        data_type: 'select', 
-        required: true,
-        options: [
-          { value: '30', label: '30 kVA' },
-          { value: '45', label: '45 kVA' },
-          { value: '75', label: '75 kVA' },
-          { value: '112.5', label: '112.5 kVA' },
-          { value: '150', label: '150 kVA' },
-          { value: '225', label: '225 kVA' },
-          { value: '300', label: '300 kVA' },
-          { value: '400', label: '400 kVA' },
-          { value: '500', label: '500 kVA' },
-          { value: '630', label: '630 kVA' },
-          { value: '750', label: '750 kVA' },
-          { value: '1000', label: '1000 kVA' }
-        ]
-      },
-      { 
-        name: 'Tensão BT', 
-        data_type: 'select', 
-        required: true,
-        options: [
-          { value: '220', label: '220 V' },
-          { value: '380', label: '380 V' },
-          { value: '440', label: '440 V' },
-          { value: '480', label: '480 V' }
-        ]
-      },
-      { 
-        name: 'Localização', 
-        data_type: 'select', 
-        required: false,
-        options: [
-          { value: 'subestacao_central', label: 'Subestação Central' },
-          { value: 'subestacao_norte', label: 'Subestação Norte' },
-          { value: 'subestacao_sul', label: 'Subestação Sul' },
-          { value: 'subestacao_leste', label: 'Subestação Leste' },
-          { value: 'subestacao_oeste', label: 'Subestação Oeste' },
-          { value: 'posto_transformacao', label: 'Posto de Transformação' },
-          { value: 'area_industrial', label: 'Área Industrial' },
-          { value: 'area_comercial', label: 'Área Comercial' },
-          { value: 'area_residencial', label: 'Área Residencial' }
-        ]
-      },
-      { 
-        name: 'Status', 
-        data_type: 'select', 
-        required: false,
-        options: [
-          { value: 'ativo', label: 'Ativo' },
-          { value: 'inativo', label: 'Inativo' },
-          { value: 'manutencao', label: 'Em Manutenção' },
-          { value: 'emergencia', label: 'Emergência' },
-          { value: 'desligado', label: 'Desligado' }
-        ]
-      },
-      { 
-        name: 'Bandeira', 
-        data_type: 'select', 
-        required: false,
-        options: [
-          { value: 'verde', label: 'Verde' },
-          { value: 'amarela', label: 'Amarela' },
-          { value: 'vermelha', label: 'Vermelha' },
-          { value: 'azul', label: 'Azul' },
-          { value: 'laranja', label: 'Laranja' },
-          { value: 'roxa', label: 'Roxa' }
-        ]
-      },
-      { 
-        name: 'Observações', 
-        data_type: 'string', 
-        required: false 
-      }
-    ];
-    
-    renderFeatures(basicFeatures);
+    featuresContainer.innerHTML = '<div class="alert alert-warning">Não foi possível carregar as características. Tente novamente.</div>';
     dynamicFeatures.style.display = 'block';
   }
 
@@ -719,143 +647,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadEquipmentFeatures(equipmentTypeSelect.value);
   }
 
-  // Detectar se é Transformador MT e carregar características específicas
-  function detectAndLoadSpecificFeatures() {
-    const selectedOption = equipmentTypeSelect.options[equipmentTypeSelect.selectedIndex];
-    if (selectedOption && selectedOption.text.includes('Transformador MT')) {
-      // Carregar características específicas do Transformador MT
-      const transformerFeatures = [
-        { 
-          name: 'Potência', 
-          data_type: 'select', 
-          required: true,
-          description: 'Potência nominal do transformador',
-          options: [
-            { value: '30', label: '30 kVA' },
-            { value: '45', label: '45 kVA' },
-            { value: '75', label: '75 kVA' },
-            { value: '112.5', label: '112.5 kVA' },
-            { value: '150', label: '150 kVA' },
-            { value: '225', label: '225 kVA' },
-            { value: '300', label: '300 kVA' },
-            { value: '400', label: '400 kVA' },
-            { value: '500', label: '500 kVA' },
-            { value: '630', label: '630 kVA' },
-            { value: '750', label: '750 kVA' },
-            { value: '1000', label: '1000 kVA' }
-          ]
-        },
-        { 
-          name: 'Tensão BT', 
-          data_type: 'select', 
-          required: true,
-          description: 'Tensão de baixa tensão do transformador',
-          options: [
-            { value: '220', label: '220 V' },
-            { value: '380', label: '380 V' },
-            { value: '440', label: '440 V' },
-            { value: '480', label: '480 V' }
-          ]
-        },
-        { 
-          name: 'Localização', 
-          data_type: 'select', 
-          required: false,
-          description: 'Local onde o transformador está instalado',
-          options: [
-            { value: 'subestacao_central', label: 'Subestação Central' },
-            { value: 'subestacao_norte', label: 'Subestação Norte' },
-            { value: 'subestacao_sul', label: 'Subestação Sul' },
-            { value: 'subestacao_leste', label: 'Subestação Leste' },
-            { value: 'subestacao_oeste', label: 'Subestação Oeste' },
-            { value: 'posto_transformacao', label: 'Posto de Transformação' },
-            { value: 'area_industrial', label: 'Área Industrial' },
-            { value: 'area_comercial', label: 'Área Comercial' },
-            { value: 'area_residencial', label: 'Área Residencial' }
-          ]
-        },
-        { 
-          name: 'Status', 
-          data_type: 'select', 
-          required: true,
-          description: 'Status atual do transformador',
-          options: [
-            { value: 'ativo', label: 'Ativo' },
-            { value: 'inativo', label: 'Inativo' },
-            { value: 'manutencao', label: 'Em Manutenção' },
-            { value: 'emergencia', label: 'Emergência' },
-            { value: 'desligado', label: 'Desligado' }
-          ]
-        },
-        { 
-          name: 'Bandeira', 
-          data_type: 'select', 
-          required: false,
-          description: 'Bandeira de identificação',
-          options: [
-            { value: 'verde', label: 'Verde' },
-            { value: 'amarela', label: 'Amarela' },
-            { value: 'vermelha', label: 'Vermelha' },
-            { value: 'azul', label: 'Azul' },
-            { value: 'laranja', label: 'Laranja' },
-            { value: 'roxa', label: 'Roxa' }
-          ]
-        },
-        { 
-          name: 'Tipo de Refrigeração', 
-          data_type: 'select', 
-          required: false,
-          description: 'Tipo de sistema de refrigeração',
-          options: [
-            { value: 'seco', label: 'Seco' },
-            { value: 'oleo', label: 'Óleo' },
-            { value: 'resfriado_ar', label: 'Resfriado a Ar' },
-            { value: 'resfriado_agua', label: 'Resfriado a Água' },
-            { value: 'resfriado_oleo', label: 'Resfriado a Óleo' }
-          ]
-        },
-        { 
-          name: 'Tipo de Instalação', 
-          data_type: 'select', 
-          required: false,
-          description: 'Tipo de instalação do transformador',
-          options: [
-            { value: 'poste', label: 'Poste' },
-            { value: 'cabine', label: 'Cabine' },
-            { value: 'subterraneo', label: 'Subterrâneo' },
-            { value: 'aereo', label: 'Aéreo' },
-            { value: 'indoor', label: 'Indoor' },
-            { value: 'outdoor', label: 'Outdoor' }
-          ]
-        },
-        { 
-          name: 'Observações', 
-          data_type: 'string', 
-          required: false,
-          description: 'Observações adicionais sobre o equipamento'
-        }
-      ];
-      
-      renderFeatures(transformerFeatures);
-      dynamicFeatures.style.display = 'block';
-      return true;
-    }
-    return false;
-  }
-
-  // Modificar o event listener para usar detecção específica
+  // Event listener para mudança no tipo de equipamento
   equipmentTypeSelect.addEventListener('change', function() {
     const selectedTypeId = this.value;
-    if (!detectAndLoadSpecificFeatures()) {
-      loadEquipmentFeatures(selectedTypeId);
-    }
+    loadEquipmentFeatures(selectedTypeId);
   });
 
   // Carregar características se já houver um tipo selecionado
   if (equipmentTypeSelect.value) {
-    if (!detectAndLoadSpecificFeatures()) {
-      loadEquipmentFeatures(equipmentTypeSelect.value);
-    }
+    loadEquipmentFeatures(equipmentTypeSelect.value);
   }
 });
 </script>

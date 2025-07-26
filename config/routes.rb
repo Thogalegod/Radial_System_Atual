@@ -7,11 +7,15 @@ Rails.application.routes.draw do
     end
     member do
       get :equipment_features, defaults: { format: :json }
+      get :edit_modal, defaults: { format: :json }
+      post :duplicate
+      get :manage
+      patch :update_manage
     end
   end
   
-  # Rotas independentes para características
-  resources :equipment_features, only: [:index, :show, :new, :create, :edit, :update, :destroy]
+  # Rotas independentes para características (apenas para acesso direto)
+  resources :equipment_features, only: [:show, :new, :create, :edit, :update, :destroy]
   
   resources :equipments do
     collection do

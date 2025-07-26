@@ -1,91 +1,226 @@
-<div class="equipment-types-page">
+<div class="equipment-types-dashboard">
+  <!-- Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1>Tipos de Equipamento</h1>
-      <p>Gerencie os tipos de equipamento e suas características</p>
+      <h1><i class="fas fa-tags"></i> Tipos de Equipamentos</h1>
+      <p>Gerencie todos os tipos de equipamentos e suas características em um só lugar</p>
     </div>
     <div class="header-actions">
-      <%= link_to new_equipment_type_path, class: "btn btn-primary" do %>
+      <button onclick="openTypeModal()" class="btn btn-primary">
         <i class="fas fa-plus"></i>
-        Novo Tipo
-      <% end %>
+        Novo Tipo de Equipamento
+      </button>
     </div>
   </div>
 
-  <div class="equipment-types-grid">
-    <% if @equipment_types.any? %>
-      <% @equipment_types.each do |equipment_type| %>
-        <div class="equipment-type-card" style="<%= equipment_type.css_style %>">
-          <div class="card-header">
-            <div class="type-icon">
-              <i class="<%= equipment_type.icon_class %>"></i>
-            </div>
-            <div class="type-info">
-              <h3><%= equipment_type.name %></h3>
-              <p><%= equipment_type.description %></p>
-            </div>
-            <div class="type-status">
-              <% if equipment_type.active? %>
-                <span class="status-badge active">Ativo</span>
-              <% else %>
-                <span class="status-badge inactive">Inativo</span>
-              <% end %>
+  <!-- Dashboard Grid -->
+  <div class="types-grid">
+    <% @equipment_types.each do |equipment_type| %>
+      <div class="type-card" data-type-id="<%= equipment_type.id %>">
+        <!-- Card Header -->
+        <div class="card-header">
+          <div class="type-icon" style="background-color: <%= equipment_type.primary_color %>;">
+            <i class="<%= equipment_type.icon_class || 'fas fa-cog' %>"></i>
+          </div>
+          <div class="type-info">
+            <h3><%= equipment_type.name %></h3>
+            <div class="type-meta">
+              <span class="status-badge <%= equipment_type.active? ? 'active' : 'inactive' %>">
+                <%= equipment_type.active? ? 'Ativo' : 'Inativo' %>
+              </span>
+              <span class="features-count">
+                <%= equipment_type.equipment_features.count %> características
+              </span>
             </div>
           </div>
-
-          <div class="card-stats">
-            <div class="stat">
-              <span class="stat-number"><%= equipment_type.equipment_count %></span>
-              <span class="stat-label">Equipamentos</span>
-            </div>
-            <div class="stat">
-              <span class="stat-number"><%= equipment_type.feature_count %></span>
-              <span class="stat-label">Características</span>
-            </div>
-          </div>
-
           <div class="card-actions">
-            <%= link_to equipment_type_path(equipment_type), class: "btn btn-sm btn-outline" do %>
-              <i class="fas fa-eye"></i>
-              Ver Detalhes
-            <% end %>
-            
-            <%= link_to equipment_type_equipment_features_path(equipment_type), class: "btn btn-sm btn-outline" do %>
-              <i class="fas fa-cog"></i>
-              Características
-            <% end %>
-            
-            <%= link_to edit_equipment_type_path(equipment_type), class: "btn btn-sm btn-outline" do %>
+            <button onclick="editTypeModal(<%= equipment_type.id %>)" class="btn-icon" title="Editar">
               <i class="fas fa-edit"></i>
-              Editar
-            <% end %>
-            
-            <%= link_to equipment_type_path(equipment_type), 
-                method: :delete, 
-                data: { confirm: "Tem certeza que deseja excluir este tipo de equipamento?" },
-                class: "btn btn-sm btn-danger" do %>
-              <i class="fas fa-trash"></i>
-              Excluir
-            <% end %>
+            </button>
+            <button onclick="duplicateType(<%= equipment_type.id %>)" class="btn-icon" title="Duplicar">
+              <i class="fas fa-copy"></i>
+            </button>
           </div>
         </div>
-      <% end %>
-    <% else %>
-      <div class="empty-state">
-        <div class="empty-icon">🏷️</div>
-        <h3>Nenhum tipo de equipamento cadastrado</h3>
-        <p>Comece criando o primeiro tipo de equipamento para o seu sistema.</p>
-        <%= link_to new_equipment_type_path, class: "btn btn-primary" do %>
-          <i class="fas fa-plus"></i>
-          Criar Primeiro Tipo
-        <% end %>
+
+        <!-- Features Preview -->
+        <div class="features-preview">
+          <% equipment_type.equipment_features.ordered.limit(3).each do |feature| %>
+            <div class="feature-tag">
+              <i class="<%= feature.icon_class || 'fas fa-tag' %>"></i>
+              <%= feature.name %>
+              <% if feature.required %>
+                <span class="required-badge">*</span>
+              <% end %>
+            </div>
+          <% end %>
+          <% if equipment_type.equipment_features.count > 3 %>
+            <div class="more-features">
+              +<%= equipment_type.equipment_features.count - 3 %> mais
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+          <div class="stat">
+            <span class="stat-number"><%= equipment_type.equipments.count %></span>
+            <span class="stat-label">Equipamentos</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number"><%= equipment_type.equipment_features.count %></span>
+            <span class="stat-label">Características</span>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card-footer">
+          <%= link_to manage_equipment_type_path(equipment_type), class: "btn btn-primary btn-sm" do %>
+            <i class="fas fa-cogs"></i>
+            Gerenciar
+          <% end %>
+          <button onclick="editTypeModal(<%= equipment_type.id %>)" class="btn btn-outline btn-sm">
+            <i class="fas fa-edit"></i>
+            Editar
+          </button>
+          <button onclick="viewEquipments(<%= equipment_type.id %>)" class="btn btn-secondary btn-sm">
+            <i class="fas fa-list"></i>
+            Ver Equipamentos
+          </button>
+        </div>
       </div>
     <% end %>
+  </div>
+
+  <!-- Empty State -->
+  <% if @equipment_types.empty? %>
+    <div class="empty-state">
+      <div class="empty-icon">🏷️</div>
+      <h3>Nenhum tipo de equipamento cadastrado</h3>
+      <p>Comece criando o primeiro tipo de equipamento com suas características.</p>
+      <button onclick="openTypeModal()" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        Criar Primeiro Tipo
+      </button>
+    </div>
+  <% end %>
+</div>
+
+<!-- Modal para Gestão Completa -->
+<div id="typeModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle">Novo Tipo de Equipamento</h2>
+      <button onclick="closeTypeModal()" class="modal-close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <form id="typeForm" class="modal-form">
+      <input type="hidden" id="typeId" name="id">
+      
+      <!-- Informações Básicas -->
+      <div class="form-section">
+        <h3><i class="fas fa-info-circle"></i> Informações Básicas</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="typeName" class="form-label">Nome do Tipo *</label>
+            <input type="text" id="typeName" name="name" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <label for="typeColor" class="form-label">Cor Principal</label>
+            <input type="color" id="typeColor" name="primary_color" class="form-control-color" value="#3b82f6">
+          </div>
+        </div>
+      </div>
+
+      <!-- Templates -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3><i class="fas fa-layer-group"></i> Templates</h3>
+          <button type="button" onclick="saveAsTemplate()" class="btn btn-sm btn-outline">
+            <i class="fas fa-save"></i>
+            Salvar como Template
+          </button>
+        </div>
+        
+        <div class="templates-section">
+          <div class="template-selector">
+            <label for="templateSelect" class="form-label">Carregar Template:</label>
+            <select id="templateSelect" class="form-control" onchange="loadTemplate()">
+              <option value="">Selecione um template...</option>
+              <option value="transformer">Transformador (Básico)</option>
+              <option value="breaker">Disjuntor (Básico)</option>
+              <option value="recloser">Religador (Básico)</option>
+              <option value="custom">Template Personalizado...</option>
+            </select>
+          </div>
+          
+          <div class="template-actions">
+            <button type="button" onclick="importFromFile()" class="btn btn-sm btn-outline">
+              <i class="fas fa-upload"></i> Importar
+            </button>
+            <button type="button" onclick="exportToFile()" class="btn btn-sm btn-outline">
+              <i class="fas fa-download"></i> Exportar
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Características -->
+      <div class="form-section">
+        <div class="section-header">
+          <h3><i class="fas fa-cogs"></i> Características</h3>
+          <div class="section-actions">
+            <button type="button" onclick="selectAllFeatures()" class="btn btn-sm btn-outline">
+              <i class="fas fa-check-square"></i> Selecionar Todas
+            </button>
+            <button type="button" onclick="addFeature()" class="btn btn-sm btn-outline">
+              <i class="fas fa-plus"></i>
+              Adicionar Característica
+            </button>
+          </div>
+        </div>
+        
+        <div id="featuresContainer" class="features-container" data-sortable="true">
+          <!-- As características serão adicionadas dinamicamente aqui -->
+        </div>
+        
+        <!-- Controles de Bulk Actions -->
+        <div class="bulk-actions" id="bulkActions" style="display: none;">
+          <div class="bulk-header">
+            <span class="bulk-count">0 características selecionadas</span>
+            <div class="bulk-buttons">
+              <button type="button" onclick="bulkDelete()" class="btn btn-sm btn-danger">
+                <i class="fas fa-trash"></i> Excluir Selecionadas
+              </button>
+              <button type="button" onclick="bulkToggleRequired()" class="btn btn-sm btn-outline">
+                <i class="fas fa-asterisk"></i> Alternar Obrigatório
+              </button>
+              <button type="button" onclick="bulkToggleFilterable()" class="btn btn-sm btn-outline">
+                <i class="fas fa-filter"></i> Alternar Filtrável
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botões de Ação -->
+      <div class="modal-footer">
+        <button type="button" onclick="closeTypeModal()" class="btn btn-outline">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i>
+          Salvar Tipo de Equipamento
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
 <style>
-.equipment-types-page {
+.equipment-types-dashboard {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
@@ -111,47 +246,43 @@
   margin: 0;
 }
 
-.header-actions {
-  flex-shrink: 0;
-}
-
-.equipment-types-grid {
+.types-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
-.equipment-type-card {
+.type-card {
   background: white;
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
   transition: all 0.2s;
-  border-left: 4px solid var(--primary-color, #3b82f6);
 }
 
-.equipment-type-card:hover {
+.type-card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
   display: flex;
   align-items: flex-start;
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .type-icon {
-  width: 50px;
-  height: 50px;
-  background: var(--primary-color, #3b82f6);
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   flex-shrink: 0;
 }
 
@@ -163,41 +294,93 @@
   margin: 0 0 0.5rem 0;
   color: #1f2937;
   font-size: 1.25rem;
-  font-weight: 600;
 }
 
-.type-info p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 0.9rem;
-  line-height: 1.4;
-}
-
-.type-status {
-  flex-shrink: 0;
+.type-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }
 
 .status-badge {
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
 .status-badge.active {
-  background: #10b981;
-  color: white;
+  background: #dcfce7;
+  color: #166534;
 }
 
 .status-badge.inactive {
-  background: #6b7280;
-  color: white;
+  background: #fef2f2;
+  color: #dc2626;
 }
 
-.card-stats {
+.features-count {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.card-actions {
   display: flex;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.features-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.feature-tag {
+  background: #f3f4f6;
+  color: #374151;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.required-badge {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.more-features {
+  color: #6b7280;
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.quick-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
   padding: 1rem;
   background: #f9fafb;
   border-radius: 8px;
@@ -205,66 +388,292 @@
 
 .stat {
   text-align: center;
+  flex: 1;
 }
 
 .stat-number {
   display: block;
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--primary-color, #3b82f6);
+  color: #1f2937;
 }
 
 .stat-label {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.card-actions {
+.card-footer {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
-.btn {
-  display: inline-flex;
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
+  backdrop-filter: blur(4px);
+}
+
+.modal.show {
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  margin: 0;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: hidden;
+  box-shadow: none;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: all 0.2s;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.modal-form {
+  padding: 2rem;
+  flex: 1;
+  overflow-y: auto;
+  height: calc(100vh - 120px - 100px); /* 100vh - header - footer */
+  max-height: calc(100vh - 120px - 100px);
+}
+
+.form-section {
+  margin-bottom: 3rem;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.form-section h3 {
+  margin: 0 0 1.5rem 0;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f3f4f6;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-control {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control-error {
+  border-color: #ef4444;
+  background-color: #fef2f2;
+}
+
+.form-control-error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.form-control-color {
+  width: 60px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.features-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+.feature-item {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.feature-item:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
+}
+
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.feature-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  flex: 1;
+}
+
+.feature-actions {
+  flex-shrink: 0;
+}
+
+.feature-options {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.feature-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.feature-flags label {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.2s;
-  border: none;
-  cursor: pointer;
   font-size: 0.875rem;
-}
-
-.btn-sm {
-  padding: 0.25rem 0.75rem;
-  font-size: 0.8rem;
-}
-
-.btn-primary {
-  background: var(--primary-color, #3b82f6);
-  color: white;
-}
-
-.btn-primary:hover {
-  background: var(--secondary-color, #1d4ed8);
-  transform: translateY(-1px);
-}
-
-.btn-outline {
-  border: 1px solid #d1d5db;
   color: #374151;
-  background: white;
+  cursor: pointer;
 }
 
-.btn-outline:hover {
-  background: #f9fafb;
-  border-color: #9ca3af;
+.feature-flags input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.options-section {
+  margin-top: 1rem;
+}
+
+.options-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.options-header h4 {
+  margin: 0;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
 }
 
 .btn-danger {
@@ -276,34 +685,192 @@
   background: #dc2626;
 }
 
-.empty-state {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 4rem 2rem;
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.btn-outline {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border: 1px solid #d1d5db;
+  color: #374151;
 }
 
-.empty-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+.btn-outline:hover {
+  background: #f9fafb;
 }
 
-.empty-state h3 {
-  color: #1f2937;
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
+.btn-secondary {
+  background: #6b7280;
+  color: white;
 }
 
-.empty-state p {
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* Drag & Drop Styles */
+.feature-item {
+  cursor: move;
+  transition: all 0.2s;
+}
+
+.feature-item.dragging {
+  opacity: 0.5;
+  transform: rotate(2deg);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.feature-item.drag-over {
+  border-top: 3px solid #3b82f6;
+  margin-top: 1rem;
+}
+
+/* Bulk Actions */
+.bulk-actions {
+  background: #f0f9ff;
+  border: 1px solid #0ea5e9;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.bulk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bulk-count {
+  font-weight: 500;
+  color: #0c4a6e;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Templates Section */
+.templates-section {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+.template-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.template-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Section Actions */
+.section-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Feature Selection */
+.feature-item {
+  position: relative;
+}
+
+.feature-checkbox {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
+}
+
+.feature-item.selected {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+/* Validation Styles */
+.feature-item.has-error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Sortable Handle */
+.sort-handle {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: #9ca3af;
+  cursor: move;
+  z-index: 10;
+}
+
+.feature-item:hover .sort-handle {
   color: #6b7280;
-  margin: 0 0 2rem 0;
-  font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .templates-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .bulk-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .bulk-buttons {
+    justify-content: center;
+  }
+  
+  .section-actions {
+    flex-direction: column;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  padding: 2rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+  flex-shrink: 0;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .feature-inputs {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .option-item {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }
 
 @media (max-width: 768px) {
-  .equipment-types-page {
+  .equipment-types-dashboard {
     padding: 1rem;
   }
   
@@ -312,22 +879,702 @@
     align-items: stretch;
   }
   
-  .equipment-types-grid {
+  .types-grid {
     grid-template-columns: 1fr;
   }
   
-  .card-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .modal-content {
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
   }
   
-  .card-stats {
+  .modal-header {
+    padding: 1.5rem;
+  }
+  
+  .modal-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .modal-close {
+    width: 50px;
+    height: 50px;
+    font-size: 1.5rem;
+  }
+  
+  .modal-form {
+    padding: 1.5rem;
+    height: calc(100vh - 100px - 80px); /* Ajustado para mobile */
+    max-height: calc(100vh - 100px - 80px);
+  }
+  
+  .form-section {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .form-section h3 {
+    font-size: 1.25rem;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .section-actions {
+    justify-content: center;
+  }
+  
+  .features-container {
+    max-height: 50vh;
+  }
+  
+  .feature-item {
+    padding: 1.5rem;
+  }
+  
+  .feature-flags {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .modal-footer {
+    padding: 1.5rem;
     flex-direction: column;
     gap: 1rem;
   }
   
-  .card-actions {
+  .bulk-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .bulk-buttons {
     justify-content: center;
+  }
+  
+  .templates-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header {
+    padding: 1rem;
+  }
+  
+  .modal-form {
+    padding: 1rem;
+  }
+  
+  .form-section {
+    padding: 1rem;
+  }
+  
+  .feature-item {
+    padding: 1rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem;
   }
 }
 </style>
+
+<script>
+let currentTypeId = null;
+let features = [];
+let selectedFeatures = new Set();
+let dragSource = null;
+
+function openTypeModal() {
+  currentTypeId = null;
+  features = [];
+  document.getElementById('modalTitle').textContent = 'Novo Tipo de Equipamento';
+  document.getElementById('typeForm').reset();
+  document.getElementById('featuresContainer').innerHTML = '';
+  document.getElementById('typeModal').classList.add('show');
+}
+
+function closeTypeModal() {
+  document.getElementById('typeModal').classList.remove('show');
+}
+
+function editTypeModal(typeId) {
+  currentTypeId = typeId;
+  // Carregar dados do tipo via AJAX
+  fetch(`/equipment_types/${typeId}/edit_modal`)
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById('modalTitle').textContent = `Editar: ${data.name}`;
+      document.getElementById('typeId').value = data.id;
+      document.getElementById('typeName').value = data.name;
+      document.getElementById('typeColor').value = data.primary_color;
+      
+      features = data.features || [];
+      renderFeatures();
+      
+      document.getElementById('typeModal').classList.add('show');
+    });
+}
+
+function addFeature() {
+  const feature = {
+    id: Date.now(), // ID temporário
+    name: '',
+    data_type: 'text',
+    required: false,
+    filterable: false,
+    searchable: false,
+    sortable: false,
+    description: '',
+    unit: '',
+    options: []
+  };
+  
+  features.push(feature);
+  renderFeatures();
+}
+
+function removeFeature(featureIndex) {
+  features.splice(featureIndex, 1);
+  renderFeatures();
+}
+
+function addOption(featureIndex) {
+  if (!features[featureIndex].options) {
+    features[featureIndex].options = [];
+  }
+  
+  features[featureIndex].options.push({
+    id: Date.now(),
+    value: '',
+    label: '',
+    color: '#3b82f6'
+  });
+  
+  renderFeatures();
+}
+
+function removeOption(featureIndex, optionIndex) {
+  console.log('Removendo opção:', featureIndex, optionIndex);
+  if (features[featureIndex] && features[featureIndex].options) {
+    features[featureIndex].options.splice(optionIndex, 1);
+    console.log('Opções após remoção:', features[featureIndex].options);
+    renderFeatures();
+  }
+}
+
+function renderFeatures() {
+  const container = document.getElementById('featuresContainer');
+  container.innerHTML = '';
+  
+  features.forEach((feature, featureIndex) => {
+    const isSelected = selectedFeatures.has(featureIndex);
+    const hasError = !feature.name || (feature.data_type === 'select' && (!feature.options || feature.options.length === 0));
+    
+    const featureHtml = `
+      <div class="feature-item ${isSelected ? 'selected' : ''} ${hasError ? 'has-error' : ''}" 
+           data-feature-index="${featureIndex}" draggable="true">
+        
+        <!-- Drag Handle -->
+        <div class="sort-handle">
+          <i class="fas fa-grip-vertical"></i>
+        </div>
+        
+        <!-- Selection Checkbox -->
+        <input type="checkbox" 
+               class="feature-checkbox" 
+               data-feature-index="${featureIndex}"
+               ${isSelected ? 'checked' : ''}
+               onchange="updateFeatureSelection(this)">
+        
+        <div class="feature-header">
+          <div class="feature-inputs">
+            <input type="text" 
+                   placeholder="Nome da característica" 
+                   value="${feature.name}"
+                   onchange="updateFeature(${featureIndex}, 'name', this.value)"
+                   class="form-control ${!feature.name ? 'form-control-error' : ''}">
+            <select onchange="updateFeature(${featureIndex}, 'data_type', this.value)" class="form-control">
+              <option value="text" ${feature.data_type === 'text' ? 'selected' : ''}>Texto</option>
+              <option value="number" ${feature.data_type === 'number' ? 'selected' : ''}>Número</option>
+              <option value="select" ${feature.data_type === 'select' ? 'selected' : ''}>Seleção</option>
+              <option value="boolean" ${feature.data_type === 'boolean' ? 'selected' : ''}>Sim/Não</option>
+            </select>
+          </div>
+          <div class="feature-actions">
+            <button type="button" onclick="removeFeature(${featureIndex})" class="btn-icon btn-danger">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="feature-options">
+          <div class="feature-flags">
+            <label><input type="checkbox" ${feature.required ? 'checked' : ''} onchange="updateFeature(${featureIndex}, 'required', this.checked)"> Obrigatório</label>
+            <label><input type="checkbox" ${feature.filterable ? 'checked' : ''} onchange="updateFeature(${featureIndex}, 'filterable', this.checked)"> Filtrável</label>
+            <label><input type="checkbox" ${feature.searchable ? 'checked' : ''} onchange="updateFeature(${featureIndex}, 'searchable', this.checked)"> Pesquisável</label>
+            <label><input type="checkbox" ${feature.sortable ? 'checked' : ''} onchange="updateFeature(${featureIndex}, 'sortable', this.checked)"> Ordenável</label>
+          </div>
+          
+          ${feature.data_type === 'select' ? `
+            <div class="options-section">
+              <div class="options-header">
+                <h4>Opções</h4>
+                <button type="button" onclick="addOption(${featureIndex})" class="btn btn-sm btn-outline">
+                  <i class="fas fa-plus"></i> Adicionar Opção
+                </button>
+              </div>
+              <div class="options-list">
+                ${feature.options ? feature.options.map((option, optionIndex) => `
+                  <div class="option-item">
+                    <input type="text" placeholder="Valor" value="${option.value}" onchange="updateOption(${featureIndex}, ${optionIndex}, 'value', this.value)" class="form-control">
+                    <input type="text" placeholder="Rótulo" value="${option.label}" onchange="updateOption(${featureIndex}, ${optionIndex}, 'label', this.value)" class="form-control">
+                    <input type="color" value="${option.color}" onchange="updateOption(${featureIndex}, ${optionIndex}, 'color', this.value)" class="form-control-color">
+                    <button type="button" onclick="removeOption(${featureIndex}, ${optionIndex})" class="btn-icon btn-danger">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  </div>
+                `).join('') : ''}
+              </div>
+            </div>
+          ` : ''}
+          
+          ${hasError ? `
+            <div class="error-message">
+              ${!feature.name ? 'Nome é obrigatório' : ''}
+              ${feature.data_type === 'select' && (!feature.options || feature.options.length === 0) ? 'Deve ter pelo menos uma opção' : ''}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', featureHtml);
+  });
+  
+  updateBulkActions();
+}
+
+function updateFeature(featureIndex, field, value) {
+  console.log('Atualizando feature:', featureIndex, field, value);
+  features[featureIndex][field] = value;
+  if (field === 'data_type' && value !== 'select') {
+    features[featureIndex].options = [];
+  }
+  renderFeatures();
+}
+
+function updateOption(featureIndex, optionIndex, field, value) {
+  features[featureIndex].options[optionIndex][field] = value;
+}
+
+// Form submission
+document.getElementById('typeForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  console.log('Formulário submetido');
+  
+  // Validação avançada
+  const validationErrors = validateFeatures();
+  if (validationErrors.length > 0) {
+    alert('Erro de validação:\n\n' + validationErrors.join('\n'));
+    return;
+  }
+  
+  const formData = {
+    id: document.getElementById('typeId').value,
+    name: document.getElementById('typeName').value,
+    primary_color: document.getElementById('typeColor').value,
+    features: features
+  };
+  
+  console.log('Dados do formulário:', formData);
+  
+  const url = currentTypeId ? `/equipment_types/${currentTypeId}` : '/equipment_types';
+  const method = currentTypeId ? 'PUT' : 'POST';
+  
+  console.log('URL:', url, 'Method:', method);
+  
+  fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+  .then(response => {
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Resposta não é JSON válido');
+    }
+    
+    return response.json();
+  })
+  .then(data => {
+    console.log('Response data:', data);
+    if (data.success) {
+      closeTypeModal();
+      location.reload(); // Recarregar para mostrar mudanças
+    } else {
+      alert('Erro ao salvar: ' + (data.errors ? data.errors.join(', ') : 'Erro desconhecido'));
+    }
+  })
+  .catch(error => {
+    console.error('Erro na requisição:', error);
+    alert('Erro ao salvar: ' + error.message);
+  });
+});
+
+function duplicateType(typeId) {
+  if (confirm('Deseja duplicar este tipo de equipamento?')) {
+    fetch(`/equipment_types/${typeId}/duplicate`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('Erro ao duplicar: ' + data.errors.join(', '));
+      }
+    });
+  }
+}
+
+function viewEquipments(typeId) {
+  window.location.href = `/equipments?equipment_type_id=${typeId}`;
+}
+
+// Close modal when clicking outside
+document.getElementById('typeModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeTypeModal();
+  }
+});
+
+// ===== FASE 2: NOVAS FUNCIONALIDADES =====
+
+// Drag & Drop
+function initDragAndDrop() {
+  const container = document.getElementById('featuresContainer');
+  
+  container.addEventListener('dragstart', function(e) {
+    if (e.target.closest('.feature-item')) {
+      dragSource = e.target.closest('.feature-item');
+      dragSource.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', dragSource.outerHTML);
+    }
+  });
+  
+  container.addEventListener('dragend', function(e) {
+    if (dragSource) {
+      dragSource.classList.remove('dragging');
+      dragSource = null;
+    }
+  });
+  
+  container.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    const target = e.target.closest('.feature-item');
+    if (target && target !== dragSource) {
+      target.classList.add('drag-over');
+    }
+  });
+  
+  container.addEventListener('dragleave', function(e) {
+    const target = e.target.closest('.feature-item');
+    if (target) {
+      target.classList.remove('drag-over');
+    }
+  });
+  
+  container.addEventListener('drop', function(e) {
+    e.preventDefault();
+    
+    const target = e.target.closest('.feature-item');
+    if (target && dragSource && target !== dragSource) {
+      const sourceIndex = parseInt(dragSource.dataset.featureIndex);
+      const targetIndex = parseInt(target.dataset.featureIndex);
+      
+      // Reordenar array
+      const [movedFeature] = features.splice(sourceIndex, 1);
+      features.splice(targetIndex, 0, movedFeature);
+      
+      renderFeatures();
+    }
+    
+    target?.classList.remove('drag-over');
+  });
+}
+
+// Bulk Actions
+function selectAllFeatures() {
+  const checkboxes = document.querySelectorAll('.feature-checkbox');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  
+  checkboxes.forEach(cb => {
+    cb.checked = !allChecked;
+    updateFeatureSelection(cb);
+  });
+}
+
+function updateFeatureSelection(checkbox) {
+  const featureIndex = parseInt(checkbox.dataset.featureIndex);
+  
+  if (checkbox.checked) {
+    selectedFeatures.add(featureIndex);
+  } else {
+    selectedFeatures.delete(featureIndex);
+  }
+  
+  updateBulkActions();
+}
+
+function updateBulkActions() {
+  const bulkActions = document.getElementById('bulkActions');
+  const bulkCount = document.querySelector('.bulk-count');
+  
+  if (selectedFeatures.size > 0) {
+    bulkActions.style.display = 'block';
+    bulkCount.textContent = `${selectedFeatures.size} características selecionadas`;
+  } else {
+    bulkActions.style.display = 'none';
+  }
+}
+
+function bulkDelete() {
+  if (confirm(`Deseja excluir ${selectedFeatures.size} características selecionadas?`)) {
+    const sortedIndices = Array.from(selectedFeatures).sort((a, b) => b - a);
+    sortedIndices.forEach(index => {
+      features.splice(index, 1);
+    });
+    selectedFeatures.clear();
+    renderFeatures();
+  }
+}
+
+function bulkToggleRequired() {
+  selectedFeatures.forEach(index => {
+    features[index].required = !features[index].required;
+  });
+  renderFeatures();
+  updateBulkActions();
+}
+
+function bulkToggleFilterable() {
+  selectedFeatures.forEach(index => {
+    features[index].filterable = !features[index].filterable;
+  });
+  renderFeatures();
+  updateBulkActions();
+}
+
+// Templates
+function saveAsTemplate() {
+  const templateName = prompt('Nome do template:');
+  if (templateName) {
+    const template = {
+      name: templateName,
+      features: features,
+      created_at: new Date().toISOString()
+    };
+    
+    // Salvar no localStorage
+    const templates = JSON.parse(localStorage.getItem('equipmentTemplates') || '[]');
+    templates.push(template);
+    localStorage.setItem('equipmentTemplates', JSON.stringify(templates));
+    
+    alert(`Template "${templateName}" salvo com sucesso!`);
+  }
+}
+
+function loadTemplate() {
+  const templateSelect = document.getElementById('templateSelect');
+  const selectedValue = templateSelect.value;
+  
+  if (!selectedValue) return;
+  
+  if (selectedValue === 'custom') {
+    loadCustomTemplate();
+    return;
+  }
+  
+  // Templates pré-definidos
+  const predefinedTemplates = {
+    transformer: [
+      { name: 'Potência', data_type: 'select', required: true, filterable: true, options: [
+        { value: '30', label: '30 kVA', color: '#3b82f6' },
+        { value: '50', label: '50 kVA', color: '#10b981' },
+        { value: '100', label: '100 kVA', color: '#f59e0b' }
+      ]},
+      { name: 'Tensão BT', data_type: 'select', required: true, filterable: true, options: [
+        { value: '380', label: '380 V', color: '#3b82f6' },
+        { value: '440', label: '440 V', color: '#10b981' }
+      ]},
+      { name: 'Bandeira', data_type: 'select', required: false, filterable: true, options: [
+        { value: 'verde', label: 'Verde', color: '#10b981' },
+        { value: 'azul', label: 'Azul', color: '#3b82f6' },
+        { value: 'vermelho', label: 'Vermelho', color: '#ef4444' }
+      ]}
+    ],
+    breaker: [
+      { name: 'Corrente Nominal', data_type: 'select', required: true, filterable: true, options: [
+        { value: '100', label: '100 A', color: '#3b82f6' },
+        { value: '200', label: '200 A', color: '#10b981' },
+        { value: '400', label: '400 A', color: '#f59e0b' }
+      ]},
+      { name: 'Tensão', data_type: 'select', required: true, filterable: true, options: [
+        { value: '13.8', label: '13.8 kV', color: '#3b82f6' },
+        { value: '24.9', label: '24.9 kV', color: '#10b981' }
+      ]}
+    ],
+    recloser: [
+      { name: 'Corrente Nominal', data_type: 'select', required: true, filterable: true, options: [
+        { value: '200', label: '200 A', color: '#3b82f6' },
+        { value: '400', label: '400 A', color: '#10b981' },
+        { value: '630', label: '630 A', color: '#f59e0b' }
+      ]},
+      { name: 'Tensão', data_type: 'select', required: true, filterable: true, options: [
+        { value: '13.8', label: '13.8 kV', color: '#3b82f6' },
+        { value: '24.9', label: '24.9 kV', color: '#10b981' }
+      ]},
+      { name: 'Tipo de Controle', data_type: 'select', required: false, filterable: true, options: [
+        { value: 'eletronico', label: 'Eletrônico', color: '#3b82f6' },
+        { value: 'hidraulico', label: 'Hidráulico', color: '#10b981' }
+      ]}
+    ]
+  };
+  
+  if (predefinedTemplates[selectedValue]) {
+    features = predefinedTemplates[selectedValue];
+    renderFeatures();
+    alert(`Template "${selectedValue}" carregado com sucesso!`);
+  }
+  
+  templateSelect.value = '';
+}
+
+function loadCustomTemplate() {
+  const templates = JSON.parse(localStorage.getItem('equipmentTemplates') || '[]');
+  
+  if (templates.length === 0) {
+    alert('Nenhum template personalizado encontrado.');
+    return;
+  }
+  
+  const templateNames = templates.map(t => t.name);
+  const selectedName = prompt(`Templates disponíveis:\n${templateNames.join('\n')}\n\nDigite o nome do template:`);
+  
+  if (selectedName) {
+    const template = templates.find(t => t.name === selectedName);
+    if (template) {
+      features = template.features;
+      renderFeatures();
+      alert(`Template "${selectedName}" carregado com sucesso!`);
+    } else {
+      alert('Template não encontrado.');
+    }
+  }
+}
+
+// Import/Export
+function exportToFile() {
+  const data = {
+    name: document.getElementById('typeName').value || 'Tipo de Equipamento',
+    features: features,
+    exported_at: new Date().toISOString()
+  };
+  
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_template.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importFromFile() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  
+  input.onchange = function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.features) {
+            features = data.features;
+            renderFeatures();
+            alert('Template importado com sucesso!');
+          } else {
+            alert('Arquivo inválido. Formato esperado: JSON com campo "features".');
+          }
+        } catch (error) {
+          alert('Erro ao ler arquivo: ' + error.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
+  
+  input.click();
+}
+
+// Validação Avançada
+function validateFeatures() {
+  const errors = [];
+  
+  features.forEach((feature, index) => {
+    if (!feature.name || feature.name.trim() === '') {
+      errors.push(`Característica ${index + 1}: Nome é obrigatório`);
+    }
+    
+    if (feature.data_type === 'select' && (!feature.options || feature.options.length === 0)) {
+      errors.push(`Característica "${feature.name}": Deve ter pelo menos uma opção`);
+    }
+    
+    if (feature.data_type === 'select' && feature.options) {
+      feature.options.forEach((option, optionIndex) => {
+        if (!option.value || option.value.trim() === '') {
+          errors.push(`Característica "${feature.name}" - Opção ${optionIndex + 1}: Valor é obrigatório`);
+        }
+      });
+    }
+  });
+  
+  return errors;
+}
+
+// Inicializar funcionalidades da Fase 2
+document.addEventListener('DOMContentLoaded', function() {
+  initDragAndDrop();
+});
+</script>

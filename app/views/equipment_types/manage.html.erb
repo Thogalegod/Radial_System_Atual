@@ -1,0 +1,1054 @@
+<div class="page-container">
+  <!-- Header da página -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>
+        <i class="fas fa-cogs"></i>
+        Gerenciar Tipo de Equipamento
+      </h1>
+      <p class="header-subtitle">
+        Configure as características e opções do tipo "<strong><%= @equipment_type.name %></strong>"
+      </p>
+    </div>
+    <div class="header-actions">
+      <%= link_to equipment_types_path, class: "btn btn-outline" do %>
+        <i class="fas fa-arrow-left"></i>
+        Voltar
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Informações básicas do tipo -->
+  <div class="info-card">
+    <div class="card-header">
+      <h3><i class="fas fa-info-circle"></i> Informações Básicas</h3>
+    </div>
+    <div class="card-content">
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nome:</label>
+          <span><%= @equipment_type.name %></span>
+        </div>
+        <div class="info-item">
+          <label>Cor Principal:</label>
+          <span class="color-preview" style="background-color: <%= @equipment_type.primary_color %>"></span>
+          <span><%= @equipment_type.primary_color %></span>
+        </div>
+        <div class="info-item">
+          <label>Equipamentos Cadastrados:</label>
+          <span class="badge badge-primary"><%= @equipment_type.equipments.count %></span>
+        </div>
+        <div class="info-item">
+          <label>Características:</label>
+          <span class="badge badge-secondary"><%= @equipment_features.count %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulário de gerenciamento -->
+  <div class="management-form">
+    <div class="form-header">
+      <h3><i class="fas fa-edit"></i> Editar Tipo de Equipamento</h3>
+      <p>Modifique as informações básicas e características deste tipo de equipamento</p>
+    </div>
+
+    <%= form_with model: @equipment_type, url: update_manage_equipment_type_path(@equipment_type), method: :patch, local: true, class: "form-content" do |form| %>
+      <!-- Informações básicas -->
+      <div class="form-section">
+        <h4><i class="fas fa-tag"></i> Informações Básicas</h4>
+        <div class="form-grid">
+          <div class="form-group">
+            <%= form.label :name, "Nome do Tipo" %>
+            <%= form.text_field :name, class: "form-control", required: true %>
+          </div>
+          <div class="form-group">
+            <%= form.label :primary_color, "Cor Principal" %>
+            <div class="color-input-group">
+              <%= form.color_field :primary_color, class: "form-control-color" %>
+              <div class="color-presets">
+                <button type="button" class="color-preset" style="background-color: #3b82f6" data-color="#3b82f6"></button>
+                <button type="button" class="color-preset" style="background-color: #10b981" data-color="#10b981"></button>
+                <button type="button" class="color-preset" style="background-color: #f59e0b" data-color="#f59e0b"></button>
+                <button type="button" class="color-preset" style="background-color: #ef4444" data-color="#ef4444"></button>
+                <button type="button" class="color-preset" style="background-color: #8b5cf6" data-color="#8b5cf6"></button>
+                <button type="button" class="color-preset" style="background-color: #06b6d4" data-color="#06b6d4"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Campos hidden para enviar dados das características -->
+      <input type="hidden" id="featuresData" name="features" value="">
+
+      <!-- Características -->
+      <div class="form-section">
+        <div class="section-header">
+          <h4><i class="fas fa-list"></i> Características</h4>
+          <div class="section-actions">
+            <button type="button" class="btn btn-primary" onclick="addFeature()">
+              <i class="fas fa-plus"></i>
+              Adicionar Característica
+            </button>
+          </div>
+        </div>
+
+        <div id="featuresContainer" class="features-container">
+          <% @equipment_features.each_with_index do |feature, index| %>
+            <div class="feature-item" data-feature-id="<%= feature.id %>" data-feature-name="<%= feature.name %>">
+              <div class="feature-header">
+                <div class="feature-toggle" onclick="toggleFeatureDetails(this)">
+                  <i class="fas fa-chevron-right toggle-icon"></i>
+                  <span class="feature-title"><%= feature.name %></span>
+                  <span class="feature-type-badge"><%= feature.data_type.humanize %></span>
+                </div>
+                <div class="feature-actions">
+                  <button type="button" class="btn-icon btn-outline" onclick="removeFeature(this)">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="feature-details collapsed">
+                <div class="feature-inputs">
+                  <input type="text" 
+                         placeholder="Nome da característica" 
+                         value="<%= feature.name %>"
+                         class="form-control feature-name"
+                         data-original-name="<%= feature.name %>">
+                  <select class="form-control feature-type">
+                    <option value="string" <%= 'selected' if feature.data_type == 'string' %>>Texto</option>
+                    <option value="integer" <%= 'selected' if feature.data_type == 'integer' %>>Número Inteiro</option>
+                    <option value="float" <%= 'selected' if feature.data_type == 'float' %>>Número Decimal</option>
+                    <option value="select" <%= 'selected' if feature.data_type == 'select' %>>Seleção</option>
+                    <option value="boolean" <%= 'selected' if feature.data_type == 'boolean' %>>Sim/Não</option>
+                    <option value="date" <%= 'selected' if feature.data_type == 'date' %>>Data</option>
+                  </select>
+                </div>
+
+              <div class="feature-options">
+                <div class="feature-flags">
+                  <label>
+                    <input type="checkbox" <%= 'checked' if feature.required %> class="feature-required">
+                    Obrigatório
+                  </label>
+                  <label>
+                    <input type="checkbox" <%= 'checked' if feature.filterable %> class="feature-filterable">
+                    Filtrável
+                  </label>
+                  <label>
+                    <input type="checkbox" <%= 'checked' if feature.searchable %> class="feature-searchable">
+                    Pesquisável
+                  </label>
+                  <label>
+                    <input type="checkbox" <%= 'checked' if feature.sortable %> class="feature-sortable">
+                    Ordenável
+                  </label>
+                </div>
+
+                <% if feature.data_type == 'select' %>
+                  <div class="options-section">
+                    <div class="options-header">
+                      <h5>Opções</h5>
+                      <button type="button" class="btn btn-sm btn-outline" onclick="addOption(this)">
+                        <i class="fas fa-plus"></i> Adicionar Opção
+                      </button>
+                    </div>
+                    <div class="options-list">
+                      <% feature.equipment_feature_options.each do |option| %>
+                        <div class="option-item" data-option-id="<%= option.id %>" data-option-value="<%= option.value %>">
+                          <input type="text" placeholder="Valor" value="<%= option.value %>" class="form-control option-value">
+                          <input type="text" placeholder="Rótulo" value="<%= option.label %>" class="form-control option-label">
+                          <input type="color" value="<%= option.color %>" class="form-control-color option-color">
+                          <button type="button" class="btn-icon btn-danger" onclick="removeOption(this)">
+                            <i class="fas fa-times"></i>
+                          </button>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Botões de ação -->
+      <div class="form-actions">
+        <%= link_to equipment_types_path, class: "btn btn-outline" do %>
+          <i class="fas fa-times"></i>
+          Cancelar
+        <% end %>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-save"></i>
+          Salvar Alterações
+        </button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.header-content h1 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 2rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1.1rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  margin-bottom: 2rem;
+}
+
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.card-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.info-item label {
+  font-weight: 600;
+  color: #374151;
+  min-width: 120px;
+}
+
+.color-preview {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 2px solid #e5e7eb;
+}
+
+.badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.management-form {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.form-header {
+  padding: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.form-header h3 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-header p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.form-content {
+  padding: 2rem;
+}
+
+.form-section {
+  margin-bottom: 3rem;
+  padding: 2rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.form-section h4 {
+  margin: 0 0 1.5rem 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-control {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control-color {
+  width: 60px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.color-input-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.color-presets {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.color-preset {
+  width: 32px;
+  height: 32px;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.color-preset:hover {
+  border-color: #3b82f6;
+  transform: scale(1.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.section-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.features-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.feature-item {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+  overflow: hidden;
+}
+
+.feature-item:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.1);
+}
+
+.feature-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
+  user-select: none;
+}
+
+.feature-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.feature-toggle:hover {
+  background-color: #e5e7eb;
+}
+
+.toggle-icon {
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.feature-title {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+.feature-type-badge {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.feature-details {
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+  max-height: 2000px;
+  opacity: 1;
+  overflow: hidden;
+}
+
+.feature-details.collapsed {
+  max-height: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.feature-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.feature-actions {
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.btn-icon.btn-danger {
+  color: #ef4444;
+}
+
+.btn-icon.btn-danger:hover {
+  background: #fef2f2;
+}
+
+.feature-options {
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1.5rem;
+}
+
+.feature-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.feature-flags label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.feature-flags input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.options-section {
+  margin-top: 1.5rem;
+}
+
+.options-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.options-header h5 {
+  margin: 0;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.option-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto auto;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-outline {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-outline:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page-container {
+    padding: 1rem;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .feature-inputs {
+    grid-template-columns: 1fr;
+  }
+  
+  .option-item {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .feature-flags {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+}
+</style>
+
+<script>
+// Color presets
+document.querySelectorAll('.color-preset').forEach(preset => {
+  preset.addEventListener('click', function() {
+    const color = this.dataset.color;
+    document.querySelector('input[type="color"]').value = color;
+  });
+});
+
+// Feature type change
+document.querySelectorAll('.feature-type').forEach(select => {
+  select.addEventListener('change', function() {
+    const featureItem = this.closest('.feature-item');
+    const optionsSection = featureItem.querySelector('.options-section');
+    
+    if (this.value === 'select') {
+      if (!optionsSection) {
+        const newOptionsSection = createOptionsSection();
+        featureItem.querySelector('.feature-options').appendChild(newOptionsSection);
+      }
+    } else {
+      if (optionsSection) {
+        optionsSection.remove();
+      }
+    }
+  });
+});
+
+function createOptionsSection() {
+  const div = document.createElement('div');
+  div.className = 'options-section';
+  div.innerHTML = `
+    <div class="options-header">
+      <h5>Opções</h5>
+      <button type="button" class="btn btn-sm btn-outline" onclick="addOption(this)">
+        <i class="fas fa-plus"></i> Adicionar Opção
+      </button>
+    </div>
+    <div class="options-list"></div>
+  `;
+  return div;
+}
+
+function addFeature() {
+  // Função simplificada para adicionar característica
+  const container = document.getElementById('featuresContainer');
+  
+  if (!container) {
+    alert('Erro: Container não encontrado');
+    return;
+  }
+  
+  // Criar nova característica
+  const featureItem = document.createElement('div');
+  featureItem.className = 'feature-item';
+  
+  // HTML da nova característica
+  featureItem.innerHTML = `
+    <div class="feature-header">
+      <div class="feature-toggle" onclick="toggleFeatureDetails(this)">
+        <i class="fas fa-chevron-right toggle-icon"></i>
+        <span class="feature-title">Nova Característica</span>
+        <span class="feature-type-badge">Texto</span>
+      </div>
+      <div class="feature-actions">
+        <button type="button" class="btn-icon btn-outline" onclick="removeFeature(this)">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+    
+    <div class="feature-details collapsed">
+      <div class="feature-inputs">
+        <input type="text" placeholder="Nome da característica" class="form-control feature-name">
+                          <select class="form-control feature-type">
+                    <option value="string">Texto</option>
+                    <option value="integer">Número Inteiro</option>
+                    <option value="float">Número Decimal</option>
+                    <option value="select">Seleção</option>
+                    <option value="boolean">Sim/Não</option>
+                    <option value="date">Data</option>
+                  </select>
+      </div>
+      
+      <div class="feature-options">
+        <div class="feature-flags">
+          <label><input type="checkbox" class="feature-required"> Obrigatório</label>
+          <label><input type="checkbox" class="feature-filterable"> Filtrável</label>
+          <label><input type="checkbox" class="feature-searchable"> Pesquisável</label>
+          <label><input type="checkbox" class="feature-sortable"> Ordenável</label>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Inserir no início
+  container.insertBefore(featureItem, container.firstChild);
+  
+  // Focar no campo de nome
+  const nameInput = featureItem.querySelector('.feature-name');
+  if (nameInput) {
+    nameInput.focus();
+  }
+  
+  // Efeito visual
+  featureItem.style.backgroundColor = '#f0f9ff';
+  featureItem.style.borderColor = '#3b82f6';
+  setTimeout(() => {
+    featureItem.style.backgroundColor = '';
+    featureItem.style.borderColor = '';
+  }, 2000);
+  
+  // Event listeners
+  const select = featureItem.querySelector('.feature-type');
+  
+  if (nameInput) {
+    nameInput.addEventListener('input', function() {
+      updateFeatureTitle(this);
+    });
+  }
+  
+  if (select) {
+    select.addEventListener('change', function() {
+      updateFeatureType(this);
+    });
+  }
+}
+
+function removeFeature(button) {
+  if (confirm('Tem certeza que deseja remover esta característica?')) {
+    const featureItem = button.closest('.feature-item');
+    
+    // Se é uma característica existente (tem ID), marcar para exclusão
+    if (featureItem.dataset.featureId) {
+      featureItem.style.display = 'none';
+      featureItem.classList.add('to-delete');
+    } else {
+      // Se é uma característica nova, remover imediatamente
+      featureItem.remove();
+    }
+  }
+}
+
+function addOption(button) {
+  const optionsList = button.closest('.options-section').querySelector('.options-list');
+  const optionItem = document.createElement('div');
+  optionItem.className = 'option-item';
+  optionItem.innerHTML = `
+    <input type="text" placeholder="Valor" class="form-control option-value">
+    <input type="text" placeholder="Rótulo" class="form-control option-label">
+    <input type="color" value="#3b82f6" class="form-control-color option-color">
+    <button type="button" class="btn-icon btn-danger" onclick="removeOption(this)">
+      <i class="fas fa-times"></i>
+    </button>
+  `;
+  
+  // Inserir no início da lista de opções (primeira posição)
+  optionsList.insertBefore(optionItem, optionsList.firstChild);
+  
+  // Focar no campo de valor da nova opção
+  const valueInput = optionItem.querySelector('.option-value');
+  valueInput.focus();
+  
+  // Adicionar efeito visual para destacar a nova opção
+  optionItem.style.backgroundColor = '#f0f9ff';
+  optionItem.style.borderColor = '#3b82f6';
+  setTimeout(() => {
+    optionItem.style.backgroundColor = '';
+    optionItem.style.borderColor = '';
+  }, 2000);
+}
+
+function removeOption(button) {
+  if (confirm('Tem certeza que deseja remover esta opção?')) {
+    button.closest('.option-item').remove();
+  }
+}
+
+// Função para alternar detalhes da característica
+function toggleFeatureDetails(toggleElement) {
+  console.log('Alternando detalhes da característica...');
+  
+  const featureItem = toggleElement.closest('.feature-item');
+  const detailsElement = featureItem.querySelector('.feature-details');
+  const toggleIcon = toggleElement.querySelector('.toggle-icon');
+  
+  console.log('Elementos encontrados:', {
+    featureItem: !!featureItem,
+    detailsElement: !!detailsElement,
+    toggleIcon: !!toggleIcon
+  });
+  
+  if (!detailsElement || !toggleIcon) {
+    console.error('Elementos necessários não encontrados');
+    return;
+  }
+  
+  if (detailsElement.classList.contains('collapsed')) {
+    // Expandir
+    console.log('Expandindo característica...');
+    detailsElement.classList.remove('collapsed');
+    toggleIcon.classList.remove('fa-chevron-right');
+    toggleIcon.classList.add('fa-chevron-down');
+  } else {
+    // Colapsar
+    console.log('Colapsando característica...');
+    detailsElement.classList.add('collapsed');
+    toggleIcon.classList.remove('fa-chevron-down');
+    toggleIcon.classList.add('fa-chevron-right');
+  }
+}
+
+// Função para atualizar o título da característica quando o nome mudar
+function updateFeatureTitle(input) {
+  const featureItem = input.closest('.feature-item');
+  const titleElement = featureItem.querySelector('.feature-title');
+  const name = input.value || 'Nova Característica';
+  titleElement.textContent = name;
+}
+
+// Função para atualizar o tipo da característica quando mudar
+function updateFeatureType(select) {
+  const featureItem = select.closest('.feature-item');
+  const typeBadge = featureItem.querySelector('.feature-type-badge');
+  const selectedOption = select.options[select.selectedIndex];
+  typeBadge.textContent = selectedOption.textContent;
+  
+  // Mostrar/esconder seção de opções baseado no tipo
+  const optionsSection = featureItem.querySelector('.options-section');
+  if (select.value === 'select') {
+    if (!optionsSection) {
+      const newOptionsSection = createOptionsSection();
+      featureItem.querySelector('.feature-options').appendChild(newOptionsSection);
+    }
+  } else {
+    if (optionsSection) {
+      optionsSection.remove();
+    }
+  }
+}
+
+// Função para coletar dados das características
+function collectFeaturesData() {
+  const features = [];
+  const featureItems = document.querySelectorAll('.feature-item');
+  
+  featureItems.forEach((item, index) => {
+    // Pular características marcadas para exclusão
+    if (item.classList.contains('to-delete')) {
+      return;
+    }
+    
+    const featureId = item.dataset.featureId;
+    const nameInput = item.querySelector('.feature-name');
+    const dataTypeSelect = item.querySelector('.feature-type');
+    const requiredCheckbox = item.querySelector('.feature-required');
+    const filterableCheckbox = item.querySelector('.feature-filterable');
+    const searchableCheckbox = item.querySelector('.feature-searchable');
+    const sortableCheckbox = item.querySelector('.feature-sortable');
+    
+    if (!nameInput || !dataTypeSelect) {
+      return;
+    }
+    
+    const name = nameInput.value.trim();
+    if (!name) {
+      return; // Pular características sem nome
+    }
+    
+    const feature = {
+      id: featureId, // Incluir ID se existir
+      name: name,
+      data_type: dataTypeSelect.value,
+      required: requiredCheckbox ? requiredCheckbox.checked : false,
+      filterable: filterableCheckbox ? filterableCheckbox.checked : false,
+      searchable: searchableCheckbox ? searchableCheckbox.checked : false,
+      sortable: sortableCheckbox ? sortableCheckbox.checked : false,
+      options: []
+    };
+    
+    // Coletar opções se for tipo select
+    if (feature.data_type === 'select') {
+      const optionItems = item.querySelectorAll('.option-item');
+      
+      optionItems.forEach((optionItem) => {
+        const optionId = optionItem.dataset.optionId;
+        const valueInput = optionItem.querySelector('.option-value');
+        const labelInput = optionItem.querySelector('.option-label');
+        const colorInput = optionItem.querySelector('.option-color');
+        
+        if (valueInput && labelInput && colorInput) {
+          const value = valueInput.value.trim();
+          const label = labelInput.value.trim();
+          
+          if (value && label) {
+            feature.options.push({
+              id: optionId, // Incluir ID se existir
+              value: value,
+              label: label,
+              color: colorInput.value || '#3b82f6'
+            });
+          }
+        }
+      });
+    }
+    
+    features.push(feature);
+  });
+  
+  return features;
+}
+
+
+
+// Interceptar envio do formulário
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM carregado - JavaScript inicializado');
+  // Adicionar event listeners para características existentes
+  document.querySelectorAll('.feature-name').forEach(input => {
+    input.addEventListener('input', function() {
+      updateFeatureTitle(this);
+    });
+  });
+  
+  document.querySelectorAll('.feature-type').forEach(select => {
+    select.addEventListener('change', function() {
+      updateFeatureType(this);
+    });
+  });
+  
+  const form = document.querySelector('form');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Coletar dados das características
+      const features = collectFeaturesData();
+      
+      // Validar características
+      const validationErrors = [];
+      features.forEach((feature, index) => {
+        if (!feature.name) {
+          validationErrors.push(`Característica ${index + 1}: Nome é obrigatório`);
+        }
+        if (feature.data_type === 'select' && feature.options.length === 0) {
+          validationErrors.push(`Característica "${feature.name}": Deve ter pelo menos uma opção`);
+        }
+      });
+      
+      if (validationErrors.length > 0) {
+        alert('Erro de validação:\n\n' + validationErrors.join('\n'));
+        return;
+      }
+      
+      // Atualizar campo hidden
+      const hiddenField = document.getElementById('featuresData');
+      if (hiddenField) {
+        hiddenField.value = JSON.stringify(features);
+      } else {
+        alert('Erro: Campo de dados não encontrado');
+        return;
+      }
+      
+      // Enviar formulário
+      form.submit();
+    });
+  }
+});
+</script> 
