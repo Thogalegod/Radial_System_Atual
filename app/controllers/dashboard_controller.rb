@@ -19,16 +19,15 @@ class DashboardController < ApplicationController
                                  .ordered_by_created
                                  .limit(10)
 
-    # Equipamentos em manutenção
-    @maintenance_equipments = Equipment.where(status: 'maintenance')
-                                     .includes(:equipment_type)
-                                     .limit(5)
+    # Equipamentos alugados
+    @alugados_equipments = Equipment.where(status: 'alugado')
+                                   .includes(:equipment_type)
+                                   .limit(5)
 
-    # Equipamentos com manutenção próxima
-    @upcoming_maintenance = Equipment.where('next_maintenance_date <= ?', Date.current + 30.days)
-                                    .where.not(next_maintenance_date: nil)
-                                    .includes(:equipment_type)
-                                    .limit(5)
+    # Equipamentos por bandeira
+    @equipments_by_bandeira = Equipment.where.not(bandeira: [nil, ''])
+                                      .group(:bandeira)
+                                      .count
 
     # Tipos de equipamento mais populares
     @popular_types = EquipmentType.joins(:equipments)

@@ -87,59 +87,58 @@
       </div>
     </div>
 
-    <!-- Equipamentos em Manutenção -->
+    <!-- Equipamentos Alugados -->
     <div class="dashboard-card">
       <div class="card-header">
-        <h3>Em Manutenção</h3>
-        <%= link_to "Ver Todos", equipments_path(status: 'maintenance'), class: "btn btn-sm btn-outline" %>
+        <h3>Alugados</h3>
+        <%= link_to "Ver Todos", equipments_path(status: 'alugado'), class: "btn btn-sm btn-outline" %>
       </div>
-      <div class="maintenance-list">
-        <% if @maintenance_equipments.any? %>
-          <% @maintenance_equipments.each do |equipment| %>
-            <div class="maintenance-item">
-              <div class="maintenance-icon">🔧</div>
-              <div class="maintenance-content">
+      <div class="alugados-list">
+        <% if @alugados_equipments.any? %>
+          <% @alugados_equipments.each do |equipment| %>
+            <div class="alugados-item">
+              <div class="alugados-icon">🤝</div>
+              <div class="alugados-content">
                 <h4><%= equipment.serial_number %></h4>
                 <p><%= equipment.equipment_type.name %></p>
-                <span class="maintenance-location"><%= equipment.location %></span>
+                <span class="alugados-location"><%= equipment.location %></span>
               </div>
             </div>
           <% end %>
         <% else %>
-          <p class="empty-state">Nenhum equipamento em manutenção.</p>
+          <p class="empty-state">Nenhum equipamento alugado.</p>
         <% end %>
       </div>
     </div>
   </div>
 
-  <!-- Manutenções Próximas -->
+  <!-- Equipamentos por Bandeira -->
   <div class="dashboard-card">
     <div class="card-header">
-      <h3>Manutenções Próximas (30 dias)</h3>
+      <h3>Equipamentos por Bandeira</h3>
       <%= link_to "Ver Todos", equipments_path, class: "btn btn-sm btn-outline" %>
     </div>
-    <div class="upcoming-list">
-      <% if @upcoming_maintenance.any? %>
-        <% @upcoming_maintenance.each do |equipment| %>
-          <div class="upcoming-item">
-            <div class="upcoming-icon">📅</div>
-            <div class="upcoming-content">
-              <h4><%= equipment.serial_number %></h4>
-              <p><%= equipment.equipment_type.name %></p>
-              <span class="upcoming-date">
-                Próxima manutenção: <%= equipment.next_maintenance_date.strftime('%d/%m/%Y') %>
-              </span>
+    <div class="bandeira-list">
+      <% bandeiras = ['Verde', 'Amarelo', 'Vermelho', 'Preto', 'Azul', 'Verde/Amarelo'] %>
+      <% bandeiras.each do |bandeira| %>
+        <% count = Equipment.where(bandeira: bandeira).count %>
+        <% if count > 0 %>
+          <div class="bandeira-item">
+            <div class="bandeira-icon" style="background-color: <%= Equipment.new(bandeira: bandeira).bandeira_color %>">🏁</div>
+            <div class="bandeira-content">
+              <h4><%= bandeira %></h4>
+              <p><%= count %> equipamento<%= count > 1 ? 's' : '' %></p>
             </div>
-            <div class="upcoming-days">
-              <% days_until = (equipment.next_maintenance_date - Date.current).to_i %>
-              <span class="days-badge <%= days_until <= 7 ? 'urgent' : days_until <= 14 ? 'warning' : 'normal' %>">
-                <%= days_until %> dias
+            <div class="bandeira-count">
+              <span class="count-badge">
+                <%= count %>
               </span>
             </div>
           </div>
         <% end %>
-      <% else %>
-        <p class="empty-state">Nenhuma manutenção agendada para os próximos 30 dias.</p>
+      <% end %>
+      <% if Equipment.where.not(bandeira: [nil, '']).count == 0 %>
+        <p class="empty-state">Nenhum equipamento com bandeira definida.</p>
       <% end %>
     </div>
   </div>
@@ -183,10 +182,9 @@ const statusData = {
   datasets: [{
     data: <%= raw @equipments_by_status.values.to_json %>,
     backgroundColor: [
-      '#10b981', // Ativo - Verde
-      '#f59e0b', // Manutenção - Amarelo
-      '#6b7280', // Inativo - Cinza
-      '#ef4444'  // Aposentado - Vermelho
+      '#10b981', // Em Estoque - Verde
+      '#ef4444', // Vendido - Vermelho
+      '#3b82f6'  // Alugado - Azul
     ],
     borderWidth: 2,
     borderColor: '#ffffff'

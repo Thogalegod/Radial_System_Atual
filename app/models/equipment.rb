@@ -9,25 +9,30 @@ class Equipment < ApplicationRecord
   belongs_to :equipment_type
   has_many :equipment_values, dependent: :destroy, foreign_key: 'equipments_id'
   has_many :equipment_features, through: :equipment_type
+  
+  # Active Storage para fotos
+  has_many_attached :photos
 
   # Validações
   validates :serial_number, presence: true, uniqueness: true, length: { minimum: 3, maximum: 100 }
   validates :equipment_type, presence: true
-  validates :status, inclusion: { in: %w[active inactive maintenance retired] }
-  validates :location, length: { maximum: 200 }
-  validates :manufacturer, length: { maximum: 100 }
-  validates :model, length: { maximum: 100 }
+  validates :status, inclusion: { in: %w[em_estoque vendido alugado] }
+  validates :location, inclusion: { in: %w[GP123 GP140 Escritório Eduardo\ Super\ Trafo Estrada\ Tronco], allow_blank: true }
+  validates :bandeira, inclusion: { in: %w[Verde Amarelo Vermelho Preto Azul Verde/Amarelo], allow_blank: true }
+  validates :acquisition_price, numericality: { greater_than_or_equal_to: 0 }, allow_blank: true
+  
+  # Validação customizada para prevenir mudança do tipo de equipamento
+  validate :equipment_type_cannot_be_changed, on: :update
 
   # Scopes
-  scope :active, -> { where(status: 'active') }
-  scope :inactive, -> { where(status: 'inactive') }
-  scope :maintenance, -> { where(status: 'maintenance') }
-  scope :retired, -> { where(status: 'retired') }
+  scope :em_estoque, -> { where(status: 'em_estoque') }
+  scope :vendido, -> { where(status: 'vendido') }
+  scope :alugado, -> { where(status: 'alugado') }
   scope :with_notes, -> { where.not(notes: [nil, '']) }
   scope :without_notes, -> { where(notes: [nil, '']) }
   scope :by_type, ->(type_id) { where(equipment_type_id: type_id) }
   scope :by_location, ->(location) { where(location: location) }
-  scope :by_manufacturer, ->(manufacturer) { where(manufacturer: manufacturer) }
+  scope :by_bandeira, ->(bandeira) { where(bandeira: bandeira) }
   scope :ordered_by_serial, -> { order(:serial_number) }
   scope :ordered_by_created, -> { order(:created_at) }
   scope :ordered_by_updated, -> { order(:updated_at) }
@@ -44,30 +49,27 @@ class Equipment < ApplicationRecord
 
   def status_display
     case status
-    when 'active' then 'Ativo'
-    when 'inactive' then 'Inativo'
-    when 'maintenance' then 'Manutenção'
-    when 'retired' then 'Aposentado'
+    when 'em_estoque' then 'Em Estoque'
+    when 'vendido' then 'Vendido'
+    when 'alugado' then 'Alugado'
     else status
     end
   end
 
   def status_color
     case status
-    when 'active' then '#10B981'      # Green
-    when 'inactive' then '#6B7280'    # Gray
-    when 'maintenance' then '#F59E0B'  # Yellow
-    when 'retired' then '#EF4444'     # Red
+    when 'em_estoque' then '#10B981'  # Green
+    when 'vendido' then '#EF4444'     # Red
+    when 'alugado' then '#3B82F6'     # Blue
     else '#6B7280'
     end
   end
 
   def status_icon
     case status
-    when 'active' then 'fas fa-check-circle'
-    when 'inactive' then 'fas fa-pause-circle'
-    when 'maintenance' then 'fas fa-tools'
-    when 'retired' then 'fas fa-times-circle'
+    when 'em_estoque' then 'fas fa-box'
+    when 'vendido' then 'fas fa-shopping-cart'
+    when 'alugado' then 'fas fa-handshake'
     else 'fas fa-question-circle'
     end
   end
@@ -105,29 +107,44 @@ class Equipment < ApplicationRecord
     end
   end
 
-  def maintenance_due?
-    return false unless next_maintenance_date
-    next_maintenance_date <= Date.current
-  end
-
-  def maintenance_overdue?
-    return false unless next_maintenance_date
-    next_maintenance_date < Date.current
-  end
-
   def age_in_days
-    return nil unless installation_date
-    (Date.current - installation_date).to_i
+    return nil unless acquisition_date
+    (Date.current - acquisition_date).to_i
   end
 
   def age_in_years
-    return nil unless installation_date
-    ((Date.current - installation_date) / 365.25).to_i
+    return nil unless acquisition_date
+    ((Date.current - acquisition_date) / 365.25).to_i
+  end
+
+  def formatted_acquisition_price
+    return nil unless acquisition_price
+    "R$ #{acquisition_price.to_f.round(2).to_s.gsub('.', ',')}"
+  end
+
+  def bandeira_color
+    case bandeira
+    when 'Verde' then '#10B981'
+    when 'Amarelo' then '#F59E0B'
+    when 'Vermelho' then '#EF4444'
+    when 'Preto' then '#1F2937'
+    when 'Azul' then '#3B82F6'
+    when 'Verde/Amarelo' then '#84CC16'
+    else '#6B7280'
+    end
   end
 
   private
 
   def set_default_status
-    self.status = 'active' if status.blank?
+    self.status = 'em_estoque' if status.blank?
+  end
+  
+  private
+  
+  def equipment_type_cannot_be_changed
+    if equipment_type_id_changed?
+      errors.add(:equipment_type_id, "não pode ser alterado após a criação do equipamento")
+    end
   end
 end 

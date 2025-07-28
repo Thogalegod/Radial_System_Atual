@@ -6,6 +6,11 @@ class EquipmentsController < ApplicationController
   def index
     @equipments = apply_filters_and_sorting
     @equipment_types = EquipmentType.active.ordered
+    
+    # Definir tipo de equipamento se filtrado por tipo
+    if params[:type].present?
+      @equipment_type = EquipmentType.find(params[:type])
+    end
   end
 
   def filter
@@ -20,8 +25,9 @@ class EquipmentsController < ApplicationController
           status: equipment.status_display,
           status_color: equipment.status_color,
           location: equipment.location,
-          manufacturer: equipment.manufacturer,
-          model: equipment.model,
+          acquisition_date: equipment.acquisition_date&.strftime('%d/%m/%Y'),
+          acquisition_price: equipment.formatted_acquisition_price,
+          bandeira: equipment.bandeira,
           feature_values: equipment.feature_values.transform_values(&:formatted_value),
           created_at: equipment.created_at.strftime('%d/%m/%Y'),
           updated_at: equipment.updated_at.strftime('%d/%m/%Y')
@@ -42,9 +48,22 @@ class EquipmentsController < ApplicationController
   end
 
   def create
-    @equipment = Equipment.new(equipment_params)
+    # Separar fotos das outras atualizações
+    photos_to_add = params[:equipment][:photos] if params[:equipment][:photos].present?
+    
+    # Remover fotos do params para evitar problemas
+    create_params = equipment_params.except(:photos)
+    
+    @equipment = Equipment.new(create_params)
     
     if @equipment.save
+      # Adicionar fotos (se houver)
+      if photos_to_add.present?
+        photos_to_add.each do |photo|
+          @equipment.photos.attach(photo)
+        end
+      end
+      
       # Salvar valores das características
       save_feature_values
       
@@ -60,7 +79,38 @@ class EquipmentsController < ApplicationController
   end
 
   def update
-    if @equipment.update(equipment_params)
+    # Verificar se o tipo de equipamento está sendo alterado
+    if params[:equipment][:equipment_type_id].present? && 
+       params[:equipment][:equipment_type_id].to_i != @equipment.equipment_type_id
+      @equipment.errors.add(:equipment_type_id, "não pode ser alterado após a criação do equipamento")
+      @feature_values = @equipment.feature_values
+      @equipment_features = @equipment.equipment_features.ordered.includes(:equipment_feature_options)
+      render :edit, status: :unprocessable_entity
+      return
+    end
+    
+    # Separar fotos das outras atualizações
+    photos_to_add = params[:equipment][:photos] if params[:equipment][:photos].present?
+    
+    # Remover fotos do params para evitar substituição
+    update_params = equipment_params.except(:photos)
+    
+    if @equipment.update(update_params)
+      # Adicionar novas fotos (se houver)
+      if photos_to_add.present?
+        photos_to_add.each do |photo|
+          @equipment.photos.attach(photo)
+        end
+      end
+      
+      # Processar remoção de fotos
+      if params[:remove_photos].present?
+        params[:remove_photos].each do |photo_index|
+          photo = @equipment.photos[photo_index.to_i]
+          photo.purge if photo
+        end
+      end
+      
       # Atualizar valores das características
       save_feature_values
       
@@ -95,6 +145,20 @@ class EquipmentsController < ApplicationController
     end
   end
 
+  def select_type
+    # Esta action renderiza a tela de seleção de tipo
+  end
+
+  def photos
+    @equipment = Equipment.find(params[:id])
+    photo_urls = @equipment.photos.map { |photo| url_for(photo) }
+    
+    render json: {
+      photos: photo_urls,
+      count: photo_urls.length
+    }
+  end
+
   private
 
   def set_equipment
@@ -108,7 +172,7 @@ class EquipmentsController < ApplicationController
   def equipment_params
     params.require(:equipment).permit(
       :serial_number, :equipment_type_id, :notes, :status, :location,
-      :manufacturer, :model, :installation_date, :last_maintenance_date, :next_maintenance_date
+      :acquisition_date, :acquisition_price, :bandeira, photos: []
     )
   end
 
@@ -124,17 +188,18 @@ class EquipmentsController < ApplicationController
     equipments = Equipment.includes(:equipment_type, :equipment_values, :equipment_features)
 
     # Filtros básicos
+    equipments = equipments.by_type(params[:type]) if params[:type].present?
     equipments = equipments.by_type(params[:equipment_type_id]) if params[:equipment_type_id].present?
     equipments = equipments.where(status: params[:status]) if params[:status].present?
     equipments = equipments.where(location: params[:location]) if params[:location].present?
-    equipments = equipments.where(manufacturer: params[:manufacturer]) if params[:manufacturer].present?
+    equipments = equipments.where(bandeira: params[:bandeira]) if params[:bandeira].present?
     
     # Filtros de texto
     if params[:search].present?
       search_term = "%#{params[:search]}%"
       equipments = equipments.where(
-        "serial_number ILIKE ? OR manufacturer ILIKE ? OR model ILIKE ? OR notes ILIKE ?",
-        search_term, search_term, search_term, search_term
+        "serial_number ILIKE ? OR notes ILIKE ?",
+        search_term, search_term
       )
     end
 
@@ -144,11 +209,11 @@ class EquipmentsController < ApplicationController
     equipments = equipments.where(notes: [nil, '']) if params[:no_notes] == 'true'
 
     # Filtros de data
-    if params[:installation_date_from].present?
-      equipments = equipments.where('installation_date >= ?', params[:installation_date_from])
+    if params[:acquisition_date_from].present?
+      equipments = equipments.where('acquisition_date >= ?', params[:acquisition_date_from])
     end
-    if params[:installation_date_to].present?
-      equipments = equipments.where('installation_date <= ?', params[:installation_date_to])
+    if params[:acquisition_date_to].present?
+      equipments = equipments.where('acquisition_date <= ?', params[:acquisition_date_to])
     end
 
     # Filtros de características
@@ -184,8 +249,8 @@ class EquipmentsController < ApplicationController
       equipments = sort_direction == 'desc' ? equipments.order(status: :desc) : equipments.order(:status)
     when 'location'
       equipments = sort_direction == 'desc' ? equipments.order(location: :desc) : equipments.order(:location)
-    when 'manufacturer'
-      equipments = sort_direction == 'desc' ? equipments.order(manufacturer: :desc) : equipments.order(:manufacturer)
+    when 'bandeira'
+      equipments = sort_direction == 'desc' ? equipments.order(bandeira: :desc) : equipments.order(:bandeira)
     when 'created_at'
       equipments = sort_direction == 'desc' ? equipments.order(created_at: :desc) : equipments.order(:created_at)
     when 'updated_at'

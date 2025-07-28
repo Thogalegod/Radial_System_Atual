@@ -537,7 +537,11 @@
             <div class="nav-icon">⚡</div>
             <span>Equipamentos</span>
             <div class="submenu">
-              <a href="<%= equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' %>">
+              <a href="<%= select_type_equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' && action_name == 'select_type' %>">
+                <div class="nav-icon">📦</div>
+                <span>Controle Estoque</span>
+              </a>
+              <a href="<%= equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' && action_name == 'index' %>">
                 <div class="nav-icon">📋</div>
                 <span>Lista de Equipamentos</span>
               </a>

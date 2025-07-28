@@ -42,16 +42,6 @@
       </div>
       
       <div class="info-card">
-        <div class="info-label">Fabricante</div>
-        <div class="info-value"><%= @equipment.manufacturer || 'Não informado' %></div>
-      </div>
-      
-      <div class="info-card">
-        <div class="info-label">Modelo</div>
-        <div class="info-value"><%= @equipment.model || 'Não informado' %></div>
-      </div>
-      
-      <div class="info-card">
         <div class="info-label">Localização</div>
         <div class="info-value"><%= @equipment.location || 'Não informado' %></div>
       </div>
@@ -60,22 +50,35 @@
         <div class="info-label">Status</div>
         <div class="info-value">
           <span class="status-badge status-<%= @equipment.status&.downcase || 'unknown' %>">
-            <%= @equipment.status || 'Não informado' %>
+            <%= @equipment.status_display || 'Não informado' %>
           </span>
         </div>
       </div>
       
       <div class="info-card">
-        <div class="info-label">Data de Instalação</div>
+        <div class="info-label">Data de Aquisição</div>
         <div class="info-value">
-          <%= @equipment.installation_date&.strftime('%d/%m/%Y') || 'Não informado' %>
+          <%= @equipment.acquisition_date&.strftime('%d/%m/%Y') || 'Não informado' %>
         </div>
       </div>
       
       <div class="info-card">
-        <div class="info-label">Próxima Manutenção</div>
+        <div class="info-label">Preço de Aquisição</div>
         <div class="info-value">
-          <%= @equipment.next_maintenance_date&.strftime('%d/%m/%Y') || 'Não informado' %>
+          <%= @equipment.formatted_acquisition_price || 'Não informado' %>
+        </div>
+      </div>
+      
+      <div class="info-card">
+        <div class="info-label">Bandeira</div>
+        <div class="info-value">
+          <% if @equipment.bandeira.present? %>
+            <span class="bandeira-badge" style="background-color: <%= @equipment.bandeira_color %>;">
+              <%= @equipment.bandeira %>
+            </span>
+          <% else %>
+            Não informado
+          <% end %>
         </div>
       </div>
     </div>
@@ -158,29 +161,29 @@
         </div>
         <div class="stat-content">
           <div class="stat-number">
-            <% if @equipment.installation_date %>
-              <%= ((Time.current - @equipment.installation_date.to_time) / 1.day).round %>
+            <% if @equipment.acquisition_date %>
+              <%= ((Time.current - @equipment.acquisition_date.to_time) / 1.day).round %>
             <% else %>
               -
             <% end %>
           </div>
-          <div class="stat-label">Dias Instalado</div>
+          <div class="stat-label">Dias desde Aquisição</div>
         </div>
       </div>
       
       <div class="stat-card">
         <div class="stat-icon">
-          <i class="fas fa-tools"></i>
+          <i class="fas fa-dollar-sign"></i>
         </div>
         <div class="stat-content">
           <div class="stat-number">
-            <% if @equipment.next_maintenance_date %>
-              <%= ((@equipment.next_maintenance_date.to_time - Time.current) / 1.day).round %>
+            <% if @equipment.acquisition_price %>
+              <%= @equipment.formatted_acquisition_price %>
             <% else %>
               -
             <% end %>
           </div>
-          <div class="stat-label">Dias para Manutenção</div>
+          <div class="stat-label">Preço de Aquisição</div>
         </div>
       </div>
     </div>

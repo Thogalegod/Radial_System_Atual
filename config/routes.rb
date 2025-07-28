@@ -21,6 +21,10 @@ Rails.application.routes.draw do
     collection do
       get :filter
       get :export_csv
+      get :select_type
+    end
+    member do
+      get :photos, defaults: { format: :json }
     end
   end
   

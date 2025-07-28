@@ -1,0 +1,83 @@
+local:
+  service: Disk
+  root: <%= Rails.root.join("storage") %>
+
+# Use Amazon S3 to store uploaded files.
+#
+# Add the aws-sdk-s3 gem to your Gemfile:
+#   gem "aws-sdk-s3", require: false
+#
+# Uncomment the following line to choose a different service than the default one:
+#   service: S3
+#
+# Use the following configuration if you want to access the bucket using a different
+# access point than the default one. When using VPS, you can specify the hostname to use.
+#
+#   for public_private: false:
+#     url: https://<YOUR-ACCESS-POINT-ID>.s3-accesspoint.<REGION>.amazonaws.com/<BUCKET>
+#   for public_private: true:
+#     url: https://<BUCKET>.s3.<REGION>.amazonaws.com
+#     virtual_host: true
+#
+#   When you don't specify an access point ID, the default access point ID for your
+#   account and region is used.
+#
+#   Example:
+#     access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
+#     secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
+#     region: us-east-1
+#     bucket: your_own_bucket-<%= Rails.env %>
+#
+# Use environment variables or the aws-sdk-s3 gem's default credential lookup methods
+# such as IAM profile, ECS task role, and EC2 instance role. When using the
+# aws-sdk-s3 gem's default credential lookup methods, you don't need to specify
+# access keys and region in this file. Note that the aws-sdk-s3 gem will
+# automatically load credentials from the Aws.config hash, the shared credentials
+# file, and environment variables.
+#
+#   Example:
+#     bucket: your_own_bucket-<%= Rails.env %>
+#
+# amazon:
+#   service: S3
+#   access_key_id: <%= Rails.application.credentials.dig(:aws, :access_key_id) %>
+#   secret_access_key: <%= Rails.application.credentials.dig(:aws, :secret_access_key) %>
+#   region: us-east-1
+#   bucket: your_own_bucket-<%= Rails.env %>
+
+# Remember not to checkin your GCS key file to a repository
+# google:
+#   service: GCS
+#   project: your_project
+#   credentials: <%= Rails.root.join("path/to/keyfile.json") %>
+#   bucket: your_own_bucket-<%= Rails.env %>
+
+# Use the Microsoft Azure Storage Service for file uploads
+# https://docs.microsoft.com/en-us/azure/storage/common/storage-introduction
+#
+# Add the azure-storage-blob gem to your Gemfile:
+#   gem "azure-storage-blob"
+#
+# Uncomment the following line to choose a different service than the default one:
+#   service: AzureStorage
+#
+#   Example:
+#     storage_account_name: your_account_name
+#     storage_access_key: your_access_key
+#     container: your_container-<%= Rails.env %>
+#
+# azure:
+#   service: AzureStorage
+#   storage_account_name: your_account_name
+#   storage_access_key: your_access_key
+#   container: your_container-<%= Rails.env %>
+
+# Mirror the filesystem for local development. This is used in conjunction
+# with the `active_storage:update` task.
+# mirror:
+#   service: Mirror
+#   primary: local
+#   mirrors:
+#     - amazon
+#     - google
+#     - azure 

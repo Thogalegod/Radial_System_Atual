@@ -45,44 +45,33 @@
           <%= render 'shared/form_field', 
               form: form, 
               object: @equipment,
-              field: :manufacturer, 
-              label: 'Fabricante',
-              placeholder: 'Ex: Siemens, Schneider, ABB',
-              help_text: 'Nome do fabricante do equipamento' %>
-
-          <%= render 'shared/form_field', 
-              form: form, 
-              object: @equipment,
-              field: :model, 
-              label: 'Modelo',
-              placeholder: 'Ex: PowerPact, MasterPact, Compact',
-              help_text: 'Modelo específico do equipamento' %>
-
-          <%= render 'shared/form_field', 
-              form: form, 
-              object: @equipment,
               field: :location, 
+              type: :select,
               label: 'Localização',
-              placeholder: 'Ex: Subestação A, Quadro 1, Sala Técnica',
+              options: [
+                ['GP123', 'GP123'],
+                ['GP140', 'GP140'],
+                ['Escritório', 'Escritório'],
+                ['Eduardo Super Trafo', 'Eduardo Super Trafo'],
+                ['Estrada Tronco', 'Estrada Tronco']
+              ],
               help_text: 'Local onde o equipamento está instalado' %>
 
           <div class="form-group">
             <%= form.label :status, "Status", class: "form-label" %>
             <%= form.select :status, 
                 [
-                  ['🟢 Ativo - Funcionando normalmente', 'active'],
-                  ['🟡 Manutenção - Em manutenção', 'maintenance'],
-                  ['⚫ Inativo - Temporariamente parado', 'inactive'],
-                  ['🔴 Aposentado - Fora de operação', 'retired']
+                  ['🟢 Em Estoque - Disponível para venda', 'em_estoque'],
+                  ['🔴 Vendido - Já foi vendido', 'vendido'],
+                  ['🔵 Alugado - Em locação', 'alugado']
                 ],
-                { selected: @equipment.status || 'active' },
+                { selected: @equipment.status || 'em_estoque' },
                 { class: "form-select" } %>
             <small class="form-help">
               <strong>Status do Equipamento:</strong>
-              <br>• <strong>Ativo:</strong> Funcionando normalmente
-              <br>• <strong>Manutenção:</strong> Em manutenção ou reparo
-              <br>• <strong>Inativo:</strong> Temporariamente parado
-              <br>• <strong>Aposentado:</strong> Fora de operação permanente
+              <br>• <strong>Em Estoque:</strong> Disponível para venda
+              <br>• <strong>Vendido:</strong> Já foi vendido
+              <br>• <strong>Alugado:</strong> Em locação
             </small>
           </div>
         </div>
@@ -90,21 +79,68 @@
         <div class="form-section">
           <h2><i class="fas fa-calendar"></i> Datas</h2>
           
-          <%= render 'shared/form_field', 
-              form: form, 
-              object: @equipment,
-              field: :installation_date, 
-              type: 'date',
-              label: 'Data de Instalação',
-              help_text: 'Data em que o equipamento foi instalado' %>
+          <div class="form-group">
+            <%= form.label :acquisition_date, "Data de Aquisição", class: "form-label" %>
+            <%= form.date_field :acquisition_date, 
+                class: "form-control date-input", 
+                id: "acquisition-date",
+                placeholder: "Selecione a data",
+                max: Date.current.strftime('%Y-%m-%d') %>
+            <small class="form-help">
+              <i class="fas fa-calendar-alt"></i>
+              <strong>Data de Aquisição:</strong> Clique no ícone do calendário para selecionar a data
+            </small>
+          </div>
 
           <%= render 'shared/form_field', 
               form: form, 
               object: @equipment,
-              field: :next_maintenance_date, 
-              type: 'date',
-              label: 'Próxima Manutenção',
-              help_text: 'Data da próxima manutenção programada' %>
+              field: :acquisition_price, 
+              type: 'number',
+              label: 'Preço de Aquisição (R$)',
+              placeholder: 'Ex: 5000.00',
+              help_text: 'Valor pago pela aquisição do equipamento' %>
+
+          <%= render 'shared/form_field', 
+              form: form, 
+              object: @equipment,
+              field: :bandeira, 
+              type: :select,
+              label: 'Bandeira',
+              options: [
+                ['Verde', 'Verde'],
+                ['Amarelo', 'Amarelo'],
+                ['Vermelho', 'Vermelho'],
+                ['Preto', 'Preto'],
+                ['Azul', 'Azul'],
+                ['Verde/Amarelo', 'Verde/Amarelo']
+              ],
+              help_text: 'Classificação visual do equipamento' %>
+
+          <div class="form-group">
+            <%= form.label :photos, "Fotos do Equipamento", class: "form-label" %>
+            <div class="photo-upload-area" id="photoUploadArea">
+              <%= form.file_field :photos, multiple: true, accept: "image/*", class: "form-control photo-input", id: "photoInput" %>
+              <div class="upload-hint">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <span>Clique para selecionar fotos ou arraste aqui</span>
+                <small>Formatos aceitos: JPG, PNG, GIF (máximo 10 fotos)</small>
+                <small class="upload-limit">Você pode selecionar múltiplas fotos de uma vez</small>
+              </div>
+            </div>
+            
+            <!-- Preview das fotos selecionadas -->
+            <div id="photoPreview" class="photo-preview-container" style="display: none;">
+              <h4>Fotos Selecionadas:</h4>
+              <div id="photoPreviewGrid" class="photo-preview-grid">
+                <!-- As previews serão inseridas aqui via JavaScript -->
+              </div>
+              <small class="form-help">
+                <i class="fas fa-info-circle"></i> 
+                Você pode remover fotos clicando no X. Todas as fotos serão salvas com o equipamento.
+              </small>
+            </div>
+          </div>
 
           <div class="info-card">
             <h3><i class="fas fa-info-circle"></i> Informações</h3>
@@ -657,5 +693,350 @@ document.addEventListener('DOMContentLoaded', function() {
   if (equipmentTypeSelect.value) {
     loadEquipmentFeatures(equipmentTypeSelect.value);
   }
+
+  // Gerenciamento de fotos
+  const photoInput = document.getElementById('photoInput');
+  const photoUploadArea = document.getElementById('photoUploadArea');
+  const photoPreview = document.getElementById('photoPreview');
+  const photoPreviewGrid = document.getElementById('photoPreviewGrid');
+  
+  let selectedFiles = [];
+
+  // Drag and drop
+  photoUploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('dragover');
+  });
+
+  photoUploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+  });
+
+  photoUploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('dragover');
+    
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+    
+    if (files.length > 0) {
+      handleFileSelection(files);
+    }
+  });
+
+  // File input change
+  photoInput.addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    handleFileSelection(files);
+  });
+
+  function handleFileSelection(files) {
+    // Limitar a 10 fotos
+    const maxFiles = 10;
+    const currentCount = selectedFiles.length;
+    
+    if (currentCount + files.length > maxFiles) {
+      alert(`Você pode selecionar no máximo ${maxFiles} fotos. Você já tem ${currentCount} selecionadas.`);
+      return;
+    }
+
+    // Adicionar novos arquivos
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        selectedFiles.push(file);
+      }
+    });
+
+    updatePhotoPreview();
+    updateUploadArea();
+  }
+
+  function updatePhotoPreview() {
+    photoPreviewGrid.innerHTML = '';
+    
+    if (selectedFiles.length === 0) {
+      photoPreview.style.display = 'none';
+      return;
+    }
+
+    photoPreview.style.display = 'block';
+    
+    selectedFiles.forEach((file, index) => {
+      const reader = new FileReader();
+      
+      reader.onload = function(e) {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'photo-preview-item';
+        previewItem.innerHTML = `
+          <img src="${e.target.result}" alt="Preview ${index + 1}">
+          <div class="photo-preview-overlay">
+            <button type="button" class="photo-preview-remove" onclick="removePhotoPreview(${index})" title="Remover foto">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+          <span class="photo-preview-number">${index + 1}</span>
+        `;
+        
+        photoPreviewGrid.appendChild(previewItem);
+      };
+      
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function removePhotoPreview(index) {
+    selectedFiles.splice(index, 1);
+    updatePhotoPreview();
+    updateUploadArea();
+  }
+
+  function updateUploadArea() {
+    if (selectedFiles.length > 0) {
+      photoUploadArea.classList.add('has-photos');
+      const hint = photoUploadArea.querySelector('.upload-hint span');
+      hint.textContent = `${selectedFiles.length} foto(s) selecionada(s)`;
+    } else {
+      photoUploadArea.classList.remove('has-photos');
+      const hint = photoUploadArea.querySelector('.upload-hint span');
+      hint.textContent = 'Clique para selecionar fotos ou arraste aqui';
+    }
+  }
+
+  // Tornar função global para uso no onclick
+  window.removePhotoPreview = removePhotoPreview;
 });
 </script>
+
+<style>
+/* Campo de data com calendário */
+.date-input {
+  position: relative;
+}
+
+.date-input::-webkit-calendar-picker-indicator {
+  background: transparent;
+  bottom: 0;
+  color: transparent;
+  cursor: pointer;
+  height: auto;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: auto;
+}
+
+.date-input::-webkit-inner-spin-button {
+  display: none;
+}
+
+.date-input::-webkit-clear-button {
+  display: none;
+}
+
+/* Área de upload de fotos */
+.photo-upload-area {
+  border: 2px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  background: #f9fafb;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-upload-area:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.photo-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.upload-hint {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.upload-hint i {
+  font-size: 2rem;
+  color: #9ca3af;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.upload-hint span {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.upload-hint small {
+  display: block;
+  margin-top: 4px;
+  color: #6b7280;
+}
+
+.upload-limit {
+  color: #10b981 !important;
+  font-weight: 600;
+}
+
+/* Drag and drop */
+.photo-upload-area.dragover {
+  border-color: #3b82f6;
+  background: #dbeafe;
+  transform: scale(1.02);
+}
+
+/* Destacar quando há fotos selecionadas */
+.photo-upload-area.has-photos {
+  border-color: #10b981;
+  background: #d1fae5;
+}
+
+.photo-upload-area.has-photos .upload-hint {
+  color: #065f46;
+}
+
+.photo-upload-area.has-photos .upload-hint i {
+  color: #10b981;
+}
+
+/* Preview das fotos */
+.photo-preview-container {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.photo-preview-container h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.photo-preview-item {
+  position: relative;
+  border-radius: 6px;
+  overflow: hidden;
+  aspect-ratio: 1;
+}
+
+.photo-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.photo-preview-item:hover .photo-preview-overlay {
+  opacity: 1;
+}
+
+.photo-preview-remove {
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s ease;
+}
+
+.photo-preview-remove:hover {
+  background: #dc2626;
+}
+
+.photo-preview-number {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.current-photos {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.current-photos h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.photo-item {
+  position: relative;
+}
+
+.photo-thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #e5e7eb;
+}
+
+.photo-thumbnail:hover {
+  border-color: #3b82f6;
+  transform: scale(1.05);
+  transition: all 0.2s ease;
+}
+</style>
