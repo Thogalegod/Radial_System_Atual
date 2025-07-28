@@ -6,6 +6,8 @@ gem "rails", "~> 8.0.0"
 gem "propshaft"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
+# Use sqlite3 as the database for Active Record in development
+gem "sqlite3", "~> 1.4", platforms: %i[ mingw mswin x64_mingw jruby ]
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]

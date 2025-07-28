@@ -329,6 +329,7 @@ DEPENDENCIES
   rubocop-rails-omakase
   solid_cache
   solid_queue
+  sqlite3 (~> 1.4)
   thruster
   tzinfo-data
   web-console

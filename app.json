@@ -1,0 +1,38 @@
+{
+  "name": "Radial System",
+  "description": "Sistema Radial desenvolvido em Rails 8",
+  "repository": "https://github.com/seu-usuario/radial-system",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["rails", "ruby", "postgresql"],
+  "addons": [
+    "heroku-postgresql:mini"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/ruby"
+    }
+  ],
+  "env": {
+    "RAILS_ENV": {
+      "description": "Environment for Rails app",
+      "value": "production"
+    },
+    "RAILS_SERVE_STATIC_FILES": {
+      "description": "Serve static files from Rails",
+      "value": "true"
+    },
+    "RAILS_LOG_TO_STDOUT": {
+      "description": "Log to STDOUT",
+      "value": "true"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "scripts": {
+    "postdeploy": "bundle exec rails db:migrate"
+  }
+} 
