@@ -1,0 +1,2 @@
+module RentalBillingPeriodsHelper
+end

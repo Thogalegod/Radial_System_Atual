@@ -2,20 +2,16 @@ class Rental < ApplicationRecord
   belongs_to :client
   has_many :rental_equipments, dependent: :destroy
   has_many :equipments, through: :rental_equipments
+  has_many :rental_billing_periods, dependent: :destroy
 
   # Enum para status
   enum :status, { ativo: 'ativo', concluido: 'concluido' }
 
   # Validações
   validates :name, presence: true
-  validates :start_date, presence: true
-  validates :end_date, presence: true
   validates :status, presence: true, inclusion: { in: statuses.keys }
   validates :client, presence: true
 
-  # Validação customizada para datas
-  validate :end_date_after_start_date
-  validate :start_date_not_in_past, on: :create
   validate :cannot_conclude_without_equipments, on: :update
 
   # Scopes
@@ -25,9 +21,8 @@ class Rental < ApplicationRecord
   scope :with_equipments, -> { includes(:equipments) }
   scope :recent, -> { order(created_at: :desc) }
 
-  def duration_days
-    return 0 unless start_date && end_date
-    (end_date - start_date).to_i
+  def display_name
+    "#{name} - #{client.name}"
   end
 
   def is_active?
@@ -40,10 +35,6 @@ class Rental < ApplicationRecord
 
   def can_be_completed?
     is_active? && equipments.any?
-  end
-
-  def display_name
-    "#{name} - #{client.name}"
   end
 
   def add_equipment(equipment)
@@ -83,23 +74,31 @@ class Rental < ApplicationRecord
     equipments.any?
   end
 
+  def total_billing_amount
+    rental_billing_periods.sum(:amount)
+  end
+
+  def formatted_total_amount
+    "R$ #{total_billing_amount.to_f.round(2).to_s.gsub('.', ',')}"
+  end
+
+  def billing_periods_count
+    rental_billing_periods.count
+  end
+
+  def has_billing_periods?
+    rental_billing_periods.any?
+  end
+
+  def active_billing_period
+    rental_billing_periods.active.first
+  end
+
+  def can_add_billing_period?
+    is_active?
+  end
+
   private
-
-  def end_date_after_start_date
-    return if start_date.blank? || end_date.blank?
-    
-    if end_date <= start_date
-      errors.add(:end_date, 'deve ser posterior à data de início')
-    end
-  end
-
-  def start_date_not_in_past
-    return if start_date.blank?
-    
-    if start_date < Date.current
-      errors.add(:start_date, 'não pode ser no passado')
-    end
-  end
 
   def cannot_conclude_without_equipments
     if status_changed? && status == 'concluido' && equipments.empty?

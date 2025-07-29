@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_29_225443) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_29_231858) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -223,6 +223,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_225443) do
     t.index ["status"], name: "index_receipts_on_status"
   end
 
+  create_table "rental_billing_periods", force: :cascade do |t|
+    t.bigint "rental_id", null: false
+    t.string "name"
+    t.date "start_date"
+    t.date "end_date"
+    t.decimal "amount"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rental_id"], name: "index_rental_billing_periods_on_rental_id"
+  end
+
   create_table "rental_equipments", force: :cascade do |t|
     t.bigint "rental_id", null: false
     t.bigint "equipment_id", null: false
@@ -266,8 +277,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_225443) do
 
   create_table "rentals", force: :cascade do |t|
     t.string "name"
-    t.date "start_date"
-    t.date "end_date"
     t.string "status"
     t.bigint "client_id", null: false
     t.datetime "created_at", null: false
@@ -297,6 +306,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_225443) do
   add_foreign_key "financial_entries", "receipts"
   add_foreign_key "notifications", "users"
   add_foreign_key "receipts", "rental_periods"
+  add_foreign_key "rental_billing_periods", "rentals"
   add_foreign_key "rental_equipments", "equipments"
   add_foreign_key "rental_status_histories", "users", column: "changed_by_id"
   add_foreign_key "rentals", "clients"

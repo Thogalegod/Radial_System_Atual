@@ -5,6 +5,7 @@ Rails.application.routes.draw do
       patch :complete
     end
     resources :rental_equipments, only: [:index, :create, :destroy]
+    resources :rental_billing_periods
   end
   
   get "dashboard/index"

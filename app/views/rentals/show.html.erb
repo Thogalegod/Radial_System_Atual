@@ -66,25 +66,25 @@
           </div>
           
           <div class="detail-item">
-            <label>Data de Início:</label>
-            <span><%= @rental.start_date.strftime("%d/%m/%Y") %></span>
-          </div>
-          
-          <div class="detail-item">
-            <label>Data de Fim:</label>
-            <span><%= @rental.end_date.strftime("%d/%m/%Y") %></span>
-          </div>
-          
-          <div class="detail-item">
-            <label>Duração:</label>
-            <span><%= pluralize(@rental.duration_days, 'dia') %></span>
-          </div>
-          
-          <div class="detail-item">
             <label>Status:</label>
             <span class="status-badge status-<%= @rental.status %>">
               <%= @rental.status.humanize %>
             </span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Equipamentos:</label>
+            <span><%= @rental.equipment_count %> <%= 'equipamento'.pluralize(@rental.equipment_count) %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Períodos de Faturamento:</label>
+            <span><%= @rental.billing_periods_count %> <%= 'período'.pluralize(@rental.billing_periods_count) %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Total Faturado:</label>
+            <span class="total-amount"><%= @rental.formatted_total_amount %></span>
           </div>
         </div>
       </div>
@@ -141,6 +141,54 @@
         <div class="section-actions">
           <%= link_to rental_rental_equipments_path(@rental), class: "btn btn-sm btn-outline" do %>
             <i class="fas fa-boxes"></i> Gerenciar Equipamentos
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Seção de Períodos de Faturamento -->
+      <div class="detail-section">
+        <h3>
+          <i class="fas fa-calendar-alt"></i>
+          Períodos de Faturamento
+          <span class="badge"><%= @rental.billing_periods_count %></span>
+        </h3>
+        
+        <div class="section-summary">
+          <span class="total-amount">Total: <%= @rental.formatted_total_amount %></span>
+        </div>
+        
+        <% if @rental.has_billing_periods? %>
+          <div class="billing-periods-preview">
+            <% @rental.rental_billing_periods.ordered_by_date.limit(3).each do |period| %>
+              <div class="period-item">
+                <div class="period-info">
+                  <h4><%= period.name %></h4>
+                  <p><%= period.start_date.strftime('%d/%m/%Y') %> - <%= period.end_date.strftime('%d/%m/%Y') %></p>
+                </div>
+                <div class="period-amount">
+                  <%= period.formatted_amount %>
+                </div>
+              </div>
+            <% end %>
+            <% if @rental.billing_periods_count > 3 %>
+              <div class="more-periods">
+                <p>+ <%= @rental.billing_periods_count - 3 %> mais períodos</p>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3>Nenhum período cadastrado</h3>
+            <p>Adicione períodos de faturamento para esta locação.</p>
+          </div>
+        <% end %>
+        
+        <div class="section-actions">
+          <%= link_to rental_rental_billing_periods_path(@rental), class: "btn btn-sm btn-outline" do %>
+            <i class="fas fa-calendar-alt"></i> Gerenciar Períodos
           <% end %>
         </div>
       </div>
@@ -317,10 +365,100 @@
 
 .section-actions {
   margin-top: 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .text-muted {
   color: #6b7280;
   font-style: italic;
+}
+
+.badge {
+  background: #3b82f6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+.section-summary {
+  margin-bottom: 16px;
+}
+
+.total-amount {
+  color: #059669;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.billing-periods-preview {
+  margin-bottom: 16px;
+}
+
+.period-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: #f9fafb;
+}
+
+.period-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.period-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.period-amount {
+  font-weight: 700;
+  color: #059669;
+  font-size: 1.125rem;
+}
+
+.more-periods {
+  text-align: center;
+  padding: 12px;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.more-periods p {
+  margin: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  color: #d1d5db;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.25rem;
+  color: #6b7280;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #9ca3af;
 }
 </style>

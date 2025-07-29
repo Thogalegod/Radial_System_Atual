@@ -50,22 +50,25 @@
               </div>
               
               <div class="info-item">
-                <label>Data de Início:</label>
-                <span><%= rental.start_date.strftime("%d/%m/%Y") %></span>
+                <label>Status:</label>
+                <span class="status-badge status-<%= rental.status %>">
+                  <%= rental.status.titleize %>
+                </span>
               </div>
               
-              <div class="info-item">
-                <label>Data de Fim:</label>
-                <span><%= rental.end_date.strftime("%d/%m/%Y") %></span>
-              </div>
-              
-              <div class="info-item">
-                <label>Duração:</label>
-                <span><%= pluralize(rental.duration_days, 'dia') %></span>
-              </div>
               <div class="info-item">
                 <label>Equipamentos:</label>
                 <span><%= rental.equipment_count %> <%= 'equipamento'.pluralize(rental.equipment_count) %></span>
+              </div>
+              
+              <div class="info-item">
+                <label>Períodos:</label>
+                <span><%= rental.billing_periods_count %> <%= 'período'.pluralize(rental.billing_periods_count) %></span>
+              </div>
+              
+              <div class="info-item">
+                <label>Total:</label>
+                <span class="total-amount"><%= rental.formatted_total_amount %></span>
               </div>
             </div>
           </div>

@@ -28,47 +28,34 @@
         
         <div class="form-group">
           <%= form.label :name, "Nome da Locação", class: "form-label" %>
-          <%= form.text_field :name, class: "form-input", placeholder: "Ex: Locação de Equipamentos ABC" %>
+          <%= form.text_field :name, 
+              class: "form-control",
+              placeholder: "Ex: Locação Transformador MT",
+              required: true %>
+          <small class="form-help">
+            <i class="fas fa-info-circle"></i>
+            Nome descritivo para identificar esta locação
+          </small>
         </div>
 
         <div class="form-group">
           <%= form.label :client_id, "Cliente", class: "form-label" %>
-          <%= form.select :client_id, 
-              @clients.map { |client| [client.name, client.id] }, 
-              { prompt: "Selecione um cliente" }, 
-              { class: "form-select" } %>
+          <%= form.collection_select :client_id, 
+              @clients, 
+              :id, 
+              :name, 
+              { prompt: "Selecione um cliente" },
+              { class: "form-select", required: true } %>
+          <small class="form-help">
+            <i class="fas fa-user"></i>
+            Cliente responsável por esta locação
+          </small>
         </div>
-      </div>
 
-      <div class="form-section">
-        <h3>Período da Locação</h3>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <%= form.label :start_date, "Data de Início", class: "form-label" %>
-            <%= form.date_field :start_date, class: "form-input" %>
-          </div>
-
-          <div class="form-group">
-            <%= form.label :end_date, "Data de Fim", class: "form-label" %>
-            <%= form.date_field :end_date, class: "form-input" %>
-          </div>
-        </div>
-      </div>
-
-      <div class="form-section">
-        <h3>Status Atual</h3>
         <div class="status-display">
-          <span class="status-badge status-<%= @rental.status %>">
-            <%= @rental.status.humanize %>
-          </span>
-          <p class="status-info">
-            <% if @rental.is_active? %>
-              Para concluir esta locação, use o botão "Concluir Locação" na página de detalhes.
-            <% else %>
-              Esta locação já foi concluída. Os equipamentos foram devolvidos ao estoque.
-            <% end %>
-          </p>
+          <h4><i class="fas fa-info-circle"></i> Status da Locação</h4>
+          <p>Status atual: <strong><%= @rental.status.titleize %></strong></p>
+          <p>Para alterar o status, use o botão "Concluir Locação" na página de detalhes.</p>
         </div>
       </div>
 
