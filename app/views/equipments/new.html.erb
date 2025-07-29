@@ -57,23 +57,6 @@
               ],
               help_text: 'Local onde o equipamento está instalado' %>
 
-          <div class="form-group">
-            <%= form.label :status, "Status", class: "form-label" %>
-            <%= form.select :status, 
-                [
-                  ['🟢 Em Estoque - Disponível para venda', 'em_estoque'],
-                  ['🔴 Vendido - Já foi vendido', 'vendido'],
-                  ['🔵 Alugado - Em locação', 'alugado']
-                ],
-                { selected: @equipment.status || 'em_estoque' },
-                { class: "form-select" } %>
-            <small class="form-help">
-              <strong>Status do Equipamento:</strong>
-              <br>• <strong>Em Estoque:</strong> Disponível para venda
-              <br>• <strong>Vendido:</strong> Já foi vendido
-              <br>• <strong>Alugado:</strong> Em locação
-            </small>
-          </div>
         </div>
 
         <div class="form-section">

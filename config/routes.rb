@@ -1,6 +1,11 @@
 Rails.application.routes.draw do
   # Rotas para locações
-  resources :rentals
+  resources :rentals do
+    member do
+      patch :complete
+    end
+    resources :rental_equipments, only: [:index, :create, :destroy]
+  end
   
   get "dashboard/index"
   # Rotas para o sistema genérico de equipamentos

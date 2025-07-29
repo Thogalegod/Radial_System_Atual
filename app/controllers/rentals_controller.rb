@@ -1,8 +1,8 @@
 class RentalsController < ApplicationController
-  before_action :set_rental, only: [:show, :edit, :update, :destroy]
+  before_action :set_rental, only: [:show, :edit, :update, :destroy, :complete]
 
   def index
-    @rentals = Rental.includes(:client).order(created_at: :desc)
+    @rentals = Rental.with_equipments.recent
   end
 
   def show
@@ -15,7 +15,7 @@ class RentalsController < ApplicationController
 
   def create
     @rental = Rental.new(rental_params)
-    @clients = Client.order(:name)
+    @rental.status = 'ativo' # Define status ativo automaticamente
 
     if @rental.save
       redirect_to @rental, notice: 'Locação criada com sucesso.'
@@ -43,6 +43,14 @@ class RentalsController < ApplicationController
     redirect_to rentals_url, notice: 'Locação excluída com sucesso.'
   end
 
+  def complete
+    if @rental.complete!
+      redirect_to @rental, notice: 'Locação concluída com sucesso!'
+    else
+      redirect_to @rental, alert: 'Não é possível concluir esta locação. Verifique se há equipamentos alocados.'
+    end
+  end
+
   private
 
   def set_rental
@@ -50,6 +58,6 @@ class RentalsController < ApplicationController
   end
 
   def rental_params
-    params.require(:rental).permit(:name, :start_date, :end_date, :status, :client_id)
+    params.require(:rental).permit(:name, :start_date, :end_date, :client_id)
   end
 end

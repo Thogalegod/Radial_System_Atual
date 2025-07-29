@@ -57,14 +57,11 @@
       </div>
 
       <div class="form-section">
-        <h3>Status</h3>
-        
-        <div class="form-group">
-          <%= form.label :status, "Status da Locação", class: "form-label" %>
-          <%= form.select :status, 
-              Rental.statuses.keys.map { |status| [status.humanize, status] }, 
-              { prompt: "Selecione o status" }, 
-              { class: "form-select" } %>
+        <h3>Informação</h3>
+        <div class="info-box">
+          <i class="fas fa-info-circle"></i>
+          <p>A locação será criada automaticamente com status <strong>Ativo</strong>. 
+          Após adicionar equipamentos, você poderá concluí-la através do botão "Concluir Locação".</p>
         </div>
       </div>
 
@@ -178,13 +175,36 @@
   margin-bottom: 4px;
 }
 
-.form-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-}
+  .form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    padding-top: 24px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .info-box {
+    background: #eff6ff;
+    border: 1px solid #dbeafe;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .info-box i {
+    color: #3b82f6;
+    font-size: 18px;
+    margin-top: 2px;
+  }
+
+  .info-box p {
+    margin: 0;
+    color: #1e40af;
+    font-size: 14px;
+    line-height: 1.5;
+  }
 
 .breadcrumb {
   margin-bottom: 16px;

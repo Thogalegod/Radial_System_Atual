@@ -1,0 +1,263 @@
+<div class="content-header">
+  <div class="header-content">
+    <div class="breadcrumb">
+      <%= link_to rental_path(@rental), class: "breadcrumb-link" do %>
+        <i class="fas fa-arrow-left"></i> Voltar para Locação
+      <% end %>
+    </div>
+    <h1>Equipamentos da Locação: <%= @rental.name %></h1>
+  </div>
+</div>
+
+<div class="content-body">
+  <div class="equipment-management">
+    <!-- Equipamentos da Locação -->
+    <div class="section">
+      <h2>Equipamentos Alocados (<%= @rental_equipments.count %>)</h2>
+      
+      <% if @rental_equipments.any? %>
+        <div class="equipment-grid">
+          <% @rental_equipments.each do |rental_equipment| %>
+            <div class="equipment-card">
+              <div class="equipment-header">
+                <h3><%= rental_equipment.equipment.display_name %></h3>
+                <span class="status-badge status-<%= rental_equipment.equipment.status %>">
+                  <%= rental_equipment.equipment.status_display %>
+                </span>
+              </div>
+              
+              <div class="equipment-body">
+                <div class="equipment-info">
+                  <p><strong>Tipo:</strong> <%= rental_equipment.equipment.equipment_type.name %></p>
+                  <p><strong>Serial:</strong> <%= rental_equipment.equipment.serial_number %></p>
+                  <% if rental_equipment.equipment.location.present? %>
+                    <p><strong>Localização:</strong> <%= rental_equipment.equipment.location %></p>
+                  <% end %>
+                </div>
+              </div>
+              
+              <div class="equipment-actions">
+                <%= button_to rental_rental_equipment_path(@rental, rental_equipment.equipment), 
+                    method: :delete, 
+                    data: { 
+                      confirm: 'Tem certeza que deseja remover este equipamento da locação?',
+                      turbo_method: :delete
+                    },
+                    class: "btn btn-sm btn-danger",
+                    form: { style: 'display: inline;' },
+                    onclick: "return confirmDelete(event, 'Tem certeza que deseja remover este equipamento da locação?')" do %>
+                  <i class="fas fa-times"></i> Remover
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-box-open"></i>
+          </div>
+          <h3>Nenhum equipamento alocado</h3>
+          <p>Adicione equipamentos disponíveis para esta locação.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Equipamentos Disponíveis -->
+    <div class="section">
+      <h2>Equipamentos Disponíveis (<%= @available_equipments.count %>)</h2>
+      
+      <% if @available_equipments.any? %>
+        <div class="equipment-grid">
+          <% @available_equipments.each do |equipment| %>
+            <div class="equipment-card available">
+              <div class="equipment-header">
+                <h3><%= equipment.display_name %></h3>
+                <span class="status-badge status-<%= equipment.status %>">
+                  <%= equipment.status_display %>
+                </span>
+              </div>
+              
+              <div class="equipment-body">
+                <div class="equipment-info">
+                  <p><strong>Tipo:</strong> <%= equipment.equipment_type.name %></p>
+                  <p><strong>Serial:</strong> <%= equipment.serial_number %></p>
+                  <% if equipment.location.present? %>
+                    <p><strong>Localização:</strong> <%= equipment.location %></p>
+                  <% end %>
+                </div>
+              </div>
+              
+              <div class="equipment-actions">
+                <%= button_to rental_rental_equipments_path(@rental), 
+                    method: :post,
+                    params: { equipment_id: equipment.id },
+                    class: "btn btn-sm btn-primary",
+                    form: { style: 'display: inline;' } do %>
+                  <i class="fas fa-plus"></i> Adicionar
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="empty-state">
+          <div class="empty-icon">
+            <i class="fas fa-box"></i>
+          </div>
+          <h3>Nenhum equipamento disponível</h3>
+          <p>Todos os equipamentos estão alocados em outras locações.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<style>
+.equipment-management {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.section {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+}
+
+.section h2 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 12px;
+}
+
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.equipment-card {
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.equipment-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.equipment-card.available {
+  background: white;
+  border-color: #d1fae5;
+}
+
+.equipment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.equipment-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.equipment-body {
+  margin-bottom: 16px;
+}
+
+.equipment-info p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.equipment-info strong {
+  color: #374151;
+}
+
+.equipment-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-em_estoque {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-alugado {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-vendido {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin-bottom: 0;
+}
+
+.breadcrumb {
+  margin-bottom: 16px;
+}
+
+.breadcrumb-link {
+  color: #6b7280;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.breadcrumb-link:hover {
+  color: #374151;
+}
+
+@media (max-width: 768px) {
+  .equipment-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

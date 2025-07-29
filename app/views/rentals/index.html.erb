@@ -63,6 +63,10 @@
                 <label>Duração:</label>
                 <span><%= pluralize(rental.duration_days, 'dia') %></span>
               </div>
+              <div class="info-item">
+                <label>Equipamentos:</label>
+                <span><%= rental.equipment_count %> <%= 'equipamento'.pluralize(rental.equipment_count) %></span>
+              </div>
             </div>
           </div>
           

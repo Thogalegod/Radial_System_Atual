@@ -171,7 +171,7 @@ class EquipmentsController < ApplicationController
 
   def equipment_params
     params.require(:equipment).permit(
-      :serial_number, :equipment_type_id, :notes, :status, :location,
+      :serial_number, :equipment_type_id, :notes, :location,
       :acquisition_date, :acquisition_price, :bandeira, photos: []
     )
   end
@@ -190,7 +190,6 @@ class EquipmentsController < ApplicationController
     # Filtros básicos
     equipments = equipments.by_type(params[:type]) if params[:type].present?
     equipments = equipments.by_type(params[:equipment_type_id]) if params[:equipment_type_id].present?
-    equipments = equipments.where(status: params[:status]) if params[:status].present?
     equipments = equipments.where(location: params[:location]) if params[:location].present?
     equipments = equipments.where(bandeira: params[:bandeira]) if params[:bandeira].present?
     
@@ -245,8 +244,6 @@ class EquipmentsController < ApplicationController
     when 'equipment_type'
       equipments = equipments.joins(:equipment_type)
       equipments = sort_direction == 'desc' ? equipments.order('equipment_types.name DESC') : equipments.order('equipment_types.name')
-    when 'status'
-      equipments = sort_direction == 'desc' ? equipments.order(status: :desc) : equipments.order(:status)
     when 'location'
       equipments = sort_direction == 'desc' ? equipments.order(location: :desc) : equipments.order(:location)
     when 'bandeira'

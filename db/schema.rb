@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_29_205003) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_29_225443) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -168,7 +168,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_205003) do
     t.string "serial_number", null: false
     t.bigint "equipment_type_id", null: false
     t.text "notes"
-    t.string "status", default: "active"
     t.string "location"
     t.date "acquisition_date"
     t.date "last_maintenance_date"
@@ -179,7 +178,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_205003) do
     t.index ["equipment_type_id"], name: "index_equipments_on_equipment_type_id"
     t.index ["location"], name: "index_equipments_on_location"
     t.index ["serial_number"], name: "index_equipments_on_serial_number", unique: true
-    t.index ["status"], name: "index_equipments_on_status"
   end
 
   create_table "financial_entries", force: :cascade do |t|

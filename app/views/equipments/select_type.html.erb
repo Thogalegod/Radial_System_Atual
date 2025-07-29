@@ -64,16 +64,6 @@
           <p><%= Equipment.alugado.count %> equipamento<%= Equipment.alugado.count != 1 ? 's' : '' %></p>
         </div>
       <% end %>
-
-      <%= link_to equipments_path(status: 'vendido'), class: "filter-card vendido" do %>
-        <div class="filter-icon">
-          <i class="fas fa-shopping-cart"></i>
-        </div>
-        <div class="filter-content">
-          <h3>Vendidos</h3>
-          <p><%= Equipment.vendido.count %> equipamento<%= Equipment.vendido.count != 1 ? 's' : '' %></p>
-        </div>
-      <% end %>
     </div>
   </div>
 

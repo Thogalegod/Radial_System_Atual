@@ -6,6 +6,22 @@
       <% end %>
     </div>
     <div class="header-actions">
+      <%= link_to rental_rental_equipments_path(@rental), class: "btn btn-primary" do %>
+        <i class="fas fa-boxes"></i> Gerenciar Equipamentos
+      <% end %>
+      <% if @rental.can_be_completed? %>
+        <%= button_to complete_rental_path(@rental), 
+            method: :patch,
+            data: { 
+              confirm: 'Tem certeza que deseja concluir esta locação? Os equipamentos serão devolvidos ao estoque.',
+              turbo_method: :patch
+            },
+            class: "btn btn-success",
+            form: { style: 'display: inline;' },
+            onclick: "return confirmDelete(event, 'Tem certeza que deseja concluir esta locação? Os equipamentos serão devolvidos ao estoque.')" do %>
+          <i class="fas fa-check-circle"></i> Concluir Locação
+        <% end %>
+      <% end %>
       <%= link_to edit_rental_path(@rental), class: "btn btn-outline" do %>
         <i class="fas fa-edit"></i> Editar
       <% end %>
@@ -98,6 +114,37 @@
         </div>
       </div>
       
+      <div class="detail-section">
+        <h3>Equipamentos da Locação</h3>
+        <% if @rental.equipments.any? %>
+          <div class="equipment-list">
+            <% @rental.equipments.each do |equipment| %>
+              <div class="equipment-item">
+                <div class="equipment-info">
+                  <strong><%= equipment.display_name %></strong>
+                  <span class="status-badge status-<%= equipment.status %>">
+                    <%= equipment.status_display %>
+                  </span>
+                </div>
+                <div class="equipment-details">
+                  <small>Tipo: <%= equipment.equipment_type.name %></small>
+                  <% if equipment.location.present? %>
+                    <small>• Localização: <%= equipment.location %></small>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-muted">Nenhum equipamento alocado para esta locação.</p>
+        <% end %>
+        <div class="section-actions">
+          <%= link_to rental_rental_equipments_path(@rental), class: "btn btn-sm btn-outline" do %>
+            <i class="fas fa-boxes"></i> Gerenciar Equipamentos
+          <% end %>
+        </div>
+      </div>
+
       <div class="detail-section">
         <h3>Informações do Sistema</h3>
         <div class="detail-grid">
@@ -227,5 +274,53 @@
 .status-concluido {
   background: #dbeafe;
   color: #1e40af;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+  border: 1px solid #10b981;
+}
+
+.btn-success:hover {
+  background: #059669;
+  border-color: #059669;
+}
+
+.equipment-list {
+  margin-bottom: 16px;
+}
+
+.equipment-item {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.equipment-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.equipment-details {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.equipment-details small {
+  margin-right: 8px;
+}
+
+.section-actions {
+  margin-top: 16px;
+}
+
+.text-muted {
+  color: #6b7280;
+  font-style: italic;
 }
 </style>

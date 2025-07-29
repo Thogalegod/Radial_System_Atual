@@ -88,18 +88,6 @@
           <%= render 'shared/form_field', 
               form: form, 
               object: @equipment,
-              field: :status, 
-              type: :select,
-              label: "Status",
-              options: [
-                ['Em Estoque', 'em_estoque'],
-                ['Vendido', 'vendido'],
-                ['Alugado', 'alugado']
-              ] %>
-
-          <%= render 'shared/form_field', 
-              form: form, 
-              object: @equipment,
               field: :acquisition_date, 
               type: :date_field,
               label: "Data de Aquisição" %>
