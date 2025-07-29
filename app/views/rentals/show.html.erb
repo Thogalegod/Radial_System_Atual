@@ -1,0 +1,231 @@
+<div class="content-header">
+  <div class="header-content">
+    <div class="breadcrumb">
+      <%= link_to rentals_path, class: "breadcrumb-link" do %>
+        <i class="fas fa-arrow-left"></i> Voltar para Locações
+      <% end %>
+    </div>
+    <div class="header-actions">
+      <%= link_to edit_rental_path(@rental), class: "btn btn-outline" do %>
+        <i class="fas fa-edit"></i> Editar
+      <% end %>
+      <%= button_to rental_path(@rental), 
+          method: :delete, 
+          data: { 
+            confirm: 'Tem certeza que deseja excluir esta locação?',
+            turbo_method: :delete
+          },
+          class: "btn btn-danger",
+          form: { style: 'display: inline;' },
+          onclick: "return confirmDelete(event, 'Tem certeza que deseja excluir esta locação?')" do %>
+        <i class="fas fa-trash"></i> Excluir
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="content-body">
+  <div class="detail-card">
+    <div class="detail-header">
+      <div class="detail-title">
+        <h1><%= @rental.name %></h1>
+        <span class="status-badge status-<%= @rental.status %>">
+          <%= @rental.status.humanize %>
+        </span>
+      </div>
+    </div>
+    
+    <div class="detail-content">
+      <div class="detail-section">
+        <h3>Informações da Locação</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Nome:</label>
+            <span><%= @rental.name %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Cliente:</label>
+            <span><%= @rental.client.name %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Data de Início:</label>
+            <span><%= @rental.start_date.strftime("%d/%m/%Y") %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Data de Fim:</label>
+            <span><%= @rental.end_date.strftime("%d/%m/%Y") %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Duração:</label>
+            <span><%= pluralize(@rental.duration_days, 'dia') %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Status:</label>
+            <span class="status-badge status-<%= @rental.status %>">
+              <%= @rental.status.humanize %>
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="detail-section">
+        <h3>Informações do Cliente</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Nome:</label>
+            <span><%= @rental.client.name %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Tipo de Documento:</label>
+            <span><%= @rental.client.document_type %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Número do Documento:</label>
+            <span><%= @rental.client.document_number %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>CEP:</label>
+            <span><%= @rental.client.zip_code %></span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="detail-section">
+        <h3>Informações do Sistema</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Criado em:</label>
+            <span><%= @rental.created_at.strftime("%d/%m/%Y às %H:%M") %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Última atualização:</label>
+            <span><%= @rental.updated_at.strftime("%d/%m/%Y às %H:%M") %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.detail-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.detail-header {
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.detail-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.detail-title h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.detail-content {
+  padding: 24px;
+}
+
+.detail-section {
+  margin-bottom: 32px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.detail-item span {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.breadcrumb {
+  margin-bottom: 16px;
+}
+
+.breadcrumb-link {
+  color: #6b7280;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.breadcrumb-link:hover {
+  color: #374151;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-ativo {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-concluido {
+  background: #dbeafe;
+  color: #1e40af;
+}
+</style>

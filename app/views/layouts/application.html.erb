@@ -20,6 +20,15 @@
           Rails.start();
         }
       });
+      
+      // Função para confirmar exclusão
+      function confirmDelete(event, message) {
+        if (!confirm(message)) {
+          event.preventDefault();
+          return false;
+        }
+        return true;
+      }
     </script>
     
     <!-- Font Awesome para ícones -->
@@ -552,7 +561,7 @@
             </div>
           </div>
           
-          <a href="#" class="nav-item">
+          <a href="<%= rentals_path %>" class="nav-item <%= 'active' if controller_name == 'rentals' %>">
             <div class="nav-icon">🚚</div>
             <span>Locações</span>
           </a>

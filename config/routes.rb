@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Rotas para locações
+  resources :rentals
+  
   get "dashboard/index"
   # Rotas para o sistema genérico de equipamentos
   resources :equipment_types do

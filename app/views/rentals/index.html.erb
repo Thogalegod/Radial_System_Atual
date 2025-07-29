@@ -1,0 +1,200 @@
+<div class="content-header">
+  <div class="header-content">
+    <h1>Locações</h1>
+    <div class="header-actions">
+      <%= link_to new_rental_path, class: "btn btn-primary" do %>
+        <i class="fas fa-plus"></i> Nova Locação
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<div class="content-body">
+  <% if @rentals.any? %>
+    <div class="cards-grid">
+      <% @rentals.each do |rental| %>
+        <div class="card rental-card">
+          <div class="card-header">
+            <div class="card-title">
+              <h3><%= rental.name %></h3>
+              <span class="status-badge status-<%= rental.status %>">
+                <%= rental.status.humanize %>
+              </span>
+            </div>
+            <div class="card-actions">
+              <%= link_to rental_path(rental), class: "btn btn-sm btn-outline" do %>
+                <i class="fas fa-eye"></i>
+              <% end %>
+              <%= link_to edit_rental_path(rental), class: "btn btn-sm btn-outline" do %>
+                <i class="fas fa-edit"></i>
+              <% end %>
+              <%= button_to rental_path(rental), 
+                  method: :delete, 
+                  data: { 
+                    confirm: 'Tem certeza que deseja excluir esta locação?',
+                    turbo_method: :delete
+                  },
+                  class: "btn btn-sm btn-danger",
+                  form: { style: 'display: inline;' },
+                  onclick: "return confirmDelete(event, 'Tem certeza que deseja excluir esta locação?')" do %>
+                <i class="fas fa-trash"></i>
+              <% end %>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <div class="info-grid">
+              <div class="info-item">
+                <label>Cliente:</label>
+                <span><%= rental.client.name %></span>
+              </div>
+              
+              <div class="info-item">
+                <label>Data de Início:</label>
+                <span><%= rental.start_date.strftime("%d/%m/%Y") %></span>
+              </div>
+              
+              <div class="info-item">
+                <label>Data de Fim:</label>
+                <span><%= rental.end_date.strftime("%d/%m/%Y") %></span>
+              </div>
+              
+              <div class="info-item">
+                <label>Duração:</label>
+                <span><%= pluralize(rental.duration_days, 'dia') %></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <small class="text-muted">
+              Criado em <%= rental.created_at.strftime("%d/%m/%Y às %H:%M") %>
+            </small>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="fas fa-calendar-alt"></i>
+      </div>
+      <h3>Nenhuma locação encontrada</h3>
+      <p>Comece criando sua primeira locação.</p>
+      <%= link_to new_rental_path, class: "btn btn-primary" do %>
+        <i class="fas fa-plus"></i> Criar Primeira Locação
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<style>
+.rental-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s;
+}
+
+.rental-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.card-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.card-title {
+  flex: 1;
+}
+
+.card-title h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-ativo {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-concluido {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.info-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-item label {
+  font-weight: 500;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.info-item span {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.card-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin-bottom: 8px;
+  color: #374151;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin-bottom: 24px;
+}
+</style>

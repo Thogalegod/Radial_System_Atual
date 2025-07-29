@@ -1,5 +1,6 @@
 class Client < ApplicationRecord
   has_many :contacts, dependent: :destroy
+  has_many :rentals, dependent: :destroy
   accepts_nested_attributes_for :contacts, allow_destroy: true, reject_if: :all_blank
 
   validates :name, presence: true

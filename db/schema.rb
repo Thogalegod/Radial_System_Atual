@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_28_184134) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_29_205003) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,6 +58,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_28_184134) do
     t.string "document_number"
     t.string "zip_code"
     t.string "state_registration"
+    t.string "neighborhood"
+    t.string "city"
+    t.string "state"
+    t.string "municipal_registration"
   end
 
   create_table "contacts", force: :cascade do |t|
@@ -70,6 +74,18 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_28_184134) do
     t.datetime "updated_at", null: false
     t.boolean "is_primary", default: false
     t.index ["client_id"], name: "index_contacts_on_client_id"
+  end
+
+  create_table "debit_notes", force: :cascade do |t|
+    t.bigint "rental_period_id", null: false
+    t.string "debit_note_number"
+    t.date "issue_date"
+    t.date "due_date"
+    t.decimal "total_value"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rental_period_id"], name: "index_debit_notes_on_rental_period_id"
   end
 
   create_table "equipment_feature_options", force: :cascade do |t|
@@ -166,6 +182,101 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_28_184134) do
     t.index ["status"], name: "index_equipments_on_status"
   end
 
+  create_table "financial_entries", force: :cascade do |t|
+    t.bigint "receipt_id", null: false
+    t.bigint "client_id", null: false
+    t.string "description", null: false
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.date "due_date", null: false
+    t.date "payment_date"
+    t.string "status", default: "pendente"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_financial_entries_on_client_id"
+    t.index ["due_date"], name: "index_financial_entries_on_due_date"
+    t.index ["receipt_id"], name: "index_financial_entries_on_receipt_id"
+    t.index ["status"], name: "index_financial_entries_on_status"
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "title", null: false
+    t.text "message"
+    t.string "link"
+    t.boolean "read", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_notifications_on_created_at"
+    t.index ["read"], name: "index_notifications_on_read"
+    t.index ["user_id"], name: "index_notifications_on_user_id"
+  end
+
+  create_table "receipts", force: :cascade do |t|
+    t.bigint "rental_period_id", null: false
+    t.string "receipt_number", null: false
+    t.date "issue_date", null: false
+    t.date "due_date", null: false
+    t.decimal "total_value", precision: 10, scale: 2, null: false
+    t.string "status", default: "pendente"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["receipt_number"], name: "index_receipts_on_receipt_number", unique: true
+    t.index ["rental_period_id"], name: "index_receipts_on_rental_period_id"
+    t.index ["status"], name: "index_receipts_on_status"
+  end
+
+  create_table "rental_equipments", force: :cascade do |t|
+    t.bigint "rental_id", null: false
+    t.bigint "equipment_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["equipment_id"], name: "index_rental_equipments_on_equipment_id"
+    t.index ["rental_id", "equipment_id"], name: "index_rental_equipments_unique", unique: true
+    t.index ["rental_id"], name: "index_rental_equipments_on_rental_id"
+  end
+
+  create_table "rental_periods", force: :cascade do |t|
+    t.bigint "rental_id", null: false
+    t.integer "period_number", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.string "description", null: false
+    t.decimal "monthly_value", precision: 10, scale: 2, null: false
+    t.string "status", default: "pendente"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "client_order"
+    t.text "notes"
+    t.index ["rental_id", "period_number"], name: "index_rental_periods_on_rental_id_and_period_number", unique: true
+    t.index ["rental_id"], name: "index_rental_periods_on_rental_id"
+    t.index ["status"], name: "index_rental_periods_on_status"
+  end
+
+  create_table "rental_status_histories", force: :cascade do |t|
+    t.bigint "rental_id", null: false
+    t.string "old_status"
+    t.string "new_status", null: false
+    t.bigint "changed_by_id", null: false
+    t.datetime "changed_at", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["changed_at"], name: "index_rental_status_histories_on_changed_at"
+    t.index ["changed_by_id"], name: "index_rental_status_histories_on_changed_by_id"
+    t.index ["rental_id"], name: "index_rental_status_histories_on_rental_id"
+  end
+
+  create_table "rentals", force: :cascade do |t|
+    t.string "name"
+    t.date "start_date"
+    t.date "end_date"
+    t.string "status"
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_rentals_on_client_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "name"
     t.string "email"
@@ -178,9 +289,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_28_184134) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "contacts", "clients"
+  add_foreign_key "debit_notes", "rental_periods"
   add_foreign_key "equipment_feature_options", "equipment_features"
   add_foreign_key "equipment_features", "equipment_types"
   add_foreign_key "equipment_values", "equipment_features"
   add_foreign_key "equipment_values", "equipments", column: "equipments_id"
   add_foreign_key "equipments", "equipment_types"
+  add_foreign_key "financial_entries", "clients"
+  add_foreign_key "financial_entries", "receipts"
+  add_foreign_key "notifications", "users"
+  add_foreign_key "receipts", "rental_periods"
+  add_foreign_key "rental_equipments", "equipments"
+  add_foreign_key "rental_status_histories", "users", column: "changed_by_id"
+  add_foreign_key "rentals", "clients"
 end
