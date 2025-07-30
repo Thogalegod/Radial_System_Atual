@@ -1,6 +1,6 @@
 class RentalBillingPeriodsController < ApplicationController
   before_action :set_rental
-  before_action :set_billing_period, only: [:show, :edit, :update, :destroy]
+  before_action :set_billing_period, only: [:show, :edit, :update, :destroy, :receipt, :receipt_pdf]
 
   def index
     @billing_periods = @rental.rental_billing_periods.ordered_by_date
@@ -39,6 +39,22 @@ class RentalBillingPeriodsController < ApplicationController
     redirect_to rental_rental_billing_periods_path(@rental), notice: 'Período de faturamento removido com sucesso.'
   end
 
+  def receipt
+    # Renderiza o recibo em HTML
+  end
+
+  def receipt_pdf
+    # Gera e faz download do PDF
+    respond_to do |format|
+      format.pdf do
+        render pdf: "recibo_#{@rental.generate_debit_note_number(@billing_period)}",
+               template: "rental_billing_periods/receipt",
+               layout: false,
+               disposition: "attachment"
+      end
+    end
+  end
+
   private
 
   def set_rental
@@ -50,6 +66,6 @@ class RentalBillingPeriodsController < ApplicationController
   end
 
   def billing_period_params
-    params.require(:rental_billing_period).permit(:name, :start_date, :end_date, :amount)
+    params.require(:rental_billing_period).permit(:name, :start_date, :end_date, :amount, :client_order, :observations)
   end
 end

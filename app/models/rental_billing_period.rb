@@ -7,6 +7,8 @@ class RentalBillingPeriod < ApplicationRecord
   validates :end_date, presence: true
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :rental, presence: true
+  validates :client_order, length: { maximum: 200 }
+  validates :observations, length: { maximum: 1000 }
 
   # Validações customizadas
   validate :end_date_after_start_date
@@ -42,6 +44,14 @@ class RentalBillingPeriod < ApplicationRecord
 
   def display_name
     "#{name} (#{start_date.strftime('%d/%m/%Y')} - #{end_date.strftime('%d/%m/%Y')})"
+  end
+
+  def has_client_order?
+    client_order.present?
+  end
+
+  def has_observations?
+    observations.present?
   end
 
   private

@@ -58,6 +58,6 @@ class RentalsController < ApplicationController
   end
 
   def rental_params
-    params.require(:rental).permit(:name, :status, :client_id)
+    params.require(:rental).permit(:name, :status, :client_id, :remessa_note)
   end
 end

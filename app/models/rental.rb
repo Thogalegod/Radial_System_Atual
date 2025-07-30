@@ -11,6 +11,7 @@ class Rental < ApplicationRecord
   validates :name, presence: true
   validates :status, presence: true, inclusion: { in: statuses.keys }
   validates :client, presence: true
+  validates :remessa_note, length: { maximum: 50 }
 
   validate :cannot_conclude_without_equipments, on: :update
 
@@ -96,6 +97,24 @@ class Rental < ApplicationRecord
 
   def can_add_billing_period?
     is_active?
+  end
+
+  def generate_debit_note_number(period)
+    # Formato: RC[nome_locacao]-[sequencial]
+    # Exemplo: RC20250721-1, RC20250721-2
+    return "RC#{name.gsub(/[^a-zA-Z0-9]/, '').upcase}-0" if period.nil?
+    
+    base_name = name.gsub(/[^a-zA-Z0-9]/, '').upcase
+    sequence = rental_billing_periods.where('id <= ?', period.id).count
+    "RC#{base_name}-#{sequence}"
+  end
+
+  def has_remessa_note?
+    remessa_note.present?
+  end
+
+  def remessa_note_display
+    has_remessa_note? ? remessa_note : '-'
   end
 
   private

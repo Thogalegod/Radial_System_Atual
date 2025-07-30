@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOTA DE DÉBITO - <%= @rental.generate_debit_note_number(@billing_period) %></title>
+  <style>
+    @media print {
+      body { margin: 0; }
+      .no-print { display: none; }
+    }
+    
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: white;
+      color: #333;
+      line-height: 1.4;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      border: 2px solid #333;
+      padding: 20px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 20px;
+    }
+    
+    .logo-section {
+      text-align: center;
+    }
+    
+    .logo-placeholder {
+      width: 120px;
+      height: 60px;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .company-name {
+      font-size: 18px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .company-info {
+      text-align: right;
+      font-size: 12px;
+    }
+    
+    .company-info p {
+      margin: 2px 0;
+    }
+    
+    .document-title {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin: 30px 0;
+      text-transform: uppercase;
+    }
+    
+    .section {
+      margin-bottom: 25px;
+    }
+    
+    .section-title {
+      font-weight: bold;
+      font-size: 14px;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #eee;
+      padding: 5px 0;
+    }
+    
+    .info-label {
+      font-weight: bold;
+      font-size: 12px;
+    }
+    
+    .info-value {
+      font-size: 12px;
+    }
+    
+    .bank-info {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    
+    .billing-description {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 20px 0;
+    }
+    
+    .description-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    
+    .description-content {
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    
+    .amount {
+      font-weight: bold;
+      color: #059669;
+    }
+    
+    .actions {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 0 10px;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: #6b7280;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Cabeçalho -->
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo-placeholder">[Seu Logo Aqui]</div>
+        <div class="company-name">RADIAL ENERGIA</div>
+      </div>
+      
+      <div class="company-info">
+        <p><strong>FONTES ENERGIA COMÉRCIO E MANUTENÇÃO LTDA - ME</strong></p>
+        <p>Estrada São Miguel Arcanjo, 140 - Veraneio Maracanã</p>
+        <p>Itaquaquecetuba - SP CEP: 08582-500</p>
+        <p>Fone: (11) 2941-4775 / 9.9837-2639</p>
+        <p>www.radialenergia.com.br</p>
+        <p>thomas@radialenergia.com.br</p>
+      </div>
+    </div>
+    
+    <!-- Título do Documento -->
+    <div class="document-title">NOTA DE DÉBITO</div>
+    
+    <!-- Sacador -->
+    <div class="section">
+      <div class="section-title">SACADOR</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">NOME RAZÃO SOCIAL:</span>
+          <span class="info-value">FONTES ENERGIA COMÉRCIO E MANUTENÇÃO LTDA - ME</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">CNPJ/CPF:</span>
+          <span class="info-value">13.318.529/0001-08</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">INSCRIÇÃO ESTADUAL:</span>
+          <span class="info-value">379.076.526.115</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">INSCRIÇÃO MUNICIPAL:</span>
+          <span class="info-value">35.2.2520868-6</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sacado -->
+    <div class="section">
+      <div class="section-title">SACADO</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">NOME RAZÃO SOCIAL:</span>
+          <span class="info-value"><%= @rental.client.name %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">ENDEREÇO:</span>
+          <span class="info-value"><%= @rental.client.address %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">MUNICÍPIO:</span>
+          <span class="info-value"><%= @rental.client.city %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">FONE/FAX:</span>
+          <span class="info-value"><%= @rental.client.phone %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">UF:</span>
+          <span class="info-value"><%= @rental.client.state %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">BAIRRO:</span>
+          <span class="info-value"><%= @rental.client.neighborhood %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">CNPJ/CPF:</span>
+          <span class="info-value"><%= @rental.client.document_number %> (<%= @rental.client.document_type %>)</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">INCR. ESTADUAL:</span>
+          <span class="info-value"><%= @rental.client.state_registration || '-' %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">CEP:</span>
+          <span class="info-value"><%= @rental.client.zip_code %></span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Dados da Nota de Débito -->
+    <div class="section">
+      <div class="section-title">DADOS NOTA DE DÉBITO</div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">NOTA DE DÉBITO Nº:</span>
+          <span class="info-value"><%= @rental.generate_debit_note_number(@billing_period) %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">DATA DE EMISSÃO:</span>
+          <span class="info-value"><%= @billing_period.start_date.strftime('%d/%m/%Y') %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">VALOR:</span>
+          <span class="info-value amount"><%= @billing_period.formatted_amount %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">VENCIMENTO:</span>
+          <span class="info-value"><%= @billing_period.end_date.strftime('%d/%m/%Y') %></span>
+        </div>
+        <div class="info-item" style="grid-column: 1 / -1;">
+          <span class="info-label">VALOR POR EXTENSO:</span>
+          <span class="info-value"><%= valor_por_extenso(@billing_period.amount) %></span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Dados Bancários -->
+    <div class="section">
+      <div class="section-title">DADOS BANCÁRIOS PARA PAGAMENTO</div>
+      <div class="bank-info">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">BANCO:</span>
+            <span class="info-value">ITAÚ S/A</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">AGÊNCIA:</span>
+            <span class="info-value">0709</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">CONTA CORRENTE:</span>
+            <span class="info-value">06.339-0</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">ENDEREÇO:</span>
+            <span class="info-value">R. Serra de Bragança, 1856 - Vl. Gomes Cardim - SP</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Discriminação da Cobrança -->
+    <div class="section">
+      <div class="section-title">DISCRIMINAÇÃO DA COBRANÇA</div>
+      <div class="billing-description">
+        <div class="description-content">
+          <p><strong>Refere-se a locação de:</strong></p>
+          <% @rental.equipments.each do |equipment| %>
+            <p>• <%= equipment.display_name %> (Série: <%= equipment.serial_number || 'N/A' %>)</p>
+          <% end %>
+          <p><strong>Pedido Cliente:</strong> <%= @billing_period.has_client_order? ? @billing_period.client_order : '-' %></p>
+          <p><strong>Conforme contrato N°:</strong> <%= @rental.name %></p>
+          <p><strong>Nota de remessa N°:</strong> <%= @rental.remessa_note_display %></p>
+          <% if @billing_period.has_observations? %>
+            <p><strong>Obs Contrato:</strong> <%= @billing_period.observations %></p>
+          <% end %>
+          <p><strong>Período:</strong> <%= @billing_period.name %></p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Ações (apenas para visualização HTML) -->
+    <div class="actions no-print">
+      <%= link_to "Voltar para Períodos", rental_rental_billing_periods_path(@rental), class: "btn btn-secondary" %>
+      <%= link_to "Baixar PDF", receipt_pdf_rental_rental_billing_period_path(@rental, @billing_period, format: :pdf), class: "btn btn-primary" %>
+    </div>
+  </div>
+</body>
+</html> 

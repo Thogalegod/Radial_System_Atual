@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_29_231858) do
+ActiveRecord::Schema[8.0].define(version: 2025_07_30_000429) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -231,6 +231,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_231858) do
     t.decimal "amount"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "client_order"
+    t.text "observations"
     t.index ["rental_id"], name: "index_rental_billing_periods_on_rental_id"
   end
 
@@ -281,6 +283,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_29_231858) do
     t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "remessa_note"
     t.index ["client_id"], name: "index_rentals_on_client_id"
   end
 

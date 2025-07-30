@@ -104,6 +104,29 @@
           </small>
         </div>
 
+        <div class="form-group">
+          <%= form.label :client_order, "Pedido do Cliente", class: "form-label" %>
+          <%= form.text_field :client_order, 
+              class: "form-control",
+              placeholder: "Ex: Pedido #12345, Ordem de serviço, etc." %>
+          <small class="form-help">
+            <i class="fas fa-file-alt"></i>
+            Número ou identificação do pedido do cliente (opcional)
+          </small>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :observations, "Observações do Período", class: "form-label" %>
+          <%= form.text_area :observations, 
+              class: "form-control",
+              rows: 4,
+              placeholder: "Observações adicionais sobre este período de faturamento..." %>
+          <small class="form-help">
+            <i class="fas fa-sticky-note"></i>
+            Observações, detalhes ou informações adicionais sobre este período (opcional)
+          </small>
+        </div>
+
         <div class="form-actions">
           <%= link_to rental_rental_billing_periods_path(@rental), class: "btn btn-secondary" do %>
             <i class="fas fa-times"></i>

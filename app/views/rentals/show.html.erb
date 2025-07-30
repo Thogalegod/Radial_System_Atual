@@ -9,6 +9,9 @@
       <%= link_to rental_rental_equipments_path(@rental), class: "btn btn-primary" do %>
         <i class="fas fa-boxes"></i> Gerenciar Equipamentos
       <% end %>
+      <%= link_to rental_rental_billing_periods_path(@rental), class: "btn btn-info" do %>
+        <i class="fas fa-calendar-alt"></i> Gerenciar Períodos
+      <% end %>
       <% if @rental.can_be_completed? %>
         <%= button_to complete_rental_path(@rental), 
             method: :patch,
@@ -63,6 +66,11 @@
           <div class="detail-item">
             <label>Cliente:</label>
             <span><%= @rental.client.name %></span>
+          </div>
+          
+          <div class="detail-item">
+            <label>Nota de Remessa:</label>
+            <span><%= @rental.remessa_note_display %></span>
           </div>
           
           <div class="detail-item">
@@ -324,15 +332,22 @@
   color: #1e40af;
 }
 
+.btn-info {
+  background: #06b6d4;
+  color: white;
+}
+
+.btn-info:hover {
+  background: #0891b2;
+}
+
 .btn-success {
   background: #10b981;
   color: white;
-  border: 1px solid #10b981;
 }
 
 .btn-success:hover {
   background: #059669;
-  border-color: #059669;
 }
 
 .equipment-list {
