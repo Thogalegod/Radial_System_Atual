@@ -178,12 +178,17 @@
 // Gráfico de Status
 const statusCtx = document.getElementById('statusChart').getContext('2d');
 const statusData = {
-  labels: <%= raw @equipments_by_status.keys.map { |status| Equipment.new(status: status).status_display }.to_json %>,
+  labels: <%= raw @equipments_by_status.keys.map { |status| 
+    case status
+    when 'em_estoque' then 'EM ESTOQUE'
+    when 'alugado' then 'ALUGADO'
+    else status.upcase
+    end
+  }.to_json %>,
   datasets: [{
     data: <%= raw @equipments_by_status.values.to_json %>,
     backgroundColor: [
       '#10b981', // Em Estoque - Verde
-      '#ef4444', // Vendido - Vermelho
       '#3b82f6'  // Alugado - Azul
     ],
     borderWidth: 2,

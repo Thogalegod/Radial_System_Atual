@@ -9,6 +9,8 @@ class RentalBillingPeriod < ApplicationRecord
   validates :rental, presence: true
   validates :client_order, length: { maximum: 200 }
   validates :observations, length: { maximum: 1000 }
+  validate :start_date_not_in_future, on: :create
+  validate :amount_format
 
   # Validações customizadas
   validate :end_date_after_start_date
@@ -19,6 +21,9 @@ class RentalBillingPeriod < ApplicationRecord
   scope :active, -> { where('start_date <= ? AND end_date >= ?', Date.current, Date.current) }
   scope :future, -> { where('start_date > ?', Date.current) }
   scope :past, -> { where('end_date < ?', Date.current) }
+  scope :by_rental, ->(rental_id) { where(rental_id: rental_id) }
+  scope :with_rental, -> { includes(:rental) }
+  scope :recent, -> { order(created_at: :desc) }
 
   # Métodos
   def duration_days
@@ -54,6 +59,87 @@ class RentalBillingPeriod < ApplicationRecord
     observations.present?
   end
 
+  # Métodos de cálculo
+  def daily_rate
+    return nil if duration_days.zero?
+    amount / duration_days
+  end
+
+  def formatted_daily_rate
+    return "N/A" if daily_rate.nil?
+    "R$ #{daily_rate.round(2)}"
+  end
+
+  def days_until_start
+    return nil if start_date.nil?
+    (start_date - Date.current).to_i
+  end
+
+  def days_until_end
+    return nil if end_date.nil?
+    (end_date - Date.current).to_i
+  end
+
+  def is_overdue?
+    end_date < Date.current && amount > 0
+  end
+
+  def days_overdue
+    return 0 unless is_overdue?
+    (Date.current - end_date).to_i
+  end
+
+  # Métodos de status
+  def status
+    if is_active?
+      'ativo'
+    elsif is_future?
+      'futuro'
+    elsif is_past?
+      'concluido'
+    else
+      'desconhecido'
+    end
+  end
+
+  def status_display
+    case status
+    when 'ativo' then 'ATIVO'
+    when 'futuro' then 'FUTURO'
+    when 'concluido' then 'CONCLUÍDO'
+    else 'DESCONHECIDO'
+    end
+  end
+
+  def status_color
+    case status
+    when 'ativo' then '#10B981'  # Green
+    when 'futuro' then '#3B82F6' # Blue
+    when 'concluido' then '#6B7280' # Gray
+    else '#EF4444' # Red
+    end
+  end
+
+  # Métodos de busca
+  def self.search(query)
+    where("name ILIKE ? OR client_order ILIKE ? OR observations ILIKE ?", 
+          "%#{query}%", "%#{query}%", "%#{query}%")
+  end
+
+  # Métodos de relatório
+  def self.total_amount_by_period(start_date, end_date)
+    where(start_date: start_date..end_date).sum(:amount)
+  end
+
+  def self.average_daily_rate
+    periods = where.not(amount: 0)
+    return 0 if periods.empty?
+    
+    total_amount = periods.sum(:amount)
+    total_days = periods.sum { |p| p.duration_days }
+    total_days.zero? ? 0 : total_amount / total_days
+  end
+
   private
 
   def end_date_after_start_date
@@ -78,6 +164,26 @@ class RentalBillingPeriod < ApplicationRecord
     
     if overlapping.exists?
       errors.add(:base, 'período sobrepõe outro período existente')
+    end
+  end
+
+  def start_date_not_in_future
+    return if start_date.blank?
+    
+    if start_date > Date.current
+      errors.add(:start_date, 'não pode ser no futuro')
+    end
+  end
+
+  def amount_format
+    return if amount.blank?
+    
+    if amount < 0
+      errors.add(:amount, 'não pode ser negativo')
+    end
+    
+    if amount > 999999.99
+      errors.add(:amount, 'não pode ser maior que R$ 999.999,99')
     end
   end
 end

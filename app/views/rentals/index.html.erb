@@ -1,207 +1,636 @@
-<div class="content-header">
-  <div class="header-content">
-    <h1>Locações</h1>
-    <div class="header-actions">
+<div class="rentals-container">
+  <!-- Header com estatísticas -->
+  <div class="stats-header">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-handshake"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= @total_rentals %></div>
+          <div class="stat-label">Total de Locações</div>
+        </div>
+      </div>
+      
+      <div class="stat-card active">
+        <div class="stat-icon">
+          <i class="fas fa-play-circle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= @active_rentals %></div>
+          <div class="stat-label">Ativas</div>
+        </div>
+      </div>
+      
+      <div class="stat-card warning">
+        <div class="stat-icon">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= @overdue_rentals %></div>
+          <div class="stat-label">Vencidas</div>
+        </div>
+      </div>
+      
+      <div class="stat-card success">
+        <div class="stat-icon">
+          <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-number"><%= format_currency(@total_billing) %></div>
+          <div class="stat-label">Faturamento Total</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas de períodos vencidos -->
+  <% if @overdue_rentals > 0 %>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="fas fa-exclamation-triangle"></i>
+      <strong>Atenção!</strong> Você tem <%= @overdue_rentals %> locação(ões) com período(s) vencido(s).
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  <% end %>
+
+  <!-- Barra de ferramentas -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <h1 class="page-title">
+        <i class="fas fa-handshake"></i>
+        Gerenciamento de Locações
+      </h1>
+    </div>
+    
+    <div class="toolbar-right">
+      <!-- Busca -->
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <%= form_with url: rentals_path, method: :get, local: true, class: "search-form" do |f| %>
+          <%= f.text_field :query, 
+              value: params[:query], 
+              placeholder: "Buscar locações...",
+              class: "search-input" %>
+        <% end %>
+      </div>
+      
+      <!-- Filtros -->
+      <div class="filters-dropdown">
+        <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+          <i class="fas fa-filter"></i>
+          Filtros
+        </button>
+        <ul class="dropdown-menu">
+          <li><%= link_to "Todas", rentals_path, class: "dropdown-item" %></li>
+          <li><%= link_to "Ativas", rentals_path(status: 'ativo'), class: "dropdown-item" %></li>
+          <li><%= link_to "Concluídas", rentals_path(status: 'concluido'), class: "dropdown-item" %></li>
+          <li><%= link_to "Vencidas", rentals_path(overdue: 'true'), class: "dropdown-item text-danger" %></li>
+        </ul>
+      </div>
+      
+      <!-- Nova Locação -->
       <%= link_to new_rental_path, class: "btn btn-primary" do %>
-        <i class="fas fa-plus"></i> Nova Locação
+        <i class="fas fa-plus"></i>
+        Nova Locação
       <% end %>
     </div>
   </div>
-</div>
 
-<div class="content-body">
-  <% if @rentals.any? %>
-    <div class="cards-grid">
-      <% @rentals.each do |rental| %>
-        <div class="card rental-card">
-          <div class="card-header">
-            <div class="card-title">
-              <h3><%= rental.name %></h3>
-              <span class="status-badge status-<%= rental.status %>">
-                <%= rental.status.humanize %>
-              </span>
-            </div>
-            <div class="card-actions">
-              <%= link_to rental_path(rental), class: "btn btn-sm btn-outline" do %>
-                <i class="fas fa-eye"></i>
-              <% end %>
-              <%= link_to edit_rental_path(rental), class: "btn btn-sm btn-outline" do %>
-                <i class="fas fa-edit"></i>
-              <% end %>
-              <%= button_to rental_path(rental), 
-                  method: :delete, 
-                  data: { 
-                    confirm: 'Tem certeza que deseja excluir esta locação?',
-                    turbo_method: :delete
-                  },
-                  class: "btn btn-sm btn-danger",
-                  form: { style: 'display: inline;' },
-                  onclick: "return confirmDelete(event, 'Tem certeza que deseja excluir esta locação?')" do %>
-                <i class="fas fa-trash"></i>
-              <% end %>
-            </div>
-          </div>
-          
-          <div class="card-body">
-            <div class="info-grid">
-              <div class="info-item">
-                <label>Cliente:</label>
-                <span><%= rental.client.name %></span>
-              </div>
+  <!-- Tabela de Locações -->
+  <div class="table-container">
+    <div class="table-responsive">
+      <table class="table table-hover rentals-table">
+        <thead>
+          <tr>
+            <th>AÇÕES</th>
+            <th>CONTRATO / PEDIDO</th>
+            <th>CLIENTE</th>
+
+            <th>EQUIPAMENTOS</th>
+            <th>STATUS DA LOCAÇÃO</th>
+            <th>STATUS PERÍODO</th>
+            <th>FATURAMENTO</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @rentals.each do |rental| %>
+            <tr class="rental-row <%= 'overdue' if rental.has_overdue_period? %>">
+              <!-- Ações -->
+              <td class="actions-cell">
+                <div class="action-buttons">
+                  <%= link_to edit_rental_path(rental), class: "btn btn-sm btn-outline-primary", title: "Editar" do %>
+                    <i class="fas fa-edit"></i>
+                  <% end %>
+                  
+                  <%= link_to rental_path(rental), class: "btn btn-sm btn-outline-info", title: "Visualizar" do %>
+                    <i class="fas fa-eye"></i>
+                  <% end %>
+                  
+                  <%= link_to rental_path(rental), 
+                      method: :delete, 
+                      data: { confirm: "Tem certeza que deseja remover esta locação?" },
+                      class: "btn btn-sm btn-outline-danger",
+                      title: "Remover" do %>
+                    <i class="fas fa-trash"></i>
+                  <% end %>
+                </div>
+              </td>
               
-              <div class="info-item">
-                <label>Status:</label>
-                <span class="status-badge status-<%= rental.status %>">
-                  <%= rental.status.titleize %>
+              <!-- Contrato/Pedido -->
+              <td class="contract-cell">
+                <%= link_to rental.name, rental_path(rental), class: "contract-link" %>
+                <% if rental.remessa_note.present? %>
+                  <div class="remessa-note">
+                    <small class="text-muted">
+                      <i class="fas fa-file-alt"></i>
+                      <%= rental.remessa_note %>
+                    </small>
+                  </div>
+                <% end %>
+              </td>
+              
+              <!-- Cliente -->
+              <td class="client-cell">
+                <div class="client-info">
+                  <div class="client-name"><%= rental.client.name %></div>
+                  <div class="client-document">
+                    <small class="text-muted">
+                      <%= format_document(rental.client.document_number, rental.client.document_type) %>
+                    </small>
+                  </div>
+                </div>
+              </td>
+              
+
+              
+              <!-- Equipamentos -->
+              <td class="equipment-cell">
+                <% if rental.equipments.any? %>
+                  <div class="equipment-list">
+                    <% rental.equipments.limit(2).each do |equipment| %>
+                      <div class="equipment-item">
+                        <i class="fas fa-cog"></i>
+                        <%= equipment.display_name %>
+                      </div>
+                    <% end %>
+                    <% if rental.equipments.count > 2 %>
+                      <div class="equipment-more">
+                        <small class="text-muted">
+                          +<%= rental.equipments.count - 2 %> mais
+                        </small>
+                      </div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <span class="text-muted">Nenhum equipamento</span>
+                <% end %>
+              </td>
+              
+              <!-- Status da Locação -->
+              <td class="status-cell">
+                <span class="badge bg-<%= rental.status == 'ativo' ? 'success' : 'secondary' %>">
+                  <i class="<%= rental.status == 'ativo' ? 'fas fa-play' : 'fas fa-check' %>"></i>
+                  <%= rental.status == 'ativo' ? 'ATIVA' : 'CONCLUÍDA' %>
                 </span>
-              </div>
+              </td>
               
-              <div class="info-item">
-                <label>Equipamentos:</label>
-                <span><%= rental.equipment_count %> <%= 'equipamento'.pluralize(rental.equipment_count) %></span>
-              </div>
+              <!-- Status do Período -->
+              <td class="period-status-cell">
+                <div class="status-container">
+                  <span class="badge <%= rental.period_status_badge_class %> status-badge">
+                    <i class="<%= rental.period_status_icon %>"></i>
+                    <%= rental.period_status_display %>
+                  </span>
+                  <% if rental.has_overdue_period? %>
+                    <div class="overdue-alert">
+                      <small class="<%= rental.period_status_text_color %>">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <%= pluralize(rental.days_overdue, 'dia') %> vencido
+                      </small>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
               
-              <div class="info-item">
-                <label>Períodos:</label>
-                <span><%= rental.billing_periods_count %> <%= 'período'.pluralize(rental.billing_periods_count) %></span>
-              </div>
-              
-              <div class="info-item">
-                <label>Total:</label>
-                <span class="total-amount"><%= rental.formatted_total_amount %></span>
-              </div>
-            </div>
-          </div>
-          
-          <div class="card-footer">
-            <small class="text-muted">
-              Criado em <%= rental.created_at.strftime("%d/%m/%Y às %H:%M") %>
-            </small>
-          </div>
-        </div>
-      <% end %>
+              <!-- Faturamento -->
+              <td class="billing-cell">
+                <% if rental.has_billing_periods? %>
+                  <div class="billing-info">
+                    <div class="billing-amount">
+                      <%= format_currency(rental.total_billing_amount) %>
+                    </div>
+                    <div class="billing-period">
+                      <% if rental.last_billing_period %>
+                        <small class="text-muted">
+                          Último: <%= format_date(rental.last_billing_period.end_date) %>
+                        </small>
+                      <% end %>
+                    </div>
+                    <div class="billing-actions">
+                      <%= link_to rental_rental_billing_periods_path(rental), 
+                          class: "btn btn-sm btn-outline-primary" do %>
+                        <i class="fas fa-calendar-alt"></i>
+                        Períodos
+                      <% end %>
+                    </div>
+                  </div>
+                <% else %>
+                  <span class="text-muted">Sem períodos</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
     </div>
-  <% else %>
-    <div class="empty-state">
-      <div class="empty-icon">
-        <i class="fas fa-calendar-alt"></i>
-      </div>
-      <h3>Nenhuma locação encontrada</h3>
-      <p>Comece criando sua primeira locação.</p>
-      <%= link_to new_rental_path, class: "btn btn-primary" do %>
-        <i class="fas fa-plus"></i> Criar Primeira Locação
-      <% end %>
+  </div>
+
+  <!-- Paginação -->
+  <% if @rentals.respond_to?(:current_page) %>
+    <div class="pagination-container">
+      <%= paginate @rentals %>
     </div>
   <% end %>
 </div>
 
+<!-- Modal para alertas de vencimento -->
+<div class="modal fade" id="overdueModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="fas fa-exclamation-triangle text-danger"></i>
+          Períodos Vencidos
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="overdue-alerts-container">
+          <!-- Conteúdo carregado via AJAX -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <style>
-.rental-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e5e7eb;
-  transition: all 0.2s;
+.rentals-container {
+  padding: 20px;
+  background: #f8f9fa;
+  min-height: 100vh;
 }
 
-.rental-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+.stats-header {
+  margin-bottom: 30px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
   transform: translateY(-2px);
 }
 
-.card-header {
-  padding: 20px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+.stat-card.active {
+  border-left: 4px solid #28a745;
 }
 
-.card-title {
-  flex: 1;
+.stat-card.warning {
+  border-left: 4px solid #ffc107;
 }
 
-.card-title h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #1f2937;
+.stat-card.success {
+  border-left: 4px solid #17a2b8;
 }
 
-.status-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  text-transform: uppercase;
+.stat-icon {
+  font-size: 2rem;
+  margin-right: 15px;
+  color: #6c757d;
 }
 
-.status-ativo {
-  background: #dcfce7;
-  color: #166534;
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
 }
 
-.status-concluido {
-  background: #dbeafe;
-  color: #1e40af;
+.stat-label {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-top: 5px;
 }
 
-.card-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.card-body {
-  padding: 20px;
-}
-
-.info-grid {
-  display: grid;
-  gap: 16px;
-}
-
-.info-item {
+.toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
+  background: white;
+  padding: 15px 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.info-item label {
-  font-weight: 500;
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.info-item span {
+.page-title {
+  font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  color: #333;
+  margin: 0;
 }
 
-.card-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
+.page-title i {
+  margin-right: 10px;
+  color: #007bff;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 60px 20px;
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
-.empty-icon {
-  font-size: 48px;
-  color: #9ca3af;
-  margin-bottom: 16px;
+.search-box {
+  position: relative;
 }
 
-.empty-state h3 {
-  margin-bottom: 8px;
-  color: #374151;
+.search-box i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
 }
 
-.empty-state p {
-  color: #6b7280;
-  margin-bottom: 24px;
+.search-input {
+  padding: 8px 12px 8px 35px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  width: 250px;
+}
+
+.table-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+.rentals-table {
+  margin: 0;
+}
+
+.rentals-table th {
+  background: #f8f9fa;
+  border: none;
+  padding: 15px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.rentals-table td {
+  padding: 15px;
+  border: none;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.rental-row:hover {
+  background: #f8f9fa;
+}
+
+.rental-row.overdue {
+  background: #fff5f5;
+  border-left: 4px solid #dc3545;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+.contract-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.contract-link:hover {
+  text-decoration: underline;
+}
+
+.client-info, .equipment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.equipment-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.9rem;
+}
+
+.billing-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.billing-amount {
+  font-weight: 600;
+  color: #28a745;
+}
+
+.overdue-info {
+  margin-top: 5px;
+}
+
+/* Estilos para Status de Período */
+.status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.status-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Cores específicas para cada status */
+.badge-success {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: 1px solid #28a745;
+}
+
+.badge-danger {
+  background: linear-gradient(135deg, #dc3545, #e74c3c);
+  color: white;
+  border: 1px solid #dc3545;
+  animation: pulse 2s infinite;
+}
+
+.badge-warning {
+  background: linear-gradient(135deg, #ffc107, #fd7e14);
+  color: #212529;
+  border: 1px solid #ffc107;
+}
+
+.badge-secondary {
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: white;
+  border: 1px solid #6c757d;
+}
+
+.badge-light {
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+/* Alerta de vencimento */
+.overdue-alert {
+  background: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-top: 3px;
+}
+
+.overdue-alert small {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Animação de pulso para status vencido */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+/* Destaque para linhas com períodos vencidos */
+.rental-row.overdue {
+  background: linear-gradient(90deg, #fff5f5 0%, #ffffff 100%);
+  border-left: 4px solid #dc3545;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.1);
+}
+
+.alert {
+  border-radius: 8px;
+  border: none;
+  margin-bottom: 20px;
+}
+
+.alert i {
+  margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .toolbar-right {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Atualizar estatísticas em tempo real
+  function updateStats() {
+    fetch('/rentals/status_counts')
+      .then(response => response.json())
+      .then(data => {
+        // Atualizar números das estatísticas
+        document.querySelectorAll('.stat-number').forEach((el, index) => {
+          const values = [data.total, data.active, data.overdue, data.total_billing];
+          if (values[index] !== undefined) {
+            el.textContent = values[index];
+          }
+        });
+      });
+  }
+  
+  // Verificar alertas de vencimento
+  function checkOverdueAlerts() {
+    fetch('/rentals/overdue_alerts')
+      .then(response => response.json())
+      .then(data => {
+        if (data.alerts.length > 0) {
+          showOverdueModal(data.alerts);
+        }
+      });
+  }
+  
+  function showOverdueModal(alerts) {
+    const container = document.getElementById('overdue-alerts-container');
+    container.innerHTML = alerts.map(alert => `
+      <div class="alert alert-danger">
+        <strong>${alert.name}</strong> - ${alert.client}<br>
+        <small>Vencido há ${alert.days_overdue} dias (último período: ${alert.last_period_end})</small>
+      </div>
+    `).join('');
+    
+    new bootstrap.Modal(document.getElementById('overdueModal')).show();
+  }
+  
+  // Atualizar a cada 5 minutos
+  setInterval(updateStats, 300000);
+  setInterval(checkOverdueAlerts, 300000);
+  
+  // Verificar alertas na carga da página
+  checkOverdueAlerts();
+});
+</script>

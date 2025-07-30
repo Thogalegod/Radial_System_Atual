@@ -8,8 +8,12 @@ class DashboardController < ApplicationController
     @total_features = EquipmentFeature.count
     @total_options = EquipmentFeatureOption.count
 
-    # Estatísticas por status
-    @equipments_by_status = Equipment.group(:status).count
+    # Estatísticas por status (calculadas dinamicamente)
+    @equipments_by_status = {
+      'em_estoque' => Equipment.em_estoque.count,
+      'alugado' => Equipment.alugado.count
+    }
+    
     @equipments_by_type = Equipment.joins(:equipment_type)
                                   .group('equipment_types.name')
                                   .count
@@ -20,7 +24,7 @@ class DashboardController < ApplicationController
                                  .limit(10)
 
     # Equipamentos alugados
-    @alugados_equipments = Equipment.where(status: 'alugado')
+    @alugados_equipments = Equipment.alugado
                                    .includes(:equipment_type)
                                    .limit(5)
 
@@ -40,15 +44,5 @@ class DashboardController < ApplicationController
                                        .group('equipment_features.id, equipment_features.name')
                                        .order('COUNT(equipment_values.id) DESC')
                                        .limit(5)
-  end
-
-  private
-
-  def require_login
-    redirect_to login_path, alert: 'Faça login para acessar esta área.' unless current_user
-  end
-
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
   end
 end

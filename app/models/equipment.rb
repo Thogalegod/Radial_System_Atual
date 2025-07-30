@@ -25,6 +25,8 @@ class Equipment < ApplicationRecord
   
   # Validação customizada para prevenir mudança do tipo de equipamento
   validate :equipment_type_cannot_be_changed, on: :update
+  validate :serial_number_format
+  validate :acquisition_date_cannot_be_in_future
 
   # Scopes dinâmicos baseados em status
   scope :em_estoque, -> { 
@@ -52,6 +54,8 @@ class Equipment < ApplicationRecord
   scope :ordered_by_updated, -> { order(:updated_at) }
   scope :with_feature_values, -> { includes(:equipment_values, :equipment_features) }
   scope :with_type, -> { includes(:equipment_type) }
+  scope :recent, -> { order(created_at: :desc) }
+  scope :needs_maintenance, -> { where('last_maintenance_date < ? OR last_maintenance_date IS NULL', 6.months.ago) }
   
   scope :available_for_rental, -> { em_estoque }
 
@@ -177,11 +181,49 @@ class Equipment < ApplicationRecord
     is_available?
   end
 
+  # Métodos de manutenção
+  def needs_maintenance?
+    return true if last_maintenance_date.nil?
+    last_maintenance_date < 6.months.ago
+  end
+
+  def maintenance_due_date
+    return nil if last_maintenance_date.nil?
+    last_maintenance_date + 6.months
+  end
+
+  def days_since_maintenance
+    return nil if last_maintenance_date.nil?
+    (Date.current - last_maintenance_date).to_i
+  end
+
+  # Métodos de busca
+  def self.search(query)
+    where("serial_number ILIKE ? OR notes ILIKE ?", "%#{query}%", "%#{query}%")
+      .or(joins(:equipment_type).where("equipment_types.name ILIKE ?", "%#{query}%"))
+  end
+
   private
 
   def equipment_type_cannot_be_changed
     if equipment_type_id_changed?
       errors.add(:equipment_type, 'não pode ser alterado após a criação')
+    end
+  end
+
+  def serial_number_format
+    return if serial_number.blank?
+    
+    unless serial_number.match?(/^[A-Z0-9\-_]+$/i)
+      errors.add(:serial_number, 'deve conter apenas letras, números, hífens e underscores')
+    end
+  end
+
+  def acquisition_date_cannot_be_in_future
+    return if acquisition_date.blank?
+    
+    if acquisition_date > Date.current
+      errors.add(:acquisition_date, 'não pode ser no futuro')
     end
   end
 end 

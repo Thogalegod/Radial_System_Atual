@@ -1,8 +1,16 @@
 Rails.application.routes.draw do
+  # Rota de teste
+  get 'test', to: 'test#index'
+  
   # Rotas para locações
   resources :rentals do
     member do
       patch :complete
+      patch :reactivate
+    end
+    collection do
+      get :status_counts
+      get :overdue_alerts
     end
     resources :rental_equipments, only: [:index, :create, :destroy]
     resources :rental_billing_periods do

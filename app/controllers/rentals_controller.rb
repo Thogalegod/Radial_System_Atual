@@ -1,11 +1,33 @@
 class RentalsController < ApplicationController
-  before_action :set_rental, only: [:show, :edit, :update, :destroy, :complete]
+  before_action :require_login
+  before_action :set_rental, only: [:show, :edit, :update, :destroy, :complete, :reactivate]
 
   def index
-    @rentals = Rental.with_equipments.recent
+    @rentals = Rental.includes(:client, :equipments, :rental_billing_periods)
+                     .order(created_at: :desc)
+    
+    # Filtros
+    @rentals = @rentals.where(status: params[:status]) if params[:status].present?
+    @rentals = @rentals.by_client(params[:client_id]) if params[:client_id].present?
+    @rentals = @rentals.with_overdue_periods if params[:overdue] == 'true'
+    
+    # Busca
+    @rentals = @rentals.search(params[:query]) if params[:query].present?
+    
+    # Estatísticas
+    @total_rentals = Rental.count
+    @active_rentals = Rental.active.count
+    @overdue_rentals = Rental.with_overdue_periods.count
+    @total_billing = Rental.joins(:rental_billing_periods).sum('rental_billing_periods.amount')
+    
+    # Para filtros
+    @clients = Client.order(:name)
+    @statuses = Rental.statuses.keys
   end
 
   def show
+    @billing_periods = @rental.rental_billing_periods.order(:start_date)
+    @equipments = @rental.equipments.includes(:equipment_type)
   end
 
   def new
@@ -15,11 +37,11 @@ class RentalsController < ApplicationController
 
   def create
     @rental = Rental.new(rental_params)
-    @rental.status = 'ativo' # Define status ativo automaticamente
-
+    
     if @rental.save
-      redirect_to @rental, notice: 'Locação criada com sucesso.'
+      redirect_to rentals_path, notice: 'Locação criada com sucesso!'
     else
+      @clients = Client.order(:name)
       render :new, status: :unprocessable_entity
     end
   end
@@ -29,26 +51,59 @@ class RentalsController < ApplicationController
   end
 
   def update
-    @clients = Client.order(:name)
-    
     if @rental.update(rental_params)
-      redirect_to @rental, notice: 'Locação atualizada com sucesso.'
+      redirect_to rentals_path, notice: 'Locação atualizada com sucesso!'
     else
+      @clients = Client.order(:name)
       render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
     @rental.destroy
-    redirect_to rentals_url, notice: 'Locação excluída com sucesso.'
+    redirect_to rentals_path, notice: 'Locação removida com sucesso!'
   end
 
   def complete
     if @rental.complete!
-      redirect_to @rental, notice: 'Locação concluída com sucesso!'
+      redirect_to rentals_path, notice: 'Locação concluída com sucesso!'
     else
-      redirect_to @rental, alert: 'Não é possível concluir esta locação. Verifique se há equipamentos alocados.'
+      redirect_to rentals_path, alert: 'Não foi possível concluir a locação.'
     end
+  end
+
+  def reactivate
+    if @rental.reactivate!
+      redirect_to rentals_path, notice: 'Locação reativada com sucesso!'
+    else
+      redirect_to rentals_path, alert: 'Não foi possível reativar a locação.'
+    end
+  end
+
+  # API endpoints para AJAX
+  def status_counts
+    render json: {
+      total: Rental.count,
+      active: Rental.active.count,
+      completed: Rental.completed.count,
+      overdue: Rental.with_overdue_periods.count
+    }
+  end
+
+  def overdue_alerts
+    overdue_rentals = Rental.with_overdue_periods.includes(:client, :last_billing_period)
+    
+    alerts = overdue_rentals.map do |rental|
+      {
+        id: rental.id,
+        name: rental.name,
+        client: rental.client.name,
+        days_overdue: rental.days_overdue,
+        last_period_end: rental.last_billing_period&.end_date&.strftime('%d/%m/%Y')
+      }
+    end
+    
+    render json: { alerts: alerts }
   end
 
   private
@@ -58,6 +113,6 @@ class RentalsController < ApplicationController
   end
 
   def rental_params
-    params.require(:rental).permit(:name, :status, :client_id, :remessa_note)
+    params.require(:rental).permit(:name, :client_id, :status, :remessa_note)
   end
 end

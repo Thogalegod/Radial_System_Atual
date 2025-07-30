@@ -69,14 +69,4 @@ class ClientsController < ApplicationController
       contacts_attributes: [:id, :name, :email, :phone, :position, :_destroy]
     )
   end
-
-
-
-  def require_login
-    redirect_to login_path, alert: 'Faça login para acessar esta área.' unless current_user
-  end
-
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
-  end
 end
