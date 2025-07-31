@@ -1,23 +1,125 @@
-<h1>Login</h1>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="text-center mb-0">Login</h2>
+        </div>
+        <div class="card-body">
+          <%= form_with url: login_path, local: true, html: { id: 'login-form' } do |form| %>
+            <% if flash[:alert] %>
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <%= flash[:alert] %>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>
+            <% end %>
 
-<%= form_with url: login_path, local: true do |form| %>
-  <% if flash[:alert] %>
-    <div class="alert alert-danger"><%= flash[:alert] %></div>
-  <% end %>
+            <div class="mb-3">
+              <%= form.label :email, 'Email', class: 'form-label' %>
+              <%= form.email_field :email, 
+                  class: 'form-control', 
+                  autofocus: true,
+                  required: true,
+                  pattern: '[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$',
+                  title: 'Digite um email válido',
+                  placeholder: 'seu@email.com' %>
+              <div class="invalid-feedback" id="email-error"></div>
+            </div>
 
-  <div class="form-group">
-    <%= form.label :email, 'Email' %>
-    <%= form.email_field :email, class: 'form-control', autofocus: true %>
+            <div class="mb-3">
+              <%= form.label :password, 'Senha', class: 'form-label' %>
+              <%= form.password_field :password, 
+                  class: 'form-control',
+                  required: true,
+                  minlength: 8,
+                  placeholder: 'Digite sua senha' %>
+              <div class="invalid-feedback" id="password-error"></div>
+            </div>
+
+            <div class="d-grid">
+              <%= form.submit 'Entrar', class: 'btn btn-primary btn-lg', id: 'login-btn' %>
+            </div>
+          <% end %>
+
+          <div class="text-center mt-3">
+            <p class="mb-0">Não possui conta? <%= link_to 'Cadastre-se', signup_path, class: 'text-decoration-none' %></p>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
 
-  <div class="form-group">
-    <%= form.label :password, 'Senha' %>
-    <%= form.password_field :password, class: 'form-control' %>
-  </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('login-form');
+  const emailField = form.querySelector('input[type="email"]');
+  const passwordField = form.querySelector('input[type="password"]');
+  const submitBtn = document.getElementById('login-btn');
 
-  <div class="actions">
-    <%= form.submit 'Entrar', class: 'btn btn-primary' %>
-  </div>
-<% end %>
+  // Validação de email em tempo real
+  emailField.addEventListener('input', function() {
+    const email = this.value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (email && !emailRegex.test(email)) {
+      this.classList.add('is-invalid');
+      document.getElementById('email-error').textContent = 'Digite um email válido';
+    } else {
+      this.classList.remove('is-invalid');
+      document.getElementById('email-error').textContent = '';
+    }
+  });
 
-<p>Não possui conta? <%= link_to 'Cadastre-se', signup_path %></p>
+  // Validação de senha em tempo real
+  passwordField.addEventListener('input', function() {
+    const password = this.value;
+    
+    if (password && password.length < 8) {
+      this.classList.add('is-invalid');
+      document.getElementById('password-error').textContent = 'A senha deve ter pelo menos 8 caracteres';
+    } else {
+      this.classList.remove('is-invalid');
+      document.getElementById('password-error').textContent = '';
+    }
+  });
+
+  // Validação antes do envio
+  form.addEventListener('submit', function(e) {
+    const email = emailField.value.trim();
+    const password = passwordField.value;
+    let isValid = true;
+
+    // Validar email
+    if (!email) {
+      emailField.classList.add('is-invalid');
+      document.getElementById('email-error').textContent = 'Email é obrigatório';
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      emailField.classList.add('is-invalid');
+      document.getElementById('email-error').textContent = 'Digite um email válido';
+      isValid = false;
+    }
+
+    // Validar senha
+    if (!password) {
+      passwordField.classList.add('is-invalid');
+      document.getElementById('password-error').textContent = 'Senha é obrigatória';
+      isValid = false;
+    } else if (password.length < 8) {
+      passwordField.classList.add('is-invalid');
+      document.getElementById('password-error').textContent = 'A senha deve ter pelo menos 8 caracteres';
+      isValid = false;
+    }
+
+    if (!isValid) {
+      e.preventDefault();
+      return false;
+    }
+
+    // Desabilitar botão durante o envio
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Entrando...';
+  });
+});
+</script>
