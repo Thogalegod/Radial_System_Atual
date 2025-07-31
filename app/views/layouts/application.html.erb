@@ -87,6 +87,26 @@
         font-weight: bold;
       }
 
+      /* User Info */
+      .user-info {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e5e7eb;
+        background: #f9fafb;
+      }
+
+      .user-name {
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 4px;
+      }
+
+      .user-role {
+        font-size: 12px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
       .nav-menu {
         padding: 16px 0;
       }
@@ -153,10 +173,6 @@
         align-items: center;
         justify-content: center;
       }
-
-
-
-
 
       /* Main Content */
       .main-content {
@@ -531,40 +547,64 @@
           </div>
         </div>
         
+        <% if logged_in? %>
+          <div class="user-info">
+            <div class="user-name"><%= current_user.name %></div>
+            <div class="user-role"><%= current_user_role_display %></div>
+          </div>
+        <% end %>
+        
         <nav class="nav-menu">
-          <a href="<%= dashboard_path %>" class="nav-item <%= 'active' if controller_name == 'users' && action_name == 'show' %>">
+          <a href="<%= dashboard_path %>" class="nav-item <%= 'active' if controller_name == 'dashboard' %>">
             <div class="nav-icon">🏠</div>
             <span>Dashboard</span>
           </a>
           
-          <a href="<%= clients_path %>" class="nav-item <%= 'active' if controller_name == 'clients' %>">
-            <div class="nav-icon">👥</div>
-            <span>Clientes</span>
-          </a>
+          <% if show_menu_item?('clients', 'read') %>
+            <a href="<%= clients_path %>" class="nav-item <%= 'active' if controller_name == 'clients' %>">
+              <div class="nav-icon">👥</div>
+              <span>Clientes</span>
+            </a>
+          <% end %>
           
-          <div class="nav-item <%= 'active' if ['equipments', 'equipment_types', 'equipment_features'].include?(controller_name) %>">
-            <div class="nav-icon">⚡</div>
-            <span>Equipamentos</span>
-            <div class="submenu">
-              <a href="<%= select_type_equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' && action_name == 'select_type' %>">
-                <div class="nav-icon">📦</div>
-                <span>Controle Estoque</span>
-              </a>
-              <a href="<%= equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' && action_name == 'index' %>">
-                <div class="nav-icon">📋</div>
-                <span>Lista de Equipamentos</span>
-              </a>
-              <a href="<%= equipment_types_path %>" class="submenu-item <%= 'active' if controller_name == 'equipment_types' %>">
-                <div class="nav-icon">🏷️</div>
-                <span>Tipos de Equipamento</span>
-              </a>
+          <% if show_menu_item?('equipments', 'read') %>
+            <div class="nav-item <%= 'active' if ['equipments', 'equipment_types', 'equipment_features'].include?(controller_name) %>">
+              <div class="nav-icon">⚡</div>
+              <span>Equipamentos</span>
+              <div class="submenu">
+                <% if show_menu_item?('equipments', 'read') %>
+                  <a href="<%= select_type_equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' && action_name == 'select_type' %>">
+                    <div class="nav-icon">📦</div>
+                    <span>Controle Estoque</span>
+                  </a>
+                  <a href="<%= equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' && action_name == 'index' %>">
+                    <div class="nav-icon">📋</div>
+                    <span>Lista de Equipamentos</span>
+                  </a>
+                <% end %>
+                <% if show_menu_item?('equipment_types', 'read') %>
+                  <a href="<%= equipment_types_path %>" class="submenu-item <%= 'active' if controller_name == 'equipment_types' %>">
+                    <div class="nav-icon">🏷️</div>
+                    <span>Tipos de Equipamento</span>
+                  </a>
+                <% end %>
+              </div>
             </div>
-          </div>
+          <% end %>
           
-          <a href="<%= rentals_path %>" class="nav-item <%= 'active' if controller_name == 'rentals' %>">
-            <div class="nav-icon">🚚</div>
-            <span>Locações</span>
-          </a>
+          <% if show_menu_item?('rentals', 'read') %>
+            <a href="<%= rentals_path %>" class="nav-item <%= 'active' if controller_name == 'rentals' %>">
+              <div class="nav-icon">🚚</div>
+              <span>Locações</span>
+            </a>
+          <% end %>
+          
+          <% if current_user&.admin? %>
+            <a href="<%= users_path %>" class="nav-item <%= 'active' if controller_name == 'users' %>">
+              <div class="nav-icon">👤</div>
+              <span>Usuários</span>
+            </a>
+          <% end %>
           
           <a href="#" class="nav-item">
             <div class="nav-icon">📄</div>
@@ -580,6 +620,16 @@
             <div class="nav-icon">⚙️</div>
             <span>Configurações</span>
           </a>
+          
+          <% if logged_in? %>
+            <div style="margin-top: 20px; padding: 0 20px;">
+              <hr style="border-color: #e5e7eb; margin: 16px 0;">
+              <a href="<%= logout_path %>" method: :delete, class="nav-item" style="color: #ef4444;">
+                <div class="nav-icon">🚪</div>
+                <span>Sair</span>
+              </a>
+            </div>
+          <% end %>
         </nav>
       </div>
 

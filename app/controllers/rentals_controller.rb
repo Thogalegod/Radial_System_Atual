@@ -1,5 +1,9 @@
 class RentalsController < ApplicationController
   before_action :require_login
+  before_action :require_resource_permission, :rentals, :read, only: [:index, :show]
+  before_action :require_resource_permission, :rentals, :create, only: [:new, :create]
+  before_action :require_resource_permission, :rentals, :update, only: [:edit, :update]
+  before_action :require_resource_permission, :rentals, :destroy, only: [:destroy]
   before_action :set_rental, only: [:show, :edit, :update, :destroy, :complete, :reactivate]
 
   def index
@@ -99,11 +103,11 @@ class RentalsController < ApplicationController
         name: rental.name,
         client: rental.client.name,
         days_overdue: rental.days_overdue,
-        last_period_end: rental.last_billing_period&.end_date&.strftime('%d/%m/%Y')
+        amount_overdue: rental.amount_overdue
       }
     end
     
-    render json: { alerts: alerts }
+    render json: alerts
   end
 
   private

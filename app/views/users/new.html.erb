@@ -44,6 +44,31 @@
               </div>
             </div>
 
+            <% if current_user&.admin? %>
+              <div class="row">
+                <div class="col-md-12 mb-3">
+                  <%= form.label :role, 'Função', class: 'form-label' %>
+                  <%= form.select :role, 
+                      options_for_select([
+                        ['Visualizador', 'viewer'],
+                        ['Operador', 'operator'],
+                        ['Gerente', 'manager'],
+                        ['Administrador', 'admin']
+                      ], @user.role),
+                      { prompt: 'Selecione uma função' },
+                      { class: 'form-control', required: true } %>
+                  <div class="form-text">
+                    <small class="text-muted">
+                      <strong>Visualizador:</strong> Apenas visualização de dados<br>
+                      <strong>Operador:</strong> Pode criar e gerenciar locações<br>
+                      <strong>Gerente:</strong> Pode gerenciar equipamentos e clientes<br>
+                      <strong>Administrador:</strong> Acesso completo ao sistema
+                    </small>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+
             <div class="row">
               <div class="col-md-6 mb-3">
                 <%= form.label :password, 'Senha', class: 'form-label' %>

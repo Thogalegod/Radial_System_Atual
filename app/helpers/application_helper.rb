@@ -239,4 +239,46 @@ module ApplicationHelper
     key = "#{prefix}/#{key}" if prefix
     key
   end
+
+  def role_display_name(role)
+    case role
+    when 'admin'
+      'Administrador'
+    when 'manager'
+      'Gerente'
+    when 'operator'
+      'Operador'
+    when 'viewer'
+      'Visualizador'
+    else
+      role.titleize
+    end
+  end
+
+  def role_badge_color(role)
+    case role
+    when 'admin'
+      'danger'
+    when 'manager'
+      'warning'
+    when 'operator'
+      'info'
+    when 'viewer'
+      'secondary'
+    else
+      'light'
+    end
+  end
+
+  def can_access_menu?(resource, action = nil)
+    current_user&.can_access?(resource, action) || false
+  end
+
+  def show_menu_item?(resource, action = nil)
+    can_access_menu?(resource, action)
+  end
+
+  def current_user_role_display
+    role_display_name(current_user&.role)
+  end
 end

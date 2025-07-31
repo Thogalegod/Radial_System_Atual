@@ -18,8 +18,26 @@ class ApplicationController < ActionController::Base
   end
 
   def require_admin
-    unless current_user&.role == 'admin'
+    unless current_user&.admin?
       redirect_to dashboard_path, alert: 'Acesso negado. Apenas administradores podem acessar esta área.'
+    end
+  end
+
+  def require_manager_or_admin
+    unless current_user&.admin? || current_user&.manager?
+      redirect_to dashboard_path, alert: 'Acesso negado. Apenas gerentes e administradores podem acessar esta área.'
+    end
+  end
+
+  def require_permission(permission)
+    unless current_user&.can?(permission)
+      redirect_to dashboard_path, alert: 'Acesso negado. Você não tem permissão para acessar esta área.'
+    end
+  end
+
+  def require_resource_permission(resource, action = nil)
+    unless current_user&.can_access?(resource, action)
+      redirect_to dashboard_path, alert: "Acesso negado. Você não tem permissão para #{action || 'acessar'} #{resource}."
     end
   end
 
@@ -38,5 +56,16 @@ class ApplicationController < ActionController::Base
 
   def redirect_if_logged_in
     redirect_to dashboard_path if logged_in?
+  end
+
+  # Helper methods para views
+  helper_method :current_user, :logged_in?, :user_can?
+
+  def user_can?(permission)
+    current_user&.can?(permission) || false
+  end
+
+  def user_can_access?(resource, action = nil)
+    current_user&.can_access?(resource, action) || false
   end
 end

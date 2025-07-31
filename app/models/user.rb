@@ -4,9 +4,76 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true, 
             format: { with: URI::MailTo::EMAIL_REGEXP, message: "deve ser um email válido" }
+  validates :role, presence: true, inclusion: { in: %w[admin manager operator viewer] }
   
   # Validação de senha forte
   validate :password_strength, if: :password_required?
+  
+  # Roles disponíveis
+  ROLES = %w[admin manager operator viewer].freeze
+  
+  # Permissões por role
+  PERMISSIONS = {
+    admin: %w[all],
+    manager: %w[users_read rentals_all equipments_all clients_all reports_all],
+    operator: %w[rentals_read rentals_create equipments_read clients_read],
+    viewer: %w[rentals_read equipments_read clients_read]
+  }.freeze
+  
+  # Métodos de verificação de role
+  def admin?
+    role == 'admin'
+  end
+  
+  def manager?
+    role == 'manager'
+  end
+  
+  def operator?
+    role == 'operator'
+  end
+  
+  def viewer?
+    role == 'viewer'
+  end
+  
+  # Métodos de verificação de permissões
+  def can?(action)
+    return true if admin?
+    
+    user_permissions = PERMISSIONS[role.to_sym] || []
+    user_permissions.include?('all') || user_permissions.include?(action.to_s)
+  end
+  
+  def can_access?(resource, action = nil)
+    permission = action ? "#{resource}_#{action}" : "#{resource}_all"
+    can?(permission)
+  end
+  
+  # Métodos específicos de permissão
+  def can_manage_users?
+    can?('users_all') || admin?
+  end
+  
+  def can_manage_rentals?
+    can?('rentals_all') || admin?
+  end
+  
+  def can_create_rentals?
+    can?('rentals_create') || can_manage_rentals?
+  end
+  
+  def can_manage_equipments?
+    can?('equipments_all') || admin?
+  end
+  
+  def can_manage_clients?
+    can?('clients_all') || admin?
+  end
+  
+  def can_view_reports?
+    can?('reports_all') || admin?
+  end
   
   private
   
