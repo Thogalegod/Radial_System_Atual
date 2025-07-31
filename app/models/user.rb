@@ -15,9 +15,21 @@ class User < ApplicationRecord
   # Permissões por role
   PERMISSIONS = {
     admin: %w[all],
-    manager: %w[users_read rentals_all equipments_all clients_all reports_all],
-    operator: %w[rentals_read rentals_create equipments_read clients_read],
-    viewer: %w[rentals_read equipments_read clients_read]
+    manager: %w[
+      users_read rentals_all equipments_all clients_all reports_all
+      dashboard_read equipment_types_all equipment_features_all equipment_feature_options_all
+      rental_billing_periods_all rental_equipments_all
+    ],
+    operator: %w[
+      rentals_read rentals_create equipments_read clients_read
+      dashboard_read equipment_types_read equipment_features_read
+      rental_billing_periods_read rental_equipments_create rental_equipments_destroy
+    ],
+    viewer: %w[
+      rentals_read equipments_read clients_read
+      dashboard_read equipment_types_read equipment_features_read
+      rental_billing_periods_read
+    ]
   }.freeze
   
   # Métodos de verificação de role
@@ -73,6 +85,26 @@ class User < ApplicationRecord
   
   def can_view_reports?
     can?('reports_all') || admin?
+  end
+  
+  def can_manage_equipment_types?
+    can?('equipment_types_all') || admin?
+  end
+  
+  def can_manage_equipment_features?
+    can?('equipment_features_all') || admin?
+  end
+  
+  def can_manage_equipment_feature_options?
+    can?('equipment_feature_options_all') || admin?
+  end
+  
+  def can_manage_rental_billing_periods?
+    can?('rental_billing_periods_all') || admin?
+  end
+  
+  def can_manage_rental_equipments?
+    can?('rental_equipments_all') || admin?
   end
   
   private

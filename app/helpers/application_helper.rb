@@ -241,6 +241,8 @@ module ApplicationHelper
   end
 
   def role_display_name(role)
+    return 'Não definido' if role.blank?
+    
     case role
     when 'admin'
       'Administrador'
@@ -256,6 +258,8 @@ module ApplicationHelper
   end
 
   def role_badge_color(role)
+    return 'light' if role.blank?
+    
     case role
     when 'admin'
       'danger'
@@ -279,6 +283,7 @@ module ApplicationHelper
   end
 
   def current_user_role_display
-    role_display_name(current_user&.role)
+    return 'Não logado' unless current_user
+    role_display_name(current_user.role)
   end
 end

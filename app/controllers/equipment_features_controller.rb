@@ -1,7 +1,11 @@
 class EquipmentFeaturesController < ApplicationController
+  before_action :require_login
+  before_action :require_resource_permission, :equipment_features, :read, only: [:index, :show]
+  before_action :require_resource_permission, :equipment_features, :create, only: [:new, :create]
+  before_action :require_resource_permission, :equipment_features, :update, only: [:edit, :update]
+  before_action :require_resource_permission, :equipment_features, :destroy, only: [:destroy]
   before_action :set_equipment_type, only: [:index, :new, :create]
   before_action :set_equipment_feature, only: [:show, :edit, :update, :destroy]
-  before_action :require_login
 
   def index
     if params[:equipment_type_id].present?
@@ -100,31 +104,33 @@ class EquipmentFeaturesController < ApplicationController
 
   def edit
     @equipment_type = @equipment_feature.equipment_type
-    @equipment_types = EquipmentType.active.ordered
+    @feature_options = @equipment_feature.equipment_feature_options.ordered
   end
 
   def update
     if @equipment_feature.update(equipment_feature_params)
-      redirect_to equipment_type_equipment_features_path(@equipment_feature.equipment_type), 
+      redirect_to equipment_feature_path(@equipment_feature), 
                   notice: 'Característica atualizada com sucesso!'
     else
+      @equipment_type = @equipment_feature.equipment_type
+      @feature_options = @equipment_feature.equipment_feature_options.ordered
       render :edit, status: :unprocessable_entity
     end
   end
 
   def destroy
     equipment_type = @equipment_feature.equipment_type
-    usage_count = @equipment_feature.equipment_values.count
+    feature_name = @equipment_feature.name
     
-    if usage_count > 0
-      redirect_to equipment_type_equipment_features_path(equipment_type), 
-                  alert: "Não é possível excluir. Esta característica está sendo usada por #{usage_count} equipamento(s)."
+    if @equipment_feature.equipment_values.any?
+      redirect_to equipment_features_path, 
+                  alert: "Não é possível excluir. A característica '#{feature_name}' está sendo usada por equipamentos."
     elsif @equipment_feature.destroy
-      redirect_to equipment_type_equipment_features_path(equipment_type), 
-                  notice: 'Característica removida com sucesso!'
+      redirect_to equipment_features_path, 
+                  notice: "Característica '#{feature_name}' removida com sucesso!"
     else
-      redirect_to equipment_type_equipment_features_path(equipment_type), 
-                  alert: 'Erro ao remover característica.'
+      redirect_to equipment_features_path, 
+                  alert: "Erro ao remover característica '#{feature_name}'."
     end
   end
 
@@ -140,17 +146,8 @@ class EquipmentFeaturesController < ApplicationController
 
   def equipment_feature_params
     params.require(:equipment_feature).permit(
-      :name, :data_type, :unit, :description, :required, :searchable, 
-      :filterable, :sortable, :default_value, :validation_rules, 
-      :display_format, :color, :icon_class, :sort_order
+      :name, :data_type, :required, :filterable, :searchable, 
+      :sortable, :description, :unit, :equipment_type_id
     )
-  end
-
-  def require_login
-    redirect_to login_path, alert: 'Faça login para acessar esta área.' unless current_user
-  end
-
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
   end
 end

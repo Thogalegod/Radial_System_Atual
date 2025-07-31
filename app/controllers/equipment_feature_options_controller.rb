@@ -1,7 +1,11 @@
 class EquipmentFeatureOptionsController < ApplicationController
+  before_action :require_login
+  before_action :require_resource_permission, :equipment_feature_options, :read, only: [:index, :show]
+  before_action :require_resource_permission, :equipment_feature_options, :create, only: [:new, :create]
+  before_action :require_resource_permission, :equipment_feature_options, :update, only: [:edit, :update]
+  before_action :require_resource_permission, :equipment_feature_options, :destroy, only: [:destroy]
   before_action :set_equipment_feature, only: [:index, :new, :create]
   before_action :set_equipment_feature_option, only: [:show, :edit, :update, :destroy]
-  before_action :require_login
 
   def index
     @equipment_feature_options = @equipment_feature.equipment_feature_options.ordered
@@ -71,13 +75,5 @@ class EquipmentFeatureOptionsController < ApplicationController
     params.require(:equipment_feature_option).permit(
       :value, :label, :color, :icon_class, :sort_order, :active
     )
-  end
-
-  def require_login
-    redirect_to login_path, alert: 'Faça login para acessar esta área.' unless current_user
-  end
-
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
   end
 end

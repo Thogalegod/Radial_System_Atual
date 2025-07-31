@@ -1,4 +1,9 @@
 class RentalBillingPeriodsController < ApplicationController
+  before_action :require_login
+  before_action :require_resource_permission, :rental_billing_periods, :read, only: [:index, :show, :receipt, :receipt_pdf]
+  before_action :require_resource_permission, :rental_billing_periods, :create, only: [:new, :create]
+  before_action :require_resource_permission, :rental_billing_periods, :update, only: [:edit, :update]
+  before_action :require_resource_permission, :rental_billing_periods, :destroy, only: [:destroy]
   before_action :set_rental
   before_action :set_billing_period, only: [:show, :edit, :update, :destroy, :receipt, :receipt_pdf]
 

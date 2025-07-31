@@ -57,6 +57,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # Rotas para usuários
+  resources :users
+
   # Rotas de autenticação
   root 'sessions#new'
 

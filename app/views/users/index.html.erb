@@ -35,10 +35,12 @@
                         <%= link_to 'Ver', user_path(user), class: 'btn btn-sm btn-outline-primary' %>
                         <%= link_to 'Editar', edit_user_path(user), class: 'btn btn-sm btn-outline-warning' %>
                         <% if current_user.admin? && user.id != current_user.id %>
-                          <%= link_to 'Remover', user_path(user), 
-                              method: :delete, 
-                              data: { confirm: 'Tem certeza que deseja remover este usuário?' },
-                              class: 'btn btn-sm btn-outline-danger' %>
+                          <%= form_with url: user_path(user), method: :delete, local: true, 
+                              style: "display: inline;", 
+                              data: { confirm: 'Tem certeza que deseja remover este usuário?' } do |form| %>
+                            <%= form.submit 'Remover', class: 'btn btn-sm btn-outline-danger', 
+                                onclick: "return confirm('Tem certeza que deseja remover este usuário?')" %>
+                          <% end %>
                         <% end %>
                       </div>
                     </td>

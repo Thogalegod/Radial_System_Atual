@@ -1,7 +1,12 @@
 class EquipmentsController < ApplicationController
+  before_action :require_login
+  before_action :require_resource_permission, :equipments, :read, only: [:index, :show, :filter, :photos]
+  before_action :require_resource_permission, :equipments, :create, only: [:new, :create]
+  before_action :require_resource_permission, :equipments, :update, only: [:edit, :update]
+  before_action :require_resource_permission, :equipments, :destroy, only: [:destroy]
+  before_action :require_resource_permission, :equipments, :export, only: [:export_csv]
   before_action :set_equipment, only: [:show, :edit, :update, :destroy]
   before_action :set_equipment_types, only: [:index, :new, :create, :edit, :update]
-  before_action :require_login
 
   def index
     @equipments = apply_filters_and_sorting
@@ -103,20 +108,11 @@ class EquipmentsController < ApplicationController
         end
       end
       
-      # Processar remoção de fotos
-      if params[:remove_photos].present?
-        params[:remove_photos].each do |photo_index|
-          photo = @equipment.photos[photo_index.to_i]
-          photo.purge if photo
-        end
-      end
-      
-      # Atualizar valores das características
+      # Salvar valores das características
       save_feature_values
       
       redirect_to equipments_path, notice: 'Equipamento atualizado com sucesso!'
     else
-      # Preparar variáveis necessárias para re-renderizar a view
       @feature_values = @equipment.feature_values
       @equipment_features = @equipment.equipment_features.ordered.includes(:equipment_feature_options)
       render :edit, status: :unprocessable_entity
@@ -125,37 +121,33 @@ class EquipmentsController < ApplicationController
 
   def destroy
     serial_number = @equipment.serial_number
-    
-    if @equipment.destroy
-      redirect_to equipments_path, notice: "Equipamento #{serial_number} removido com sucesso!"
-    else
-      redirect_to equipments_path, alert: "Erro ao remover equipamento: #{@equipment.errors.full_messages.join(', ')}"
-    end
+    @equipment.destroy
+    redirect_to equipments_path, notice: "Equipamento #{serial_number} removido com sucesso!"
   end
 
   def export_csv
     @equipments = apply_filters_and_sorting
+    csv_data = generate_csv(@equipments)
     
-    respond_to do |format|
-      format.csv do
-        send_data generate_csv, 
-          filename: "equipamentos_#{Date.current.strftime('%Y%m%d')}.csv",
-          type: 'text/csv; charset=utf-8'
-      end
-    end
+    send_data csv_data, 
+              filename: "equipamentos_#{Date.current.strftime('%Y%m%d')}.csv",
+              type: 'text/csv; charset=utf-8; header=present'
   end
 
   def select_type
-    # Esta action renderiza a tela de seleção de tipo
+    @equipment_types = EquipmentType.active.ordered
   end
 
   def photos
     @equipment = Equipment.find(params[:id])
-    photo_urls = @equipment.photos.map { |photo| url_for(photo) }
-    
     render json: {
-      photos: photo_urls,
-      count: photo_urls.length
+      photos: @equipment.photos.map do |photo|
+        {
+          id: photo.id,
+          url: rails_blob_url(photo),
+          filename: photo.filename.to_s
+        }
+      end
     }
   end
 
@@ -171,155 +163,126 @@ class EquipmentsController < ApplicationController
 
   def equipment_params
     params.require(:equipment).permit(
-      :serial_number, :equipment_type_id, :notes, :location,
-      :acquisition_date, :acquisition_price, :bandeira, photos: []
+      :serial_number, :equipment_type_id, :status, :location, 
+      :acquisition_date, :acquisition_price, :bandeira, :notes, :photos
     )
   end
 
   def save_feature_values
     return unless params[:feature_values]
-
-    params[:feature_values].each do |feature_name, value|
-      @equipment.set_feature_value(feature_name, value)
+    
+    params[:feature_values].each do |feature_id, value|
+      next if value.blank?
+      
+      equipment_value = @equipment.equipment_values.find_or_initialize_by(equipment_feature_id: feature_id)
+      equipment_value.value = value
+      equipment_value.save
     end
   end
 
   def apply_filters_and_sorting
     equipments = Equipment.includes(:equipment_type, :equipment_values, :equipment_features)
-
-    # Filtros básicos
-    equipments = equipments.by_type(params[:type]) if params[:type].present?
-    equipments = equipments.by_type(params[:equipment_type_id]) if params[:equipment_type_id].present?
-    equipments = equipments.where(location: params[:location]) if params[:location].present?
-    equipments = equipments.where(bandeira: params[:bandeira]) if params[:bandeira].present?
     
-    # Filtros de texto
-    if params[:search].present?
-      search_term = "%#{params[:search]}%"
-      equipments = equipments.where(
-        "serial_number ILIKE ? OR notes ILIKE ?",
-        search_term, search_term
-      )
+    # Filtro por tipo de equipamento
+    if params[:equipment_type_id].present?
+      equipments = equipments.where(equipment_type_id: params[:equipment_type_id])
     end
-
-    # Filtros especiais
-    equipments = equipments.with_notes if params[:with_notes] == 'true'
-    equipments = equipments.without_notes if params[:no_notes] == 'true'
-    equipments = equipments.where(notes: [nil, '']) if params[:no_notes] == 'true'
-
-    # Filtros de data
+    
+    # Filtro por status
+    if params[:status].present?
+      equipments = equipments.where(status: params[:status])
+    end
+    
+    # Filtro por localização
+    if params[:location].present?
+      equipments = equipments.where('location ILIKE ?', "%#{params[:location]}%")
+    end
+    
+    # Filtro por número de série
+    if params[:serial_number].present?
+      equipments = equipments.where('serial_number ILIKE ?', "%#{params[:serial_number]}%")
+    end
+    
+    # Filtro por bandeira
+    if params[:bandeira].present?
+      equipments = equipments.where(bandeira: params[:bandeira])
+    end
+    
+    # Filtro por data de aquisição
     if params[:acquisition_date_from].present?
-      equipments = equipments.where('acquisition_date >= ?', params[:acquisition_date_from])
+      equipments = equipments.where('acquisition_date >= ?', Date.parse(params[:acquisition_date_from]))
     end
+    
     if params[:acquisition_date_to].present?
-      equipments = equipments.where('acquisition_date <= ?', params[:acquisition_date_to])
+      equipments = equipments.where('acquisition_date <= ?', Date.parse(params[:acquisition_date_to]))
     end
-
-    # Filtros de características
-    if params[:feature_filters].present?
-      params[:feature_filters].each do |feature_name, value|
-        next if value.blank?
-        
-        feature = EquipmentFeature.joins(:equipment_type)
-                                 .where(equipment_features: { name: feature_name })
-                                 .first
-        
-        if feature
-          equipments = equipments.joins(:equipment_values)
-                                .where(equipment_values: { 
-                                  equipment_feature: feature, 
-                                  value: value 
-                                })
-        end
-      end
+    
+    # Filtro por preço de aquisição
+    if params[:acquisition_price_min].present?
+      equipments = equipments.where('acquisition_price >= ?', params[:acquisition_price_min].to_f)
     end
-
+    
+    if params[:acquisition_price_max].present?
+      equipments = equipments.where('acquisition_price <= ?', params[:acquisition_price_max].to_f)
+    end
+    
     # Ordenação
-    sort_field = params[:sort_field] || 'serial_number'
-    sort_direction = params[:sort_direction] || 'asc'
-
-    case sort_field
+    sort_by = params[:sort_by] || 'created_at'
+    sort_direction = params[:sort_direction] || 'desc'
+    
+    case sort_by
     when 'serial_number'
-      equipments = sort_direction == 'desc' ? equipments.order(serial_number: :desc) : equipments.order(:serial_number)
+      equipments = equipments.order("serial_number #{sort_direction}")
     when 'equipment_type'
-      equipments = equipments.joins(:equipment_type)
-      equipments = sort_direction == 'desc' ? equipments.order('equipment_types.name DESC') : equipments.order('equipment_types.name')
+      equipments = equipments.joins(:equipment_type).order("equipment_types.name #{sort_direction}")
+    when 'status'
+      equipments = equipments.order("status #{sort_direction}")
     when 'location'
-      equipments = sort_direction == 'desc' ? equipments.order(location: :desc) : equipments.order(:location)
+      equipments = equipments.order("location #{sort_direction}")
+    when 'acquisition_date'
+      equipments = equipments.order("acquisition_date #{sort_direction}")
+    when 'acquisition_price'
+      equipments = equipments.order("acquisition_price #{sort_direction}")
     when 'bandeira'
-      equipments = sort_direction == 'desc' ? equipments.order(bandeira: :desc) : equipments.order(:bandeira)
-    when 'created_at'
-      equipments = sort_direction == 'desc' ? equipments.order(created_at: :desc) : equipments.order(:created_at)
-    when 'updated_at'
-      equipments = sort_direction == 'desc' ? equipments.order(updated_at: :desc) : equipments.order(:updated_at)
+      equipments = equipments.order("bandeira #{sort_direction}")
     else
-      equipments = equipments.order(:serial_number)
+      equipments = equipments.order("created_at #{sort_direction}")
     end
-
+    
     equipments
   end
 
-  def generate_csv
+  def generate_csv(equipments)
     require 'csv'
     
     CSV.generate(headers: true) do |csv|
-      # Headers básicos
-      headers = [
+      csv << [
         'Número de Série',
         'Tipo de Equipamento',
         'Status',
         'Localização',
-        'Fabricante',
-        'Modelo',
-        'Data de Instalação',
-        'Última Manutenção',
-        'Próxima Manutenção',
-        'Observações'
+        'Data de Aquisição',
+        'Preço de Aquisição',
+        'Bandeira',
+        'Observações',
+        'Data de Criação',
+        'Última Atualização'
       ]
       
-      # Headers dinâmicos para características
-      all_features = EquipmentFeature.joins(:equipment_type)
-                                   .where(equipment_types: { id: @equipments.joins(:equipment_type).distinct.pluck(:equipment_type_id) })
-                                   .distinct
-                                   .ordered
-      
-      all_features.each do |feature|
-        headers << feature.name
-      end
-      
-      csv << headers
-      
-      # Dados
-      @equipments.each do |equipment|
-        row = [
+      equipments.each do |equipment|
+        csv << [
           equipment.serial_number,
           equipment.equipment_type.name,
           equipment.status_display,
           equipment.location,
-          equipment.manufacturer,
-          equipment.model,
-          equipment.installation_date&.strftime('%d/%m/%Y'),
-          equipment.last_maintenance_date&.strftime('%d/%m/%Y'),
-          equipment.next_maintenance_date&.strftime('%d/%m/%Y'),
-          equipment.notes
+          equipment.acquisition_date&.strftime('%d/%m/%Y'),
+          equipment.formatted_acquisition_price,
+          equipment.bandeira,
+          equipment.notes,
+          equipment.created_at.strftime('%d/%m/%Y'),
+          equipment.updated_at.strftime('%d/%m/%Y')
         ]
-        
-        # Valores das características
-        all_features.each do |feature|
-          value = equipment.feature_value(feature.name)
-          row << (value&.formatted_value || '')
-        end
-        
-        csv << row
       end
     end
-  end
-
-  def require_login
-    redirect_to login_path, alert: 'Faça login para acessar esta área.' unless current_user
-  end
-
-  def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
   end
 end
