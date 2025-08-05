@@ -2,174 +2,134 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NOTA DE DÉBITO - <%= @rental.generate_debit_note_number(@billing_period) %></title>
   <style>
-    @media print {
-      body { margin: 0; }
-      .no-print { display: none; }
-    }
-    
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
+      font-size: 9px;
+      line-height: 1.2;
+      color: black;
       background: white;
-      color: #333;
-      line-height: 1.4;
+      margin: 10px;
     }
     
     .container {
+      border: 2px solid black;
+      padding: 10px;
       max-width: 800px;
       margin: 0 auto;
-      border: 2px solid #333;
-      padding: 20px;
     }
     
     .header {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 30px;
-      border-bottom: 2px solid #333;
-      padding-bottom: 20px;
-    }
-    
-    .logo-section {
       text-align: center;
-    }
-    
-    .logo-placeholder {
-      width: 120px;
-      height: 60px;
-      border: 1px solid #ccc;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 10px;
-      font-size: 12px;
-      color: #666;
+      margin-bottom: 15px;
+      border-bottom: 1px solid black;
+      padding-bottom: 10px;
     }
     
     .company-name {
-      font-size: 18px;
+      font-size: 14px;
       font-weight: bold;
-      color: #333;
+      margin-bottom: 5px;
     }
     
     .company-info {
-      text-align: right;
-      font-size: 12px;
-    }
-    
-    .company-info p {
-      margin: 2px 0;
+      font-size: 8px;
+      line-height: 1.2;
     }
     
     .document-title {
       text-align: center;
-      font-size: 24px;
+      font-size: 16px;
       font-weight: bold;
-      margin: 30px 0;
+      margin: 15px 0;
       text-transform: uppercase;
+      border: 1px solid black;
+      padding: 8px;
+      background: #f0f0f0;
     }
     
     .section {
-      margin-bottom: 25px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      background: white;
     }
     
     .section-title {
       font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 10px;
+      font-size: 10px;
+      background: #e0e0e0;
+      padding: 4px 6px;
+      border-bottom: 1px solid #ccc;
       text-transform: uppercase;
     }
     
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
     }
     
-    .info-item {
-      display: flex;
-      justify-content: space-between;
+    .info-table td {
+      padding: 2px 6px;
       border-bottom: 1px solid #eee;
-      padding: 5px 0;
+      vertical-align: top;
     }
     
     .info-label {
       font-weight: bold;
-      font-size: 12px;
+      width: 35%;
+      font-size: 8px;
     }
     
     .info-value {
-      font-size: 12px;
-    }
-    
-    .bank-info {
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-    
-    .billing-description {
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 5px;
-      margin: 20px 0;
-    }
-    
-    .description-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    
-    .description-content {
-      font-size: 12px;
-      line-height: 1.6;
+      width: 65%;
+      font-size: 8px;
     }
     
     .amount {
       font-weight: bold;
-      color: #059669;
+      font-size: 10px;
     }
     
-    .actions {
-      text-align: center;
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
+    .bank-info, .billing-description {
+      background: #f9f9f9;
+      padding: 8px;
+      border: 1px solid #ccc;
+      margin: 6px 0;
     }
     
-    .btn {
-      display: inline-block;
-      padding: 10px 20px;
-      margin: 0 10px;
-      text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
+    .description-content p {
+      margin: 2px 0;
+      font-size: 8px;
     }
     
-    .btn-primary {
-      background: #3b82f6;
-      color: white;
-    }
-    
-    .btn-secondary {
-      background: #6b7280;
-      color: white;
-    }
-    
-    /* Otimizações específicas para PDF */
     @page {
-      margin: 15mm;
+      margin: 8mm;
       size: A4;
     }
     
-    /* Evita quebras de página em seções importantes */
-    .header, .document-title, .section {
+    /* Força tudo em uma página */
+    .container {
       page-break-inside: avoid;
+    }
+    
+    /* Reduz espaçamentos para seções específicas */
+    .section.compact {
+      margin-bottom: 8px;
+    }
+    
+    .section.compact .section-title {
+      padding: 3px 5px;
+    }
+    
+    .section.compact .info-table td {
+      padding: 1px 4px;
+    }
+    
+    .section.compact .bank-info,
+    .section.compact .billing-description {
+      padding: 5px;
+      margin: 4px 0;
     }
   </style>
 </head>
@@ -177,18 +137,14 @@
   <div class="container">
     <!-- Cabeçalho -->
     <div class="header">
-      <div class="logo-section">
-        <div class="logo-placeholder">[Seu Logo Aqui]</div>
-        <div class="company-name">RADIAL ENERGIA</div>
-      </div>
-      
+      <div class="company-name">RADIAL ENERGIA</div>
       <div class="company-info">
-        <p><strong>FONTES ENERGIA COMÉRCIO E MANUTENÇÃO LTDA - ME</strong></p>
-        <p>Estrada São Miguel Arcanjo, 140 - Veraneio Maracanã</p>
-        <p>Itaquaquecetuba - SP CEP: 08582-500</p>
-        <p>Fone: (11) 2941-4775 / 9.9837-2639</p>
-        <p>www.radialenergia.com.br</p>
-        <p>thomas@radialenergia.com.br</p>
+        <strong>FONTES ENERGIA COMÉRCIO E MANUTENÇÃO LTDA - ME</strong><br>
+        Estrada São Miguel Arcanjo, 140 - Veraneio Maracanã<br>
+        Itaquaquecetuba - SP CEP: 08582-500<br>
+        Fone: (11) 2941-4775 / 9.9837-2639<br>
+        www.radialenergia.com.br<br>
+        thomas@radialenergia.com.br
       </div>
     </div>
     
@@ -196,125 +152,125 @@
     <div class="document-title">NOTA DE DÉBITO</div>
     
     <!-- Sacador -->
-    <div class="section">
+    <div class="section compact">
       <div class="section-title">SACADOR</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">NOME RAZÃO SOCIAL:</span>
-          <span class="info-value">FONTES ENERGIA COMÉRCIO E MANUTENÇÃO LTDA - ME</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">CNPJ/CPF:</span>
-          <span class="info-value">13.318.529/0001-08</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">INSCRIÇÃO ESTADUAL:</span>
-          <span class="info-value">379.076.526.115</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">INSCRIÇÃO MUNICIPAL:</span>
-          <span class="info-value">35.2.2520868-6</span>
-        </div>
-      </div>
+      <table class="info-table">
+        <tr>
+          <td class="info-label">NOME RAZÃO SOCIAL:</td>
+          <td class="info-value">FONTES ENERGIA COMÉRCIO E MANUTENÇÃO LTDA - ME</td>
+        </tr>
+        <tr>
+          <td class="info-label">CNPJ/CPF:</td>
+          <td class="info-value">13.318.529/0001-08</td>
+        </tr>
+        <tr>
+          <td class="info-label">INSCRIÇÃO ESTADUAL:</td>
+          <td class="info-value">379.076.526.115</td>
+        </tr>
+        <tr>
+          <td class="info-label">INSCRIÇÃO MUNICIPAL:</td>
+          <td class="info-value">35.2.2520868-6</td>
+        </tr>
+      </table>
     </div>
     
     <!-- Sacado -->
-    <div class="section">
+    <div class="section compact">
       <div class="section-title">SACADO</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">NOME RAZÃO SOCIAL:</span>
-          <span class="info-value"><%= @rental.client.name %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">ENDEREÇO:</span>
-          <span class="info-value"><%= @rental.client.address %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">MUNICÍPIO:</span>
-          <span class="info-value"><%= @rental.client.city %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">FONE/FAX:</span>
-          <span class="info-value"><%= @rental.client.phone %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">UF:</span>
-          <span class="info-value"><%= @rental.client.state %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">BAIRRO:</span>
-          <span class="info-value"><%= @rental.client.neighborhood %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">CNPJ/CPF:</span>
-          <span class="info-value"><%= @rental.client.document_number %> (<%= @rental.client.document_type %>)</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">INCR. ESTADUAL:</span>
-          <span class="info-value"><%= @rental.client.state_registration || '-' %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">CEP:</span>
-          <span class="info-value"><%= @rental.client.zip_code %></span>
-        </div>
-      </div>
+      <table class="info-table">
+        <tr>
+          <td class="info-label">NOME RAZÃO SOCIAL:</td>
+          <td class="info-value"><%= @rental.client.name %></td>
+        </tr>
+        <tr>
+          <td class="info-label">ENDEREÇO:</td>
+          <td class="info-value"><%= @rental.client.address %></td>
+        </tr>
+        <tr>
+          <td class="info-label">MUNICÍPIO:</td>
+          <td class="info-value"><%= @rental.client.city %></td>
+        </tr>
+        <tr>
+          <td class="info-label">FONE/FAX:</td>
+          <td class="info-value"><%= @rental.client.phone %></td>
+        </tr>
+        <tr>
+          <td class="info-label">UF:</td>
+          <td class="info-value"><%= @rental.client.state %></td>
+        </tr>
+        <tr>
+          <td class="info-label">BAIRRO:</td>
+          <td class="info-value"><%= @rental.client.neighborhood %></td>
+        </tr>
+        <tr>
+          <td class="info-label">CNPJ/CPF:</td>
+          <td class="info-value"><%= @rental.client.document_number %> (<%= @rental.client.document_type %>)</td>
+        </tr>
+        <tr>
+          <td class="info-label">INCR. ESTADUAL:</td>
+          <td class="info-value"><%= @rental.client.state_registration || '-' %></td>
+        </tr>
+        <tr>
+          <td class="info-label">CEP:</td>
+          <td class="info-value"><%= @rental.client.zip_code %></td>
+        </tr>
+      </table>
     </div>
     
     <!-- Dados da Nota de Débito -->
-    <div class="section">
+    <div class="section compact">
       <div class="section-title">DADOS NOTA DE DÉBITO</div>
-      <div class="info-grid">
-        <div class="info-item">
-          <span class="info-label">NOTA DE DÉBITO Nº:</span>
-          <span class="info-value"><%= @rental.generate_debit_note_number(@billing_period) %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">DATA DE EMISSÃO:</span>
-          <span class="info-value"><%= @billing_period.start_date.strftime('%d/%m/%Y') %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">VALOR:</span>
-          <span class="info-value amount"><%= @billing_period.formatted_amount %></span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">VENCIMENTO:</span>
-          <span class="info-value"><%= @billing_period.end_date.strftime('%d/%m/%Y') %></span>
-        </div>
-        <div class="info-item" style="grid-column: 1 / -1;">
-          <span class="info-label">VALOR POR EXTENSO:</span>
-          <span class="info-value"><%= valor_por_extenso(@billing_period.amount) %></span>
-        </div>
-      </div>
+      <table class="info-table">
+        <tr>
+          <td class="info-label">NOTA DE DÉBITO Nº:</td>
+          <td class="info-value"><%= @rental.generate_debit_note_number(@billing_period) %></td>
+        </tr>
+        <tr>
+          <td class="info-label">DATA DE EMISSÃO:</td>
+          <td class="info-value"><%= @billing_period.start_date.strftime('%d/%m/%Y') %></td>
+        </tr>
+        <tr>
+          <td class="info-label">VALOR:</td>
+          <td class="info-value amount"><%= @billing_period.formatted_amount %></td>
+        </tr>
+        <tr>
+          <td class="info-label">VENCIMENTO:</td>
+          <td class="info-value"><%= @billing_period.end_date.strftime('%d/%m/%Y') %></td>
+        </tr>
+        <tr>
+          <td class="info-label">VALOR POR EXTENSO:</td>
+          <td class="info-value"><%= valor_por_extenso(@billing_period.amount) %></td>
+        </tr>
+      </table>
     </div>
     
     <!-- Dados Bancários -->
-    <div class="section">
+    <div class="section compact">
       <div class="section-title">DADOS BANCÁRIOS PARA PAGAMENTO</div>
       <div class="bank-info">
-        <div class="info-grid">
-          <div class="info-item">
-            <span class="info-label">BANCO:</span>
-            <span class="info-value">ITAÚ S/A</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">AGÊNCIA:</span>
-            <span class="info-value">0709</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">CONTA CORRENTE:</span>
-            <span class="info-value">06.339-0</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">ENDEREÇO:</span>
-            <span class="info-value">R. Serra de Bragança, 1856 - Vl. Gomes Cardim - SP</span>
-          </div>
-        </div>
+        <table class="info-table">
+          <tr>
+            <td class="info-label">BANCO:</td>
+            <td class="info-value">ITAÚ S/A</td>
+          </tr>
+          <tr>
+            <td class="info-label">AGÊNCIA:</td>
+            <td class="info-value">0709</td>
+          </tr>
+          <tr>
+            <td class="info-label">CONTA CORRENTE:</td>
+            <td class="info-value">06.339-0</td>
+          </tr>
+          <tr>
+            <td class="info-label">ENDEREÇO:</td>
+            <td class="info-value">R. Serra de Bragança, 1856 - Vl. Gomes Cardim - SP</td>
+          </tr>
+        </table>
       </div>
     </div>
     
     <!-- Discriminação da Cobrança -->
-    <div class="section">
+    <div class="section compact">
       <div class="section-title">DISCRIMINAÇÃO DA COBRANÇA</div>
       <div class="billing-description">
         <div class="description-content">

@@ -1,14 +1,16 @@
 class RentalBillingPeriodsController < ApplicationController
   before_action :require_login
-  before_action :require_resource_permission, :rental_billing_periods, :read, only: [:index, :show, :receipt, :receipt_pdf]
-  before_action :require_resource_permission, :rental_billing_periods, :create, only: [:new, :create]
-  before_action :require_resource_permission, :rental_billing_periods, :update, only: [:edit, :update]
-  before_action :require_resource_permission, :rental_billing_periods, :destroy, only: [:destroy]
+  before_action -> { require_resource_permission(:rental_billing_periods, :read) }, only: [:index, :show, :receipt, :receipt_pdf]
+  before_action -> { require_resource_permission(:rental_billing_periods, :create) }, only: [:new, :create]
+  before_action -> { require_resource_permission(:rental_billing_periods, :update) }, only: [:edit, :update]
+  before_action -> { require_resource_permission(:rental_billing_periods, :destroy) }, only: [:destroy]
   before_action :set_rental
-  before_action :set_billing_period, only: [:show, :edit, :update, :destroy, :receipt, :receipt_pdf]
+  before_action :set_billing_period, only: [:show, :edit, :update, :destroy, :receipt, :receipt_pdf, :regenerate_financial_entry]
 
   def index
-    @billing_periods = @rental.rental_billing_periods.ordered_by_date
+    @billing_periods = @rental.rental_billing_periods
+                           .includes(:financial_entry)
+                           .ordered_by_date
   end
 
   def show
@@ -55,8 +57,24 @@ class RentalBillingPeriodsController < ApplicationController
         render pdf: "recibo_#{@rental.generate_debit_note_number(@billing_period)}",
                template: "rental_billing_periods/receipt",
                layout: false,
-               disposition: "attachment"
+               disposition: "attachment",
+               page_size: "A4",
+               orientation: "Portrait",
+               margin: {
+                 top: 5,
+                 bottom: 5,
+                 left: 5,
+                 right: 5
+               }
       end
+    end
+  end
+
+  def regenerate_financial_entry
+    if @billing_period.regenerate_financial_entry
+      redirect_to rental_rental_billing_periods_path(@rental), notice: 'Lançamento financeiro regenerado com sucesso!'
+    else
+      redirect_to rental_rental_billing_periods_path(@rental), alert: 'Erro ao regenerar lançamento financeiro.'
     end
   end
 

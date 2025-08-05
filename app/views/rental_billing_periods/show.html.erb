@@ -1,0 +1,466 @@
+<div class="container">
+  <div class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1>Detalhes do Período de Faturamento</h1>
+        <p class="subtitle">Locação: <%= @rental.display_name %></p>
+      </div>
+      <div class="header-actions">
+        <%= link_to rental_rental_billing_periods_path(@rental), class: "btn btn-secondary" do %>
+          <i class="fas fa-arrow-left"></i>
+          Voltar para Períodos
+        <% end %>
+        <%= link_to edit_rental_rental_billing_period_path(@rental, @billing_period), class: "btn btn-primary" do %>
+          <i class="fas fa-edit"></i>
+          Editar
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informações da Locação -->
+  <div class="rental-info">
+    <div class="info-card">
+      <h3>Informações da Locação</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Status da Locação:</label>
+          <span class="status-badge status-<%= @rental.status %>">
+            <%= @rental.status.titleize %>
+          </span>
+        </div>
+        <div class="info-item">
+          <label>Equipamentos:</label>
+          <span><%= @rental.equipment_count %> <%= 'equipamento'.pluralize(@rental.equipment_count) %></span>
+        </div>
+        <div class="info-item">
+          <label>Períodos Existentes:</label>
+          <span><%= @rental.billing_periods_count %> <%= 'período'.pluralize(@rental.billing_periods_count) %></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalhes do Período -->
+  <div class="detail-section">
+    <div class="detail-card">
+      <h3>Dados do Período</h3>
+      
+      <div class="detail-grid">
+        <div class="detail-item">
+          <label>Nome do Período:</label>
+          <span class="detail-value"><%= @billing_period.name %></span>
+        </div>
+        
+        <div class="detail-item">
+          <label>Data de Início:</label>
+          <span class="detail-value"><%= @billing_period.start_date.strftime('%d/%m/%Y') if @billing_period.start_date %></span>
+        </div>
+        
+        <div class="detail-item">
+          <label>Data de Fim:</label>
+          <span class="detail-value"><%= @billing_period.end_date.strftime('%d/%m/%Y') if @billing_period.end_date %></span>
+        </div>
+        
+        <div class="detail-item">
+          <label>Valor do Período:</label>
+          <span class="detail-value amount-value">
+            <%= number_to_currency(@billing_period.amount) %>
+          </span>
+        </div>
+        
+        <% if @billing_period.client_order.present? %>
+          <div class="detail-item">
+            <label>Pedido do Cliente:</label>
+            <span class="detail-value"><%= @billing_period.client_order %></span>
+          </div>
+        <% end %>
+        
+        <% if @billing_period.observations.present? %>
+          <div class="detail-item full-width">
+            <label>Observações:</label>
+            <span class="detail-value"><%= @billing_period.observations %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Informações do Lançamento Financeiro -->
+  <div class="financial-section">
+    <div class="financial-card">
+      <h3>Lançamento Financeiro</h3>
+      
+      <% if @billing_period.has_financial_entry? %>
+        <div class="financial-info">
+          <div class="info-item">
+            <label>Status:</label>
+            <span class="status-badge status-<%= @billing_period.financial_entry.status %>">
+              <%= @billing_period.financial_entry.status_display %>
+            </span>
+          </div>
+          <div class="info-item">
+            <label>Data de Vencimento:</label>
+            <span><%= @billing_period.financial_entry.formatted_due_date %></span>
+          </div>
+          <div class="info-item">
+            <label>Data de Pagamento:</label>
+            <% if @billing_period.financial_entry.has_paid_date? %>
+              <span class="paid-date"><%= @billing_period.financial_entry.formatted_paid_date %></span>
+              <% if @billing_period.financial_entry.was_paid_on_time? %>
+                <span class="payment-status on-time">
+                  <i class="fas fa-check-circle"></i>
+                  Pago no prazo
+                </span>
+              <% else %>
+                <span class="payment-status <%= @billing_period.financial_entry.days_to_pay > 0 ? 'late' : 'early' %>">
+                  <i class="fas fa-clock"></i>
+                  <%= pluralize(@billing_period.financial_entry.days_to_pay.abs, 'dia') %> <%= @billing_period.financial_entry.days_to_pay > 0 ? 'atrasado' : 'antecipado' %>
+                </span>
+              <% end %>
+            <% else %>
+              <span class="not-paid">Não pago</span>
+            <% end %>
+          </div>
+          <div class="info-item">
+            <label>Valor:</label>
+            <span class="amount-value"><%= number_to_currency(@billing_period.financial_entry.amount) %></span>
+          </div>
+        </div>
+        
+        <div class="financial-actions">
+          <%= link_to financial_entries_path(reference_type: 'RentalBillingPeriod', reference_id: @billing_period.id), class: "btn btn-outline-success" do %>
+            <i class="fas fa-money-bill"></i>
+            Ver Lançamento
+          <% end %>
+        </div>
+      <% else %>
+        <div class="no-financial-entry">
+          <p class="text-muted">Nenhum lançamento financeiro gerado para este período.</p>
+          <%= button_to regenerate_financial_entry_rental_rental_billing_period_path(@rental, @billing_period),
+              turbo_method: :post,
+              data: { confirm: 'Gerar lançamento financeiro para este período?' },
+              class: "btn btn-outline-warning",
+              form: { style: 'display: inline;' } do %>
+            <i class="fas fa-plus"></i>
+            Gerar Lançamento
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Ações -->
+  <div class="actions-section">
+    <div class="actions-card">
+      <h3>Ações</h3>
+      
+      <div class="actions-grid">
+        <%= link_to receipt_rental_rental_billing_period_path(@rental, @billing_period), class: "btn btn-outline-info", target: "_blank" do %>
+          <i class="fas fa-file-alt"></i>
+          Visualizar Recibo
+        <% end %>
+        
+        <%= link_to receipt_pdf_rental_rental_billing_period_path(@rental, @billing_period), class: "btn btn-outline-primary" do %>
+          <i class="fas fa-download"></i>
+          Baixar PDF
+        <% end %>
+        
+        <%= button_to rental_rental_billing_period_path(@rental, @billing_period),
+            turbo_method: :delete,
+            data: { confirm: 'Tem certeza que deseja excluir este período?' },
+            class: "btn btn-outline-danger",
+            form: { style: 'display: inline;' } do %>
+          <i class="fas fa-trash"></i>
+          Excluir Período
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-left h1 {
+  margin: 0 0 8px 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.header-left .subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2563eb;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+.btn-outline-primary {
+  background: transparent;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+}
+
+.btn-outline-primary:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-outline-info {
+  background: transparent;
+  color: #17a2b8;
+  border: 2px solid #17a2b8;
+}
+
+.btn-outline-info:hover {
+  background: #17a2b8;
+  color: white;
+}
+
+.btn-outline-success {
+  background: transparent;
+  color: #28a745;
+  border: 2px solid #28a745;
+}
+
+.btn-outline-success:hover {
+  background: #28a745;
+  color: white;
+}
+
+.btn-outline-warning {
+  background: transparent;
+  color: #ffc107;
+  border: 2px solid #ffc107;
+}
+
+.btn-outline-warning:hover {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  color: #dc3545;
+  border: 2px solid #dc3545;
+}
+
+.btn-outline-danger:hover {
+  background: #dc3545;
+  color: white;
+}
+
+.rental-info, .detail-section, .financial-section, .actions-section {
+  margin-bottom: 30px;
+}
+
+.info-card, .detail-card, .financial-card, .actions-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  padding: 24px;
+}
+
+.info-card h3, .detail-card h3, .financial-card h3, .actions-card h3 {
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.info-grid, .detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.info-item, .detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item.full-width, .detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-item label, .detail-item label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.info-item span, .detail-item .detail-value {
+  font-size: 16px;
+  color: #1f2937;
+  font-weight: 500;
+}
+
+.amount-value {
+  font-weight: 700;
+  color: #059669;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-ativo {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-concluida {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.status-pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.financial-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.financial-actions, .actions-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.no-financial-entry {
+  text-align: center;
+  padding: 20px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+}
+
+.no-financial-entry p {
+  margin: 0 0 16px 0;
+  color: #6b7280;
+}
+
+.paid-date {
+  color: #059669 !important;
+  font-weight: 600 !important;
+}
+
+.not-paid {
+  color: #6b7280 !important;
+  font-style: italic;
+}
+
+.payment-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+.payment-status.on-time {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.payment-status.late {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.payment-status.early {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .info-grid, .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .financial-actions, .actions-grid {
+    flex-direction: column;
+  }
+  
+  .btn {
+    justify-content: center;
+  }
+}
+</style> 

@@ -1,4 +1,6 @@
 module ApplicationHelper
+  include Heroicons::Engine.helpers
+  
   # Formatação de valores monetários
   def format_currency(value)
     return "R$ 0,00" if value.nil? || value.zero?

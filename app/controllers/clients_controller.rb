@@ -1,9 +1,9 @@
 class ClientsController < ApplicationController
   before_action :require_login
-  before_action :require_resource_permission, :clients, :read, only: [:index, :show]
-  before_action :require_resource_permission, :clients, :create, only: [:new, :create]
-  before_action :require_resource_permission, :clients, :update, only: [:edit, :update]
-  before_action :require_resource_permission, :clients, :destroy, only: [:destroy]
+  before_action -> { require_resource_permission(:clients, :read) }, only: [:index, :show]
+  before_action -> { require_resource_permission(:clients, :create) }, only: [:new, :create]
+  before_action -> { require_resource_permission(:clients, :update) }, only: [:edit, :update]
+  before_action -> { require_resource_permission(:clients, :destroy) }, only: [:destroy]
   before_action :set_client, only: [:show, :edit, :update, :destroy, :contacts]
 
   def index

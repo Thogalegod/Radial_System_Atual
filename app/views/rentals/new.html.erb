@@ -23,33 +23,39 @@
         </div>
       <% end %>
 
+      <!-- Seção 1: Informações Básicas -->
       <div class="form-section">
-        <h3>Informações Básicas</h3>
-        
-        <div class="form-group">
-          <%= form.label :name, "Nome da Locação", class: "form-label" %>
-          <%= form.text_field :name, 
-              class: "form-control",
-              placeholder: "Ex: Locação Transformador MT",
-              required: true %>
-          <small class="form-help">
-            <i class="fas fa-info-circle"></i>
-            Nome descritivo para identificar esta locação
-          </small>
+        <div class="section-header">
+          <h3><i class="fas fa-info-circle"></i> Informações da Locação</h3>
+          <span class="section-badge required">Obrigatório</span>
         </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <%= form.label :name, "Nome da Locação", class: "form-label" %>
+            <%= form.text_field :name, 
+                class: "form-control",
+                placeholder: "Ex: Locação Transformador MT",
+                required: true %>
+            <small class="form-help">
+              <i class="fas fa-info-circle"></i>
+              Nome descritivo para identificar esta locação
+            </small>
+          </div>
 
-        <div class="form-group">
-          <%= form.label :client_id, "Cliente", class: "form-label" %>
-          <%= form.collection_select :client_id, 
-              @clients, 
-              :id, 
-              :name, 
-              { prompt: "Selecione um cliente" },
-              { class: "form-select", required: true } %>
-          <small class="form-help">
-            <i class="fas fa-user"></i>
-            Cliente responsável por esta locação
-          </small>
+          <div class="form-group">
+            <%= form.label :client_id, "Cliente", class: "form-label" %>
+            <%= form.collection_select :client_id, 
+                @clients, 
+                :id, 
+                :name, 
+                { prompt: "Selecione um cliente" },
+                { class: "form-select", required: true } %>
+            <small class="form-help">
+              <i class="fas fa-user"></i>
+              Cliente responsável por esta locação
+            </small>
+          </div>
         </div>
 
         <div class="form-group">
@@ -62,16 +68,110 @@
             Número da nota de remessa (opcional)
           </small>
         </div>
+      </div>
 
-        <div class="info-box">
-          <h4><i class="fas fa-info-circle"></i> Informações</h4>
-          <p>A locação será criada com status <strong>"Ativo"</strong> automaticamente.</p>
-          <p>Após criar a locação, você poderá:</p>
-          <ul>
-            <li>Adicionar equipamentos</li>
-            <li>Criar períodos de faturamento com datas e valores</li>
-            <li>Gerenciar a locação completa</li>
-          </ul>
+      <!-- Seção 2: Equipamentos -->
+      <div class="form-section collapsible">
+        <div class="section-header" onclick="toggleSection('equipment-section')">
+          <h3><i class="fas fa-boxes"></i> Equipamentos</h3>
+          <div class="section-controls">
+            <span class="section-badge optional">Opcional</span>
+            <i class="fas fa-chevron-down toggle-icon" id="equipment-toggle"></i>
+          </div>
+        </div>
+        
+        <div class="section-content" id="equipment-section">
+          <div class="info-box">
+            <p><i class="fas fa-lightbulb"></i> Você pode adicionar equipamentos agora ou depois de criar a locação.</p>
+          </div>
+          
+          <div class="equipment-selection">
+            <div class="form-group">
+              <label class="form-label">Selecionar Equipamentos</label>
+              
+              <!-- Campo de busca -->
+              <div class="search-container">
+                <div class="search-input-wrapper">
+                  <i class="fas fa-search search-icon"></i>
+                  <input type="text" 
+                         id="equipment-search" 
+                         class="search-input" 
+                         placeholder="Buscar equipamentos por nome, tipo ou número de série..."
+                         autocomplete="off">
+                  <div class="search-clear" id="search-clear" style="display: none;">
+                    <i class="fas fa-times"></i>
+                  </div>
+                </div>
+                <div class="search-info">
+                  <small>Digite pelo menos 2 caracteres para buscar equipamentos por nome, tipo ou número de série</small>
+                </div>
+              </div>
+              
+              <!-- Resultados da busca -->
+              <div class="equipment-grid" id="equipment-grid" style="display: none;">
+                <!-- Os equipamentos aparecerão aqui quando o usuário buscar -->
+              </div>
+              
+              <!-- Mensagem quando não há resultados -->
+              <div class="no-results" id="no-results" style="display: none;">
+                <div class="empty-message">
+                  <i class="fas fa-search"></i>
+                  <p>Nenhum equipamento encontrado com os critérios de busca.</p>
+                  <small>Tente usar termos diferentes ou verifique se o equipamento está disponível.</small>
+                </div>
+              </div>
+              
+              <!-- Mensagem para digitar mais caracteres -->
+              <div class="type-more" id="type-more" style="display: none;">
+                <div class="empty-message">
+                  <i class="fas fa-keyboard"></i>
+                  <p>Digite pelo menos 2 caracteres para buscar equipamentos</p>
+                  <small>Busque por nome, tipo ou número de série do equipamento</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção 3: Período de Faturamento -->
+      <div class="form-section collapsible">
+        <div class="section-header" onclick="toggleSection('billing-section')">
+          <h3><i class="fas fa-calendar-alt"></i> Período de Faturamento</h3>
+          <div class="section-controls">
+            <span class="section-badge optional">Opcional</span>
+            <i class="fas fa-chevron-down toggle-icon" id="billing-toggle"></i>
+          </div>
+        </div>
+        
+        <div class="section-content" id="billing-section">
+          <div class="info-box">
+            <p><i class="fas fa-lightbulb"></i> Configure o primeiro período de faturamento ou adicione depois.</p>
+          </div>
+          
+          <div class="billing-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nome do Período</label>
+                <input type="text" name="billing_period[name]" class="form-control" placeholder="Ex: Janeiro 2024">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Valor (R$)</label>
+                <input type="number" name="billing_period[amount]" class="form-control" placeholder="0,00" step="0.01" min="0">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Data de Início</label>
+                <input type="date" name="billing_period[start_date]" class="form-control">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Data de Fim</label>
+                <input type="date" name="billing_period[end_date]" class="form-control">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -92,43 +192,97 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
   padding: 32px;
-  max-width: 800px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
 .rental-form {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
 }
 
 .form-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.section-header {
+  background: #f9fafb;
+  padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
-  padding-bottom: 24px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
 }
 
-.form-section:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
+.section-header:hover {
+  background: #f3f4f6;
 }
 
-.form-section h3 {
-  margin: 0 0 20px 0;
-  font-size: 18px;
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
   color: #374151;
-  border-bottom: 2px solid #e5e7eb;
-  padding-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.form-group {
-  margin-bottom: 20px;
+.section-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.section-badge.required {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.section-badge.optional {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.toggle-icon {
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.toggle-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.section-content {
+  padding: 20px;
+  display: none;
+}
+
+.section-content.active {
+  display: block;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
 }
 
 .form-label {
@@ -139,9 +293,8 @@
   font-size: 14px;
 }
 
-.form-input,
-.form-select,
-.form-control {
+.form-control,
+.form-select {
   width: 100%;
   padding: 12px 16px;
   border: 1px solid #d1d5db;
@@ -151,15 +304,14 @@
   background: white;
 }
 
-.form-input:focus,
-.form-select:focus,
-.form-control:focus {
+.form-control:focus,
+.form-select:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.form-input::placeholder {
+.form-control::placeholder {
   color: #9ca3af;
 }
 
@@ -174,21 +326,165 @@
   margin-right: 4px;
 }
 
-.info-box h4 {
-  margin: 0 0 12px 0;
-  font-size: 1rem;
+.info-box {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.info-box p {
+  margin: 0;
+  color: #1e40af;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-container {
+  margin-bottom: 16px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: white;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-clear {
+  position: absolute;
+  right: 12px;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.search-clear:hover {
+  color: #6b7280;
+  background: #f3f4f6;
+}
+
+.search-info {
+  margin-top: 6px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.equipment-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.equipment-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+}
+
+.equipment-item:hover {
+  border-color: #3b82f6;
+  background: #f8fafc;
+}
+
+.equipment-item.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.equipment-item input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.equipment-name {
   font-weight: 600;
-  color: #1e40af;
-}
-
-.info-box ul {
-  margin: 8px 0 0 0;
-  padding-left: 20px;
-  color: #1e40af;
-}
-
-.info-box li {
+  color: #1f2937;
   margin-bottom: 4px;
+}
+
+.equipment-details {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.loading-message i {
+  margin-right: 8px;
+}
+
+.empty-message,
+.error-message {
+  text-align: center;
+  padding: 20px;
+  font-size: 14px;
+}
+
+.empty-message {
+  color: #6b7280;
+  text-align: center;
+}
+
+.empty-message i {
+  font-size: 24px;
+  margin-bottom: 8px;
+  color: #9ca3af;
+}
+
+.empty-message p {
+  margin: 8px 0 4px 0;
+  font-weight: 500;
+}
+
+.empty-message small {
+  color: #9ca3af;
+}
+
+.error-message {
+  color: #dc2626;
+  text-align: center;
+}
+
+.billing-form {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 16px;
 }
 
 .btn {
@@ -249,36 +545,13 @@
   margin-bottom: 4px;
 }
 
-  .form-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    padding-top: 24px;
-    border-top: 1px solid #e5e7eb;
-  }
-
-  .info-box {
-    background: #eff6ff;
-    border: 1px solid #dbeafe;
-    border-radius: 8px;
-    padding: 16px;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .info-box i {
-    color: #3b82f6;
-    font-size: 18px;
-    margin-top: 2px;
-  }
-
-  .info-box p {
-    margin: 0;
-    color: #1e40af;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+.form-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
 
 .breadcrumb {
   margin-bottom: 16px;
@@ -305,5 +578,232 @@
   .form-actions {
     flex-direction: column;
   }
+  
+  .equipment-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
+
+<script>
+function toggleSection(sectionId) {
+  const section = document.getElementById(sectionId);
+  const toggleIcon = document.querySelector(`#${sectionId.replace('-section', '-toggle')}`);
+  
+  if (section.classList.contains('active')) {
+    section.classList.remove('active');
+    toggleIcon.classList.remove('rotated');
+  } else {
+    section.classList.add('active');
+    toggleIcon.classList.add('rotated');
+  }
+}
+
+// Variáveis globais para controle da busca
+let searchTimeout;
+let currentSearchQuery = '';
+
+// Carregar equipamentos disponíveis
+document.addEventListener('DOMContentLoaded', function() {
+  // Definir data atual como padrão para o período de faturamento
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelector('input[name="billing_period[start_date]"]').value = today;
+  
+  // Configurar busca
+  setupSearch();
+});
+
+function setupSearch() {
+  const searchInput = document.getElementById('equipment-search');
+  const searchClear = document.getElementById('search-clear');
+  
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      const query = this.value.trim();
+      currentSearchQuery = query;
+      
+      // Limpar timeout anterior
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+      
+      // Mostrar/esconder botão de limpar
+      if (query.length > 0) {
+        searchClear.style.display = 'block';
+      } else {
+        searchClear.style.display = 'none';
+      }
+      
+      // Debounce da busca (500ms)
+      searchTimeout = setTimeout(() => {
+        searchEquipment(query);
+      }, 500);
+    });
+    
+    // Limpar busca
+    searchClear.addEventListener('click', function() {
+      searchInput.value = '';
+      currentSearchQuery = '';
+      searchClear.style.display = 'none';
+      hideResults();
+    });
+  }
+}
+
+function loadAvailableEquipment() {
+  // Esta função não é mais usada, mas mantida para compatibilidade
+  searchEquipment('');
+}
+
+function searchEquipment(query) {
+  if (query.length === 0) {
+    // Se não há query, esconder os resultados
+    hideResults();
+    return;
+  }
+  
+  if (query.length === 1) {
+    // Mostrar mensagem para digitar mais caracteres
+    showTypeMore();
+    return;
+  }
+  
+  showLoading();
+  
+  const url = `/equipments/search_available?query=${encodeURIComponent(query)}`;
+  
+  fetch(url)
+    .then(response => response.json())
+    .then(data => {
+      displayEquipmentResults(data.equipments, query);
+    })
+    .catch(error => {
+      console.error('Erro ao buscar equipamentos:', error);
+      showError('Erro ao buscar equipamentos. Tente novamente.');
+    });
+}
+
+function displayEquipmentResults(equipments, searchQuery = '') {
+  const grid = document.getElementById('equipment-grid');
+  const noResults = document.getElementById('no-results');
+  
+  if (!grid) return;
+  
+  // Limpar grid
+  grid.innerHTML = '';
+  
+  if (equipments.length === 0) {
+    if (searchQuery) {
+      // Mostrar mensagem de "nenhum resultado encontrado"
+      grid.style.display = 'none';
+      noResults.style.display = 'block';
+    } else {
+      // Esconder tudo se não há query
+      hideResults();
+    }
+    return;
+  }
+  
+  // Mostrar resultados
+  grid.style.display = 'block';
+  noResults.style.display = 'none';
+  
+  equipments.forEach(equipment => {
+    const item = createEquipmentItem(equipment);
+    grid.appendChild(item);
+  });
+}
+
+function showLoading() {
+  const grid = document.getElementById('equipment-grid');
+  const noResults = document.getElementById('no-results');
+  const typeMore = document.getElementById('type-more');
+  
+  if (grid) {
+    grid.style.display = 'block';
+    grid.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Buscando equipamentos...</div>';
+  }
+  
+  if (noResults) {
+    noResults.style.display = 'none';
+  }
+  
+  if (typeMore) {
+    typeMore.style.display = 'none';
+  }
+}
+
+function hideResults() {
+  const grid = document.getElementById('equipment-grid');
+  const noResults = document.getElementById('no-results');
+  const typeMore = document.getElementById('type-more');
+  
+  if (grid) {
+    grid.style.display = 'none';
+  }
+  
+  if (noResults) {
+    noResults.style.display = 'none';
+  }
+  
+  if (typeMore) {
+    typeMore.style.display = 'none';
+  }
+}
+
+function showTypeMore() {
+  const grid = document.getElementById('equipment-grid');
+  const noResults = document.getElementById('no-results');
+  const typeMore = document.getElementById('type-more');
+  
+  if (grid) {
+    grid.style.display = 'none';
+  }
+  
+  if (noResults) {
+    noResults.style.display = 'none';
+  }
+  
+  if (typeMore) {
+    typeMore.style.display = 'block';
+  }
+}
+
+function showError(message) {
+  const grid = document.getElementById('equipment-grid');
+  
+  if (grid) {
+    grid.style.display = 'block';
+    grid.innerHTML = `<div class="error-message">${message}</div>`;
+  }
+}
+
+function createEquipmentItem(equipment) {
+  const item = document.createElement('div');
+  item.className = 'equipment-item';
+  item.innerHTML = `
+    <label style="display: flex; align-items: center; cursor: pointer;">
+      <input type="checkbox" name="equipment_ids[]" value="${equipment.id}" style="margin-right: 8px;">
+      <div>
+        <div class="equipment-name">${equipment.display_name}</div>
+        <div class="equipment-details">${equipment.equipment_type_name} • ${equipment.location || 'Localização não informada'}</div>
+      </div>
+    </label>
+  `;
+  
+  item.addEventListener('click', function(e) {
+    if (e.target.type !== 'checkbox') {
+      const checkbox = item.querySelector('input[type="checkbox"]');
+      checkbox.checked = !checkbox.checked;
+    }
+    
+    if (item.querySelector('input[type="checkbox"]').checked) {
+      item.classList.add('selected');
+    } else {
+      item.classList.remove('selected');
+    }
+  });
+  
+  return item;
+}
+</script>

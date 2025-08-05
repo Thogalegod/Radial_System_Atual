@@ -1,10 +1,10 @@
 class EquipmentTypesController < ApplicationController
   before_action :require_login
-  before_action :require_resource_permission, :equipment_types, :read, only: [:index, :show, :equipment_features, :edit_modal]
-  before_action :require_resource_permission, :equipment_types, :create, only: [:new, :create]
-  before_action :require_resource_permission, :equipment_types, :update, only: [:edit, :update, :update_manage]
-  before_action :require_resource_permission, :equipment_types, :destroy, only: [:destroy]
-  before_action :require_resource_permission, :equipment_types, :manage, only: [:manage, :duplicate]
+  before_action -> { require_resource_permission(:equipment_types, :read) }, only: [:index, :show, :equipment_features, :edit_modal]
+  before_action -> { require_resource_permission(:equipment_types, :create) }, only: [:new, :create]
+  before_action -> { require_resource_permission(:equipment_types, :update) }, only: [:edit, :update, :update_manage]
+  before_action -> { require_resource_permission(:equipment_types, :destroy) }, only: [:destroy]
+  before_action -> { require_resource_permission(:equipment_types, :manage) }, only: [:manage, :duplicate]
   before_action :set_equipment_type, only: [:show, :edit, :update, :destroy]
 
   def index

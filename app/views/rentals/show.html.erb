@@ -14,10 +14,9 @@
       <% end %>
       <% if @rental.can_be_completed? %>
         <%= button_to complete_rental_path(@rental), 
-            method: :patch,
+            turbo_method: :patch,
             data: { 
-              confirm: 'Tem certeza que deseja concluir esta locação? Os equipamentos serão devolvidos ao estoque.',
-              turbo_method: :patch
+              confirm: 'Tem certeza que deseja concluir esta locação? Os equipamentos serão devolvidos ao estoque.'
             },
             class: "btn btn-success",
             form: { style: 'display: inline;' },
@@ -29,10 +28,9 @@
         <i class="fas fa-edit"></i> Editar
       <% end %>
       <%= button_to rental_path(@rental), 
-          method: :delete, 
+          turbo_method: :delete, 
           data: { 
-            confirm: 'Tem certeza que deseja excluir esta locação?',
-            turbo_method: :delete
+            confirm: 'Tem certeza que deseja excluir esta locação?'
           },
           class: "btn btn-danger",
           form: { style: 'display: inline;' },

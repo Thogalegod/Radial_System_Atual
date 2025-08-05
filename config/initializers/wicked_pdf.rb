@@ -3,10 +3,10 @@ WickedPdf.configure do |config|
   config.orientation = "Portrait"
   config.page_size = "A4"
   config.margin = {
-    top: 10,
-    bottom: 10,
-    left: 10,
-    right: 10
+    top: 5,
+    bottom: 5,
+    left: 5,
+    right: 5
   }
   config.enable_local_file_access = true
   config.lowquality = false
@@ -14,4 +14,8 @@ WickedPdf.configure do |config|
   config.dpi = 300
   config.image_quality = 100
   config.disable_smart_shrinking = true
+  config.print_media_type = true
+  config.page_height = "297mm"
+  config.page_width = "210mm"
+  config.encoding = "UTF-8"
 end 

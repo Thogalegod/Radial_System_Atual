@@ -1,0 +1,144 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-800">Detalhes do Lançamento</h1>
+        <div class="flex space-x-3">
+          <%= link_to "Editar", edit_financial_entry_path(@financial_entry), class: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700" %>
+          <%= link_to "Voltar", financial_entries_path, class: "px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300" %>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Descrição</label>
+            <p class="mt-1 text-lg text-gray-900"><%= @financial_entry.description %></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Valor</label>
+            <p class="mt-1 text-lg font-semibold <%= @financial_entry.entry_type == 'receivable' ? 'text-green-600' : 'text-red-600' %>">
+              <%= number_to_currency(@financial_entry.amount) %>
+            </p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Tipo</label>
+            <p class="mt-1 text-lg text-gray-900">
+              <%= @financial_entry.entry_type == 'receivable' ? 'Recebimento' : 'Despesa' %>
+            </p>
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Data de Vencimento</label>
+            <p class="mt-1 text-lg text-gray-900"><%= @financial_entry.formatted_due_date %></p>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Data de Pagamento</label>
+            <% if @financial_entry.has_paid_date? %>
+              <p class="mt-1 text-lg text-green-600 font-semibold"><%= @financial_entry.formatted_paid_date %></p>
+              <div class="mt-1">
+                <% if @financial_entry.was_paid_on_time? %>
+                  <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    Pago no prazo
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center px-2 py-1 text-xs font-medium <%= @financial_entry.days_to_pay > 0 ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' %> rounded-full">
+                    <i class="fas fa-clock mr-1"></i>
+                    <%= pluralize(@financial_entry.days_to_pay.abs, 'dia') %> <%= @financial_entry.days_to_pay > 0 ? 'atrasado' : 'antecipado' %>
+                  </span>
+                <% end %>
+              </div>
+            <% else %>
+              <p class="mt-1 text-lg text-gray-400">Não pago</p>
+            <% end %>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Status</label>
+            <span class="mt-1 inline-flex px-3 py-1 text-sm font-semibold rounded-full
+              <%= case @financial_entry.status
+                  when 'pending' then 'bg-yellow-100 text-yellow-800'
+                  when 'paid' then 'bg-green-100 text-green-800'
+                  when 'overdue' then 'bg-red-100 text-red-800'
+                  when 'cancelled' then 'bg-gray-100 text-gray-800'
+                  else 'bg-gray-100 text-gray-800'
+                  end %>">
+              <%= @financial_entry.status_display %>
+            </span>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-500">Referência</label>
+            <p class="mt-1 text-lg text-gray-900">
+              <% if @financial_entry.reference %>
+                <% begin %>
+                  <% if @financial_entry.reference.is_a?(RentalBillingPeriod) %>
+                    <%= link_to @financial_entry.reference.class.name, rental_rental_billing_period_path(@financial_entry.reference.rental, @financial_entry.reference), class: "text-blue-600 hover:text-blue-800" %>
+                  <% else %>
+                    <%= link_to @financial_entry.reference.class.name, polymorphic_path(@financial_entry.reference), class: "text-blue-600 hover:text-blue-800" %>
+                  <% end %>
+                <% rescue NoMethodError, ActionController::UrlGenerationError %>
+                  <span class="text-gray-600"><%= @financial_entry.reference.class.name %></span>
+                <% end %>
+              <% else %>
+                N/A
+              <% end %>
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <% if @financial_entry.notes.present? %>
+        <div class="mt-6 pt-6 border-t border-gray-200">
+          <label class="block text-sm font-medium text-gray-500 mb-2">Observações</label>
+          <p class="text-gray-900"><%= @financial_entry.notes %></p>
+        </div>
+      <% end %>
+      
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Informações Adicionais</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div>
+            <span class="text-gray-500">Criado em:</span>
+            <p class="text-gray-900"><%= l(@financial_entry.created_at, format: :long) %></p>
+          </div>
+          <div>
+            <span class="text-gray-500">Atualizado em:</span>
+            <p class="text-gray-900"><%= l(@financial_entry.updated_at, format: :long) %></p>
+          </div>
+          <div>
+            <span class="text-gray-500">Dias até vencimento:</span>
+            <p class="text-gray-900">
+              <% if @financial_entry.days_until_due %>
+                <%= @financial_entry.days_until_due %> dias
+              <% else %>
+                N/A
+              <% end %>
+            </p>
+          </div>
+          <% if @financial_entry.has_paid_date? %>
+            <div>
+              <span class="text-gray-500">Dias para pagar:</span>
+              <p class="text-gray-900">
+                <%= @financial_entry.days_to_pay %> dias
+                <% if @financial_entry.days_to_pay > 0 %>
+                  <span class="text-red-600">(atrasado)</span>
+                <% elsif @financial_entry.days_to_pay < 0 %>
+                  <span class="text-green-600">(antecipado)</span>
+                <% else %>
+                  <span class="text-green-600">(no prazo)</span>
+                <% end %>
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div> 

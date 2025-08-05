@@ -26,8 +26,12 @@ class Rental < ApplicationRecord
   scope :with_overdue_periods, -> { 
     joins(:rental_billing_periods)
     .where('rental_billing_periods.end_date < ? AND rentals.status = ?', Date.current, 'ativo')
+    .where('rental_billing_periods.id = (SELECT MAX(rbp.id) FROM rental_billing_periods rbp WHERE rbp.rental_id = rentals.id)')
     .distinct
   }
+
+  # Callbacks
+  after_update :update_financial_entries_description
 
   def display_name
     "#{name} - #{client.name}"
@@ -145,6 +149,11 @@ class Rental < ApplicationRecord
     (Date.current - last_billing_period.end_date).to_i
   end
 
+  def amount_overdue
+    return 0 unless has_overdue_period?
+    last_billing_period&.amount || 0
+  end
+
   def period_status
     return 'concluida' if is_completed?
     return 'sem_periodos' unless has_billing_periods?
@@ -254,6 +263,19 @@ class Rental < ApplicationRecord
   end
 
   private
+
+  def update_financial_entries_description
+    # Atualiza as descrições de todos os lançamentos financeiros relacionados a esta locação
+    # Só executar se o nome realmente mudou
+    return unless name_previous_change.present?
+    
+    rental_billing_periods.includes(:financial_entry).each do |period|
+      if period.financial_entry.present?
+        new_description = "Período de Faturamento: #{period.name} - #{display_name}"
+        period.financial_entry.update_column(:description, new_description)
+      end
+    end
+  end
 
   def cannot_conclude_without_equipments
     if status_changed? && status == 'concluido' && equipments.empty?

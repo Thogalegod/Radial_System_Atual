@@ -144,6 +144,8 @@ pt-BR:
       default: "%d/%m/%Y"
       short: "%d/%m"
       long: "%d de %B de %Y"
+    month_names: [~, Janeiro, Fevereiro, Março, Abril, Maio, Junho, Julho, Agosto, Setembro, Outubro, Novembro, Dezembro]
+
 
   datetime:
     formats:

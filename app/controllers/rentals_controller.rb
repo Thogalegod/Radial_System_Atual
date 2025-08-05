@@ -1,9 +1,9 @@
 class RentalsController < ApplicationController
   before_action :require_login
-  before_action :require_resource_permission, :rentals, :read, only: [:index, :show]
-  before_action :require_resource_permission, :rentals, :create, only: [:new, :create]
-  before_action :require_resource_permission, :rentals, :update, only: [:edit, :update]
-  before_action :require_resource_permission, :rentals, :destroy, only: [:destroy]
+  before_action -> { require_resource_permission(:rentals, :read) }, only: [:index, :show]
+  before_action -> { require_resource_permission(:rentals, :create) }, only: [:new, :create]
+  before_action -> { require_resource_permission(:rentals, :update) }, only: [:edit, :update]
+  before_action -> { require_resource_permission(:rentals, :destroy) }, only: [:destroy]
   before_action :set_rental, only: [:show, :edit, :update, :destroy, :complete, :reactivate]
 
   def index
@@ -30,7 +30,9 @@ class RentalsController < ApplicationController
   end
 
   def show
-    @billing_periods = @rental.rental_billing_periods.order(:start_date)
+    @billing_periods = @rental.rental_billing_periods
+                           .includes(:financial_entry)
+                           .order(:start_date)
     @equipments = @rental.equipments.includes(:equipment_type)
   end
 
@@ -41,6 +43,17 @@ class RentalsController < ApplicationController
 
   def create
     @rental = Rental.new(rental_params)
+    
+    # Processar equipamentos selecionados
+    if params[:equipment_ids].present?
+      equipment_ids = params[:equipment_ids].reject(&:blank?)
+      @rental.equipment_ids = equipment_ids if equipment_ids.any?
+    end
+    
+    # Processar período de faturamento
+    if params[:billing_period].present? && billing_period_params[:name].present?
+      billing_period = @rental.rental_billing_periods.build(billing_period_params)
+    end
     
     if @rental.save
       redirect_to rentals_path, notice: 'Locação criada com sucesso!'
@@ -95,7 +108,7 @@ class RentalsController < ApplicationController
   end
 
   def overdue_alerts
-    overdue_rentals = Rental.with_overdue_periods.includes(:client, :last_billing_period)
+    overdue_rentals = Rental.with_overdue_periods.includes(:client, :rental_billing_periods)
     
     alerts = overdue_rentals.map do |rental|
       {
@@ -118,5 +131,9 @@ class RentalsController < ApplicationController
 
   def rental_params
     params.require(:rental).permit(:name, :client_id, :status, :remessa_note)
+  end
+
+  def billing_period_params
+    params.require(:billing_period).permit(:name, :amount, :start_date, :end_date)
   end
 end

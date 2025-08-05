@@ -26,6 +26,7 @@ class EquipmentValue < ApplicationRecord
   # Métodos
   def display_value
     return '' if value.blank?
+    return value.to_s unless equipment_feature
     equipment_feature.format_value(value)
   end
 
@@ -35,6 +36,7 @@ class EquipmentValue < ApplicationRecord
 
   def formatted_value
     return '' if value.blank?
+    return value.to_s unless equipment_feature
     
     case equipment_feature.data_type
     when 'boolean'
@@ -58,7 +60,8 @@ class EquipmentValue < ApplicationRecord
 
   def option_color
     return color if color.present?
-    return equipment_feature.color if equipment_feature.color.present?
+    return equipment_feature.color if equipment_feature&.color.present?
+    return '#6B7280' unless equipment_feature
     
     # Cor padrão baseada no tipo de dado
     case equipment_feature.data_type
@@ -73,19 +76,19 @@ class EquipmentValue < ApplicationRecord
   end
 
   def option_icon
-    return nil unless equipment_feature.data_type == 'select'
+    return nil unless equipment_feature&.data_type == 'select'
     
     option = equipment_feature.equipment_feature_options.find_by(value: value.to_s)
     option&.icon_class
   end
 
   def is_boolean_true?
-    return false unless equipment_feature.data_type == 'boolean'
+    return false unless equipment_feature&.data_type == 'boolean'
     %w[true 1 yes].include?(value.to_s.downcase)
   end
 
   def is_boolean_false?
-    return false unless equipment_feature.data_type == 'boolean'
+    return false unless equipment_feature&.data_type == 'boolean'
     %w[false 0 no].include?(value.to_s.downcase)
   end
 
@@ -107,6 +110,7 @@ class EquipmentValue < ApplicationRecord
 
   def validate_feature_value
     return if value.blank?
+    return unless equipment_feature
     
     unless equipment_feature.validate_value(value)
       errors.add(:value, "não é válido para o tipo de dado '#{equipment_feature.data_type_display}'")
@@ -115,6 +119,7 @@ class EquipmentValue < ApplicationRecord
 
   def set_default_color
     return if color.present?
+    return unless equipment_feature
     
     # Usar cor da opção se for select
     if equipment_feature.data_type == 'select' && value.present?

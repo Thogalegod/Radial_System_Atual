@@ -201,6 +201,7 @@ class Equipment < ApplicationRecord
   def self.search(query)
     where("serial_number ILIKE ? OR notes ILIKE ?", "%#{query}%", "%#{query}%")
       .or(joins(:equipment_type).where("equipment_types.name ILIKE ?", "%#{query}%"))
+      .or(where("location ILIKE ?", "%#{query}%"))
   end
 
   private

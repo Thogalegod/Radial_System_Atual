@@ -6,9 +6,13 @@
         <p class="subtitle">Locação: <%= @rental.display_name %></p>
       </div>
       <div class="header-actions">
+        <%= link_to rentals_path, class: "btn btn-secondary" do %>
+          <i class="fas fa-list"></i>
+          Voltar para Locações
+        <% end %>
         <%= link_to rental_path(@rental), class: "btn btn-secondary" do %>
           <i class="fas fa-arrow-left"></i>
-          Voltar para Locação
+          Voltar para Detalhes da Locação
         <% end %>
         <%= link_to new_rental_rental_billing_period_path(@rental), class: "btn btn-primary" do %>
           <i class="fas fa-plus"></i>
@@ -102,6 +106,60 @@
                 <% end %>
               </div>
               
+              <!-- Status do Pagamento -->
+              <div class="payment-status-section">
+                <h4>Status do Pagamento</h4>
+                <% if period.has_financial_entry? %>
+                  <% entry = period.financial_entry %>
+                  <div class="payment-status-details">
+                    <div class="payment-status-item">
+                      <label>Status:</label>
+                      <span class="payment-status-badge <%= entry.status %>">
+                        <%= entry.status_display %>
+                      </span>
+                    </div>
+                    
+                    <div class="payment-status-item">
+                      <label>Vencimento:</label>
+                      <span><%= entry.formatted_due_date %></span>
+                    </div>
+                    
+                    <% if entry.has_paid_date? %>
+                      <div class="payment-status-item">
+                        <label>Pagamento:</label>
+                        <span class="paid-date"><%= entry.formatted_paid_date %></span>
+                        <% if entry.was_paid_on_time? %>
+                          <span class="payment-timing on-time">
+                            <i class="fas fa-check-circle"></i>
+                            No prazo
+                          </span>
+                        <% else %>
+                          <span class="payment-timing <%= entry.days_to_pay > 0 ? 'late' : 'early' %>">
+                            <i class="fas fa-clock"></i>
+                            <%= pluralize(entry.days_to_pay.abs, 'dia') %> <%= entry.days_to_pay > 0 ? 'atrasado' : 'antecipado' %>
+                          </span>
+                        <% end %>
+                      </div>
+                    <% else %>
+                      <div class="payment-status-item">
+                        <label>Pagamento:</label>
+                        <span class="not-paid">Não pago</span>
+                        <% if entry.is_overdue? %>
+                          <span class="payment-timing overdue">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Vencido há <%= entry.days_overdue %> dias
+                          </span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% else %>
+                  <div class="no-payment-info">
+                    <span class="text-muted">Nenhum lançamento financeiro gerado</span>
+                  </div>
+                <% end %>
+              </div>
+              
               <div class="period-actions">
                 <%= link_to edit_rental_rental_billing_period_path(@rental, period), class: "btn btn-sm btn-outline-primary" do %>
                   <i class="fas fa-edit"></i>
@@ -111,8 +169,23 @@
                   <i class="fas fa-file-invoice"></i>
                   Gerar Recibo
                 <% end %>
+                <% if period.has_financial_entry? %>
+                  <%= link_to financial_entries_path(reference_type: 'RentalBillingPeriod', reference_id: period.id), class: "btn btn-sm btn-outline-success" do %>
+                    <i class="fas fa-money-bill"></i>
+                    Ver Lançamento
+                  <% end %>
+                <% else %>
+                  <%= button_to regenerate_financial_entry_rental_rental_billing_period_path(@rental, period),
+                      turbo_method: :post,
+                      data: { confirm: 'Gerar lançamento financeiro para este período?' },
+                      class: "btn btn-sm btn-outline-warning",
+                      form: { style: 'display: inline;' } do %>
+                    <i class="fas fa-plus"></i>
+                    Gerar Lançamento
+                  <% end %>
+                <% end %>
                 <%= button_to rental_rental_billing_period_path(@rental, period),
-                    method: :delete,
+                    turbo_method: :delete,
                     data: { confirm: 'Tem certeza que deseja excluir este período?' },
                     class: "btn btn-sm btn-outline-danger",
                     form: { style: 'display: inline;' } do %>
@@ -152,6 +225,18 @@
   gap: 20px;
 }
 
+.header-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.header-actions .btn {
+  min-width: fit-content;
+  flex-shrink: 0;
+}
+
 .header-left h1 {
   margin: 0 0 8px 0;
   font-size: 2rem;
@@ -167,14 +252,16 @@
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  border-radius: 8px;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 6px;
   text-decoration: none;
   font-weight: 600;
+  font-size: 0.875rem;
   transition: all 0.3s ease;
   border: none;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -420,7 +507,175 @@
 
 .period-actions {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: flex-end;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* Payment Status Styles */
+.payment-status-section {
+  margin: 16px 0;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.payment-status-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.payment-status-section h4::before {
+  content: "💰";
+  font-size: 1.2rem;
+}
+
+.payment-status-details {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payment-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.payment-status-item:last-child {
+  border-bottom: none;
+}
+
+.payment-status-item label {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.875rem;
+  min-width: 80px;
+}
+
+.payment-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.payment-status-badge.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.payment-status-badge.paid {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.payment-status-badge.overdue {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.payment-status-badge.cancelled {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.paid-date {
+  color: #059669;
+  font-weight: 600;
+}
+
+.not-paid {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.payment-timing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 8px;
+}
+
+.payment-timing.on-time {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.payment-timing.late {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.payment-timing.early {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.payment-timing.overdue {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.no-payment-info {
+  text-align: center;
+  padding: 12px;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+.period-actions .btn {
+  flex-shrink: 0;
+  min-width: fit-content;
+  font-size: 0.875rem;
+  padding: 8px 12px;
+}
+
+.period-actions .btn i {
+  font-size: 0.75rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  
+  .header-actions {
+    justify-content: center;
+    gap: 8px;
+  }
+  
+  .header-actions .btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .billing-periods-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
 }
 </style> 

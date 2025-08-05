@@ -5,7 +5,7 @@
       <h1>
         <% if @equipment_type %>
           <%= @equipment_type.name %>
-          <small style="font-size: 0.6em; opacity: 0.8;">(<%= @equipments.count %> equipamento<%= @equipments.count != 1 ? 's' : '' %>)</small>
+          <small style="font-size: 0.6em; opacity: 0.8;">(<%= @equipments.respond_to?(:count) ? @equipments.count : @equipments.length %> equipamento<%= (@equipments.respond_to?(:count) ? @equipments.count : @equipments.length) != 1 ? 's' : '' %>)</small>
         <% else %>
           Equipamentos
         <% end %>
@@ -103,7 +103,7 @@
   <div class="table-section">
     <div class="table-header">
       <div class="results-info">
-        <h3>Resultados (<%= @equipments.count %> equipamentos)</h3>
+        <h3>Resultados (<%= @equipments.respond_to?(:count) ? @equipments.count : @equipments.length %> equipamentos)</h3>
       </div>
       <div class="table-actions">
         <div class="sort-controls">

@@ -1,8 +1,8 @@
 class RentalEquipmentsController < ApplicationController
   before_action :require_login
-  before_action :require_resource_permission, :rental_equipments, :read, only: [:index]
-  before_action :require_resource_permission, :rental_equipments, :create, only: [:create]
-  before_action :require_resource_permission, :rental_equipments, :destroy, only: [:destroy]
+  before_action -> { require_resource_permission(:rental_equipments, :read) }, only: [:index]
+  before_action -> { require_resource_permission(:rental_equipments, :create) }, only: [:create]
+  before_action -> { require_resource_permission(:rental_equipments, :destroy) }, only: [:destroy]
   before_action :set_rental
   before_action :set_equipment, only: [:destroy]
 

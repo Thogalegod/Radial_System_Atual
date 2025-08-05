@@ -18,17 +18,18 @@ class User < ApplicationRecord
     manager: %w[
       users_read rentals_all equipments_all clients_all reports_all
       dashboard_read equipment_types_all equipment_features_all equipment_feature_options_all
-      rental_billing_periods_all rental_equipments_all
+      rental_billing_periods_all rental_equipments_all financial_entries_all
     ],
     operator: %w[
       rentals_read rentals_create equipments_read clients_read
       dashboard_read equipment_types_read equipment_features_read
       rental_billing_periods_read rental_equipments_create rental_equipments_destroy
+      financial_entries_read
     ],
     viewer: %w[
       rentals_read equipments_read clients_read
       dashboard_read equipment_types_read equipment_features_read
-      rental_billing_periods_read
+      rental_billing_periods_read financial_entries_read
     ]
   }.freeze
   
@@ -105,6 +106,10 @@ class User < ApplicationRecord
   
   def can_manage_rental_equipments?
     can?('rental_equipments_all') || admin?
+  end
+
+  def can_manage_financial_entries?
+    can?('financial_entries_all') || admin?
   end
   
   private

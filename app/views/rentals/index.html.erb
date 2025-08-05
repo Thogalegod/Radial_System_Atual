@@ -127,7 +127,7 @@
                   <% end %>
                   
                   <%= link_to rental_path(rental), 
-                      method: :delete, 
+                      turbo_method: :delete, 
                       data: { confirm: "Tem certeza que deseja remover esta locação?" },
                       class: "btn btn-sm btn-outline-danger",
                       title: "Remover" do %>

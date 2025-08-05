@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_07_30_000429) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_05_205335) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -181,18 +181,20 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_30_000429) do
   end
 
   create_table "financial_entries", force: :cascade do |t|
-    t.bigint "receipt_id", null: false
-    t.bigint "client_id", null: false
     t.string "description", null: false
     t.decimal "amount", precision: 10, scale: 2, null: false
     t.date "due_date", null: false
-    t.date "payment_date"
-    t.string "status", default: "pendente"
+    t.string "status", default: "pending", null: false
+    t.string "entry_type", null: false
+    t.string "reference_type"
+    t.integer "reference_id"
+    t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["client_id"], name: "index_financial_entries_on_client_id"
+    t.date "paid_date"
     t.index ["due_date"], name: "index_financial_entries_on_due_date"
-    t.index ["receipt_id"], name: "index_financial_entries_on_receipt_id"
+    t.index ["entry_type"], name: "index_financial_entries_on_entry_type"
+    t.index ["reference_type", "reference_id"], name: "index_financial_entries_on_reference_type_and_reference_id"
     t.index ["status"], name: "index_financial_entries_on_status"
   end
 
@@ -305,8 +307,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_07_30_000429) do
   add_foreign_key "equipment_values", "equipment_features"
   add_foreign_key "equipment_values", "equipments", column: "equipments_id"
   add_foreign_key "equipments", "equipment_types"
-  add_foreign_key "financial_entries", "clients"
-  add_foreign_key "financial_entries", "receipts"
   add_foreign_key "notifications", "users"
   add_foreign_key "receipts", "rental_periods"
   add_foreign_key "rental_billing_periods", "rentals"

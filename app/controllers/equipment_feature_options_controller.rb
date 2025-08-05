@@ -1,9 +1,9 @@
 class EquipmentFeatureOptionsController < ApplicationController
   before_action :require_login
-  before_action :require_resource_permission, :equipment_feature_options, :read, only: [:index, :show]
-  before_action :require_resource_permission, :equipment_feature_options, :create, only: [:new, :create]
-  before_action :require_resource_permission, :equipment_feature_options, :update, only: [:edit, :update]
-  before_action :require_resource_permission, :equipment_feature_options, :destroy, only: [:destroy]
+  before_action -> { require_resource_permission(:equipment_feature_options, :read) }, only: [:index, :show]
+  before_action -> { require_resource_permission(:equipment_feature_options, :create) }, only: [:new, :create]
+  before_action -> { require_resource_permission(:equipment_feature_options, :update) }, only: [:edit, :update]
+  before_action -> { require_resource_permission(:equipment_feature_options, :destroy) }, only: [:destroy]
   before_action :set_equipment_feature, only: [:index, :new, :create]
   before_action :set_equipment_feature_option, only: [:show, :edit, :update, :destroy]
 

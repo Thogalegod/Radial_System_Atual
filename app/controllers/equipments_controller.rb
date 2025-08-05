@@ -1,10 +1,10 @@
 class EquipmentsController < ApplicationController
   before_action :require_login
-  before_action :require_resource_permission, :equipments, :read, only: [:index, :show, :filter, :photos]
-  before_action :require_resource_permission, :equipments, :create, only: [:new, :create]
-  before_action :require_resource_permission, :equipments, :update, only: [:edit, :update]
-  before_action :require_resource_permission, :equipments, :destroy, only: [:destroy]
-  before_action :require_resource_permission, :equipments, :export, only: [:export_csv]
+  before_action -> { require_resource_permission(:equipments, :read) }, only: [:index, :show, :filter, :photos, :json]
+  before_action -> { require_resource_permission(:equipments, :create) }, only: [:new, :create]
+  before_action -> { require_resource_permission(:equipments, :update) }, only: [:edit, :update]
+  before_action -> { require_resource_permission(:equipments, :destroy) }, only: [:destroy]
+  before_action -> { require_resource_permission(:equipments, :export) }, only: [:export_csv]
   before_action :set_equipment, only: [:show, :edit, :update, :destroy]
   before_action :set_equipment_types, only: [:index, :new, :create, :edit, :update]
 
@@ -151,6 +151,55 @@ class EquipmentsController < ApplicationController
     }
   end
 
+  def json
+    equipments = Equipment.includes(:equipment_type)
+                         .em_estoque
+                         .order(:serial_number)
+    
+    render json: {
+      equipments: equipments.map do |equipment|
+        {
+          id: equipment.id,
+          display_name: equipment.display_name,
+          equipment_type_name: equipment.equipment_type.name,
+          status: equipment.status,
+          location: equipment.location,
+          serial_number: equipment.serial_number
+        }
+      end
+    }
+  end
+
+  def search_available
+    query = params[:query]&.strip
+    
+    # Só buscar se tiver pelo menos 2 caracteres
+    if query.blank? || query.length < 2
+      render json: { equipments: [], total_count: 0 }
+      return
+    end
+    
+    equipments = Equipment.includes(:equipment_type)
+                         .em_estoque
+                         .search(query)
+                         .order(:serial_number)
+                         .limit(50)
+    
+    render json: {
+      equipments: equipments.map do |equipment|
+        {
+          id: equipment.id,
+          display_name: equipment.display_name,
+          equipment_type_name: equipment.equipment_type.name,
+          status: equipment.status,
+          location: equipment.location,
+          serial_number: equipment.serial_number
+        }
+      end,
+      total_count: equipments.count
+    }
+  end
+
   private
 
   def set_equipment
@@ -163,7 +212,7 @@ class EquipmentsController < ApplicationController
 
   def equipment_params
     params.require(:equipment).permit(
-      :serial_number, :equipment_type_id, :status, :location, 
+      :serial_number, :equipment_type_id, :location, 
       :acquisition_date, :acquisition_price, :bandeira, :notes, :photos
     )
   end
@@ -171,12 +220,23 @@ class EquipmentsController < ApplicationController
   def save_feature_values
     return unless params[:feature_values]
     
-    params[:feature_values].each do |feature_id, value|
+    params[:feature_values].each do |feature_name, value|
       next if value.blank?
       
-      equipment_value = @equipment.equipment_values.find_or_initialize_by(equipment_feature_id: feature_id)
+      # Buscar a característica pelo nome
+      equipment_feature = @equipment.equipment_features.find_by(name: feature_name)
+      
+      if equipment_feature.nil?
+        Rails.logger.warn "Característica não encontrada: #{feature_name} para equipamento #{@equipment.id}"
+        next
+      end
+      
+      equipment_value = @equipment.equipment_values.find_or_initialize_by(equipment_feature_id: equipment_feature.id)
       equipment_value.value = value
-      equipment_value.save
+      
+      unless equipment_value.save
+        Rails.logger.error "Erro ao salvar valor da característica: #{equipment_value.errors.full_messages.join(', ')}"
+      end
     end
   end
 
@@ -188,9 +248,14 @@ class EquipmentsController < ApplicationController
       equipments = equipments.where(equipment_type_id: params[:equipment_type_id])
     end
     
-    # Filtro por status
+    # Filtro por status (calculado dinamicamente)
     if params[:status].present?
-      equipments = equipments.where(status: params[:status])
+      case params[:status]
+      when 'em_estoque'
+        equipments = equipments.em_estoque
+      when 'alugado'
+        equipments = equipments.alugado
+      end
     end
     
     # Filtro por localização
@@ -236,7 +301,11 @@ class EquipmentsController < ApplicationController
     when 'equipment_type'
       equipments = equipments.joins(:equipment_type).order("equipment_types.name #{sort_direction}")
     when 'status'
-      equipments = equipments.order("status #{sort_direction}")
+      # Ordenação por status precisa ser feita em memória
+      equipments = equipments.to_a.sort_by { |e| e.status }
+      equipments = equipments.reverse if sort_direction == 'desc'
+      # Retornar array diretamente para ordenação por status
+      return equipments
     when 'location'
       equipments = equipments.order("location #{sort_direction}")
     when 'acquisition_date'

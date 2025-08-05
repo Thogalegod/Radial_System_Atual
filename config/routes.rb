@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get 'financial_dashboard', to: 'financial_dashboard#index'
   # Rota de teste
   get 'test', to: 'test#index'
   
@@ -17,6 +18,7 @@ Rails.application.routes.draw do
       member do
         get :receipt
         get :receipt_pdf
+        post :regenerate_financial_entry
       end
     end
   end
@@ -44,6 +46,8 @@ Rails.application.routes.draw do
       get :filter
       get :export_csv
       get :select_type
+      get :json
+      get :search_available
     end
     member do
       get :photos, defaults: { format: :json }
@@ -59,6 +63,13 @@ Rails.application.routes.draw do
 
   # Rotas para usuários
   resources :users
+
+  # Rotas para financeiro
+  resources :financial_entries do
+    member do
+      patch :update_status
+    end
+  end
 
   # Rotas de autenticação
   root 'sessions#new'

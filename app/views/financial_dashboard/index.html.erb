@@ -1,0 +1,786 @@
+<div class="financial-dashboard">
+  <!-- Header com Seletor de Mês -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">
+        <i class="fas fa-chart-line"></i>
+        Dashboard Financeiro
+      </h1>
+      <div class="month-selector">
+        <%= link_to "< #{@selected_month.prev_month.strftime('%B/%Y')}", 
+            financial_dashboard_index_path(month: @selected_month.prev_month.strftime('%Y-%m')), 
+            class: "month-nav" %>
+        <span class="current-month"><%= @selected_month.strftime('%B/%Y') %></span>
+        <%= link_to "#{@selected_month.next_month.strftime('%B/%Y')} >", 
+            financial_dashboard_index_path(month: @selected_month.next_month.strftime('%Y-%m')), 
+            class: "month-nav" %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alertas e Notificações -->
+  <% if @alerts.any? %>
+    <div class="alerts-section">
+      <% @alerts.each do |alert| %>
+        <div class="alert alert-<%= alert[:type] %> alert-dismissible">
+          <div class="alert-content">
+            <div class="alert-icon">
+              <i class="fas fa-<%= alert[:type] == 'warning' ? 'exclamation-triangle' : 'exclamation-circle' %>"></i>
+            </div>
+            <div class="alert-body">
+              <h4><%= alert[:title] %></h4>
+              <p><%= alert[:message] %></p>
+              <% if alert[:amount] %>
+                <span class="alert-amount"><%= number_to_currency(alert[:amount]) %></span>
+              <% end %>
+            </div>
+            <div class="alert-actions">
+              <%= link_to "Ver Detalhes", alert[:link], class: "btn btn-sm btn-outline-#{alert[:type]}" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- KPIs Principais -->
+  <div class="kpis-grid">
+    <div class="kpi-card primary">
+      <div class="kpi-icon">
+        <i class="fas fa-arrow-up"></i>
+      </div>
+      <div class="kpi-content">
+        <h3 class="kpi-value"><%= number_to_currency(@kpis[:total_receivables]) %></h3>
+        <p class="kpi-label">Recebimentos Totais</p>
+        <div class="kpi-progress">
+          <div class="progress-bar" style="width: <%= @kpis[:collection_rate] %>%"></div>
+        </div>
+        <small class="kpi-subtitle"><%= @kpis[:collection_rate].round(1) %>% recebido</small>
+      </div>
+    </div>
+
+    <div class="kpi-card secondary">
+      <div class="kpi-icon">
+        <i class="fas fa-arrow-down"></i>
+      </div>
+      <div class="kpi-content">
+        <h3 class="kpi-value"><%= number_to_currency(@kpis[:total_payables]) %></h3>
+        <p class="kpi-label">Despesas Totais</p>
+        <div class="kpi-progress">
+          <div class="progress-bar" style="width: <%= (@kpis[:paid_payables] / @kpis[:total_payables] * 100).round(1) %>%"></div>
+        </div>
+        <small class="kpi-subtitle"><%= (@kpis[:paid_payables] / @kpis[:total_payables] * 100).round(1) %>% pago</small>
+      </div>
+    </div>
+
+    <div class="kpi-card success">
+      <div class="kpi-icon">
+        <i class="fas fa-cash-register"></i>
+      </div>
+      <div class="kpi-content">
+        <h3 class="kpi-value"><%= number_to_currency(@kpis[:net_cash_flow]) %></h3>
+        <p class="kpi-label">Fluxo de Caixa Líquido</p>
+        <div class="kpi-trend <%= @kpis[:net_cash_flow] >= 0 ? 'positive' : 'negative' %>">
+          <i class="fas fa-<%= @kpis[:net_cash_flow] >= 0 ? 'arrow-up' : 'arrow-down' %>"></i>
+          <span><%= @kpis[:net_cash_flow] >= 0 ? 'Positivo' : 'Negativo' %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="kpi-card warning">
+      <div class="kpi-icon">
+        <i class="fas fa-clock"></i>
+      </div>
+      <div class="kpi-content">
+        <h3 class="kpi-value"><%= @kpis[:days_sales_outstanding] %></h3>
+        <p class="kpi-label">Dias de Vendas Pendentes</p>
+        <div class="kpi-status">
+          <span class="status-badge <%= @kpis[:days_sales_outstanding] <= 30 ? 'success' : 'warning' %>">
+            <%= @kpis[:days_sales_outstanding] <= 30 ? 'Bom' : 'Atenção' %>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos e Análises -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Fluxo de Caixa Diário</h3>
+        <div class="chart-legend">
+          <span class="legend-item">
+            <span class="legend-color receivables"></span>
+            Recebimentos
+          </span>
+          <span class="legend-item">
+            <span class="legend-color payables"></span>
+            Despesas
+          </span>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="cashFlowChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Status dos Lançamentos</h3>
+      </div>
+      <div class="chart-container">
+        <canvas id="statusChart" width="400" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabelas de Dados -->
+  <div class="data-grid">
+    <div class="data-card">
+      <div class="card-header">
+        <h3>Top Clientes</h3>
+        <%= link_to "Ver Todos", clients_path, class: "btn btn-sm btn-outline" %>
+      </div>
+      <div class="data-table">
+        <% if @top_clients.any? %>
+          <% @top_clients.each_with_index do |(client, amount), index| %>
+            <div class="table-row">
+              <div class="row-number"><%= index + 1 %></div>
+              <div class="client-info">
+                <h4><%= client.name %></h4>
+                <small><%= client.email %></small>
+              </div>
+              <div class="amount-info">
+                <span class="amount"><%= number_to_currency(amount) %></span>
+                <small class="percentage"><%= ((amount / @kpis[:total_receivables]) * 100).round(1) %>%</small>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <p>Nenhum cliente com recebimentos este mês</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="data-card">
+      <div class="card-header">
+        <h3>Lançamentos Vencidos</h3>
+        <%= link_to "Ver Todos", financial_entries_path(overdue: true), class: "btn btn-sm btn-outline" %>
+      </div>
+      <div class="data-table">
+        <% if @overdue_entries.any? %>
+          <% @overdue_entries.each do |entry| %>
+            <div class="table-row overdue">
+              <div class="entry-info">
+                <h4><%= entry.description.truncate(30) %></h4>
+                <small><%= entry.formatted_due_date %></small>
+              </div>
+              <div class="amount-info">
+                <span class="amount"><%= number_to_currency(entry.amount) %></span>
+                <small class="days-overdue"><%= entry.days_overdue %> dias vencido</small>
+              </div>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>Nenhum lançamento vencido</p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projeções -->
+  <div class="projections-section">
+    <div class="projection-card">
+      <div class="projection-header">
+        <h3>Projeções Financeiras</h3>
+        <div class="confidence-level">
+          <span class="confidence-badge <%= @projections[:confidence_level] %>">
+            <%= @projections[:confidence_level].titleize %> Confiança
+          </span>
+        </div>
+      </div>
+      <div class="projection-content">
+        <div class="projection-item">
+          <label>Próximo Mês (Projeção)</label>
+          <span class="projection-value"><%= number_to_currency(@projections[:next_month_projection]) %></span>
+        </div>
+        <div class="projection-item">
+          <label>Tendência</label>
+          <span class="trend-badge <%= @projections[:trend] %>">
+            <i class="fas fa-<%= @projections[:trend] == 'increasing' ? 'arrow-up' : @projections[:trend] == 'decreasing' ? 'arrow-down' : 'minus' %>"></i>
+            <%= @projections[:trend].titleize %>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.financial-dashboard {
+  padding: 24px;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.month-nav {
+  color: #6b7280;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.month-nav:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.current-month {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+/* Alertas */
+.alerts-section {
+  margin-bottom: 24px;
+}
+
+.alert {
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid;
+}
+
+.alert-warning {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.alert-danger {
+  background: #fee2e2;
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.alert-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.alert-icon {
+  font-size: 20px;
+}
+
+.alert-body h4 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.alert-body p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.alert-amount {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* KPIs */
+.kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid;
+}
+
+.kpi-card.primary {
+  border-left-color: #3b82f6;
+}
+
+.kpi-card.secondary {
+  border-left-color: #ef4444;
+}
+
+.kpi-card.success {
+  border-left-color: #10b981;
+}
+
+.kpi-card.warning {
+  border-left-color: #f59e0b;
+}
+
+.kpi-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.kpi-label {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+.kpi-progress {
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+  transition: width 0.3s ease;
+}
+
+.kpi-subtitle {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.kpi-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kpi-trend.positive {
+  color: #10b981;
+}
+
+.kpi-trend.negative {
+  color: #ef4444;
+}
+
+/* Gráficos */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.chart-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.legend-color.receivables {
+  background: #3b82f6;
+}
+
+.legend-color.payables {
+  background: #ef4444;
+}
+
+.chart-container {
+  height: 300px;
+  position: relative;
+}
+
+/* Tabelas de Dados */
+.data-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.data-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.data-table {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.table-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.table-row:hover {
+  background: #f3f4f6;
+}
+
+.table-row.overdue {
+  background: #fef2f2;
+  border-left: 3px solid #ef4444;
+}
+
+.row-number {
+  width: 24px;
+  height: 24px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.client-info h4 {
+  margin: 0 0 2px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.client-info small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.amount-info {
+  margin-left: auto;
+  text-align: right;
+}
+
+.amount {
+  display: block;
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.percentage, .days-overdue {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.days-overdue {
+  color: #ef4444;
+}
+
+/* Estados Vazios */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #9ca3af;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Projeções */
+.projections-section {
+  margin-bottom: 24px;
+}
+
+.projection-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.projection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.projection-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.confidence-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.confidence-badge.high {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.confidence-badge.medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.confidence-badge.low {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.projection-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.projection-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.projection-item label {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.projection-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.trend-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.trend-badge.increasing {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.trend-badge.decreasing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.trend-badge.stable {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .financial-dashboard {
+    padding: 16px;
+  }
+  
+  .header-content {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .kpis-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .data-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .projection-content {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Gráfico de Fluxo de Caixa
+  const cashFlowCtx = document.getElementById('cashFlowChart').getContext('2d');
+  new Chart(cashFlowCtx, {
+    type: 'line',
+    data: {
+      labels: <%= raw @chart_data[:daily_cash_flow].keys.map { |date| date.strftime('%d/%m') } %>,
+      datasets: [{
+        label: 'Recebimentos',
+        data: <%= raw @chart_data[:daily_cash_flow].values %>,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return 'R$ ' + value.toLocaleString('pt-BR');
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Gráfico de Status
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Pago', 'Pendente', 'Vencido'],
+      datasets: [{
+        data: [
+          <%= @chart_data[:receivables_by_status]['paid'] || 0 %>,
+          <%= @chart_data[:receivables_by_status]['pending'] || 0 %>,
+          <%= @chart_data[:receivables_by_status]['overdue'] || 0 %>
+        ],
+        backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+});
+</script>

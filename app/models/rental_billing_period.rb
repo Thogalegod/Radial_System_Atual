@@ -1,5 +1,6 @@
 class RentalBillingPeriod < ApplicationRecord
   belongs_to :rental
+  has_one :financial_entry, as: :reference, dependent: :destroy
 
   # Validações
   validates :name, presence: true, length: { minimum: 2, maximum: 100 }
@@ -120,6 +121,48 @@ class RentalBillingPeriod < ApplicationRecord
     end
   end
 
+  # Métodos de integração financeira
+  def create_financial_entry
+    return if financial_entry.present?
+    
+    FinancialEntry.create!(
+      description: "Período de Faturamento: #{name} - #{rental.display_name}",
+      amount: amount,
+      due_date: end_date,
+      status: 'pending',
+      entry_type: 'receivable',
+      reference: self,
+      notes: "Gerado automaticamente do período de faturamento #{id}"
+    )
+  end
+
+  def regenerate_financial_entry
+    if financial_entry.present?
+      # Atualizar o lançamento existente em vez de recriar
+      financial_entry.update!(
+        description: "Período de Faturamento: #{name} - #{rental.display_name}",
+        amount: amount,
+        due_date: end_date
+      )
+    else
+      create_financial_entry
+    end
+  end
+
+  def has_financial_entry?
+    financial_entry.present?
+  end
+
+  def financial_entry_status
+    return 'N/A' unless has_financial_entry?
+    financial_entry.status_display
+  end
+
+  def financial_entry_status_color
+    return '#6B7280' unless has_financial_entry?
+    financial_entry.status_color
+  end
+
   # Métodos de busca
   def self.search(query)
     where("name ILIKE ? OR client_order ILIKE ? OR observations ILIKE ?", 
@@ -140,7 +183,22 @@ class RentalBillingPeriod < ApplicationRecord
     total_days.zero? ? 0 : total_amount / total_days
   end
 
+  # Callbacks
+  after_create :create_financial_entry_automatically
+  after_update :update_financial_entry_description
+
   private
+
+  def create_financial_entry_automatically
+    create_financial_entry
+  end
+
+  def update_financial_entry_description
+    return unless financial_entry.present?
+    
+    # Atualizar apenas a descrição quando o período for editado
+    financial_entry.update_column(:description, "Período de Faturamento: #{name} - #{rental.display_name}")
+  end
 
   def end_date_after_start_date
     return if start_date.blank? || end_date.blank?

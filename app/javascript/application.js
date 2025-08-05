@@ -2,10 +2,6 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 
-// Rails UJS para suporte a method: :delete
-import Rails from "@rails/ujs"
-Rails.start()
-
 // Configuração para confirmações de exclusão
 document.addEventListener('DOMContentLoaded', function() {
   // Interceptar cliques em links com data-confirm
@@ -20,4 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   })
-}) 
+})
+
+import "chartkick"
+import "Chart.bundle"
