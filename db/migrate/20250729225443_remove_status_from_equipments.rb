@@ -1,5 +1,13 @@
 class RemoveStatusFromEquipments < ActiveRecord::Migration[8.0]
-  def change
-    remove_column :equipments, :status, :string
+  def up
+    if table_exists?(:equipments)
+      remove_column :equipments, :status
+    end
+  end
+
+  def down
+    if table_exists?(:equipments)
+      add_column :equipments, :status, :string
+    end
   end
 end

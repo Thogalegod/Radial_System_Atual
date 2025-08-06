@@ -49,6 +49,6 @@ gem 'bcrypt', '~> 3.1.7'
 
 gem "wicked_pdf", "~> 2.8"
 
-gem "chartkick"
+
 gem "groupdate"
 gem "heroicons"

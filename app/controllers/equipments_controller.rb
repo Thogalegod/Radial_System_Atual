@@ -1,6 +1,6 @@
 class EquipmentsController < ApplicationController
   before_action :require_login
-  before_action -> { require_resource_permission(:equipments, :read) }, only: [:index, :show, :filter, :photos, :json]
+  before_action -> { require_resource_permission(:equipments, :read) }, only: [:index, :show, :filter, :photos, :json, :search_available]
   before_action -> { require_resource_permission(:equipments, :create) }, only: [:new, :create]
   before_action -> { require_resource_permission(:equipments, :update) }, only: [:edit, :update]
   before_action -> { require_resource_permission(:equipments, :destroy) }, only: [:destroy]
@@ -171,33 +171,44 @@ class EquipmentsController < ApplicationController
   end
 
   def search_available
-    query = params[:query]&.strip
-    
-    # Só buscar se tiver pelo menos 2 caracteres
-    if query.blank? || query.length < 2
-      render json: { equipments: [], total_count: 0 }
-      return
+    begin
+      query = params[:query]&.strip
+      
+      Rails.logger.info "Search available called with query: #{query}"
+      
+      # Só buscar se tiver pelo menos 2 caracteres
+      if query.blank? || query.length < 2
+        Rails.logger.info "Query too short, returning empty results"
+        render json: { equipments: [], total_count: 0 }
+        return
+      end
+      
+      equipments = Equipment.includes(:equipment_type)
+                           .em_estoque
+                           .search(query)
+                           .order(:serial_number)
+                           .limit(50)
+      
+      Rails.logger.info "Found #{equipments.count} equipments for query: #{query}"
+      
+      render json: {
+        equipments: equipments.map do |equipment|
+          {
+            id: equipment.id,
+            display_name: equipment.display_name,
+            equipment_type_name: equipment.equipment_type.name,
+            status: equipment.status,
+            location: equipment.location,
+            serial_number: equipment.serial_number
+          }
+        end,
+        total_count: equipments.count
+      }
+    rescue => e
+      Rails.logger.error "Error in search_available: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      render json: { error: "Erro interno do servidor" }, status: :internal_server_error
     end
-    
-    equipments = Equipment.includes(:equipment_type)
-                         .em_estoque
-                         .search(query)
-                         .order(:serial_number)
-                         .limit(50)
-    
-    render json: {
-      equipments: equipments.map do |equipment|
-        {
-          id: equipment.id,
-          display_name: equipment.display_name,
-          equipment_type_name: equipment.equipment_type.name,
-          status: equipment.status,
-          location: equipment.location,
-          serial_number: equipment.serial_number
-        }
-      end,
-      total_count: equipments.count
-    }
   end
 
   private

@@ -31,6 +31,8 @@
         }
         return true;
       }
+
+
     </script>
     
     <!-- Font Awesome para ícones -->
@@ -636,7 +638,7 @@
           <% if logged_in? %>
             <div style="margin-top: 20px; padding: 0 20px;">
               <hr style="border-color: #e5e7eb; margin: 16px 0;">
-              <%= form_with url: logout_path, method: :delete, local: true, style: "margin: 0;" do |form| %>
+              <%= form_with url: logout_path, method: :delete, local: true, style: "margin: 0;", data: { confirm: 'Tem certeza que deseja sair do sistema?' }, html: { onsubmit: "return confirm('Tem certeza que deseja sair do sistema?')" } do |form| %>
                 <%= form.submit "🚪 Sair", class: "nav-item", style: "color: #ef4444; background: none; border: none; width: 100%; text-align: left; cursor: pointer; padding: 12px 0; display: flex; align-items: center; gap: 12px;" %>
               <% end %>
             </div>

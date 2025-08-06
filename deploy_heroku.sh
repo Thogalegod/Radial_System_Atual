@@ -32,7 +32,12 @@ heroku config:set RAILS_SERVE_STATIC_FILES=true
 heroku config:set RAILS_LOG_TO_STDOUT=true
 
 # Adicionar banco PostgreSQL
+echo "🗄️ Adicionando banco PostgreSQL..."
 heroku addons:create heroku-postgresql:mini
+
+# Aguardar um pouco para o banco ser criado
+echo "⏳ Aguardando criação do banco de dados..."
+sleep 10
 
 # Fazer commit das mudanças se necessário
 if ! git diff --quiet; then
@@ -45,13 +50,35 @@ fi
 echo "🚀 Fazendo push para o Heroku..."
 git push heroku main
 
-# Executar migrações
+# Verificar se o app está funcionando
+echo "🔍 Verificando status do app..."
+heroku ps
+
+# Executar migrações com verificação
 echo "🗄️ Executando migrações do banco de dados..."
-heroku run rails db:migrate
+if heroku run rails db:migrate; then
+    echo "✅ Migrações executadas com sucesso!"
+else
+    echo "❌ Erro nas migrações. Verificando logs..."
+    heroku logs --tail
+    echo "🔄 Tentando reset do banco..."
+    heroku run rails db:reset
+fi
+
+# Verificar se as migrações foram aplicadas
+echo "🔍 Verificando status das migrações..."
+heroku run rails db:migrate:status
 
 # Abrir o app
 echo "🌐 Abrindo o app..."
 heroku open
 
 echo "✅ Deploy concluído! Seu app está disponível em:"
-heroku info -s | grep web_url | cut -d= -f2 
+heroku info -s | grep web_url | cut -d= -f2
+
+echo ""
+echo "📋 Comandos úteis:"
+echo "   heroku logs --tail          # Ver logs em tempo real"
+echo "   heroku run rails console    # Abrir console Rails"
+echo "   heroku run rails db:migrate # Executar migrações"
+echo "   heroku restart              # Reiniciar app" 

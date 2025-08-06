@@ -31,6 +31,7 @@ class Rental < ApplicationRecord
   }
 
   # Callbacks
+  before_create :set_default_status
   after_update :update_financial_entries_description
 
   def display_name
@@ -289,5 +290,11 @@ class Rental < ApplicationRecord
     unless name.match?(/^[A-Za-z0-9\s\-_]+$/)
       errors.add(:name, 'deve conter apenas letras, números, espaços, hífens e underscores')
     end
+  end
+
+  private
+
+  def set_default_status
+    self.status = 'ativo' if status.blank?
   end
 end

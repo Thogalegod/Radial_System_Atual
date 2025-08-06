@@ -98,26 +98,7 @@
     </div>
   </div>
 
-  <!-- Gráfico de Fluxo de Caixa -->
-  <% if @cash_flow_data.any? %>
-    <div class="chart-container">
-      <div class="chart-header">
-        <h3><i class="fas fa-chart-area"></i> Fluxo de Caixa Mensal</h3>
-      </div>
-      <div class="chart-content">
-        <%= line_chart @cash_flow_data, 
-            colors: ["#28a745", "#dc3545"], 
-            library: { 
-              plugins: { legend: { labels: { color: '#495057' } } },
-              scales: { 
-                y: { ticks: { color: '#495057' } }, 
-                x: { ticks: { color: '#495057' } } 
-              } 
-            } 
-        %>
-      </div>
-    </div>
-  <% end %>
+
 
   <!-- Tabela de Transações -->
   <div class="table-container">
@@ -148,11 +129,12 @@
                     <i class="fas fa-eye"></i>
                   <% end %>
                   
-                  <%= link_to financial_entry_path(entry), 
-                      turbo_method: :delete, 
+                  <%= button_to financial_entry_path(entry), 
+                      method: :delete, 
                       data: { confirm: "Tem certeza que deseja remover esta transação?" },
                       class: "btn btn-sm btn-outline-danger",
-                      title: "Remover" do %>
+                      title: "Remover",
+                      form: { style: 'display: inline;', onsubmit: "return confirm('Tem certeza que deseja remover esta transação?')" } do %>
                     <i class="fas fa-trash"></i>
                   <% end %>
                 </div>
@@ -454,32 +436,7 @@
   text-align: center;
 }
 
-.chart-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-  overflow: hidden;
-}
 
-.chart-header {
-  padding: 20px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.chart-header h3 {
-  margin: 0;
-  color: #495057;
-}
-
-.chart-header i {
-  margin-right: 10px;
-  color: #007bff;
-}
-
-.chart-content {
-  padding: 20px;
-}
 
 .table-container {
   background: white;

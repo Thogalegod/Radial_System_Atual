@@ -3,12 +3,6 @@
 <p>Bem-vindo, <strong><%= @user.name %></strong>!</p>
 <p>Email: <%= @user.email %></p>
 
-<%= form_with url: logout_path, method: :delete, local: true, html: { onsubmit: "return confirmLogout()" } do %>
+<%= form_with url: logout_path, method: :delete, local: true, data: { confirm: 'Tem certeza que deseja sair do sistema?' }, html: { onsubmit: "return confirm('Tem certeza que deseja sair do sistema?')" } do %>
   <%= submit_tag 'Sair', class: 'btn btn-danger' %>
 <% end %>
-
-<script>
-function confirmLogout() {
-  return confirm('Tem certeza que deseja sair do sistema?');
-}
-</script>

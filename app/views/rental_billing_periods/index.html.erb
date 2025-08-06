@@ -185,10 +185,10 @@
                   <% end %>
                 <% end %>
                 <%= button_to rental_rental_billing_period_path(@rental, period),
-                    turbo_method: :delete,
+                    method: :delete,
                     data: { confirm: 'Tem certeza que deseja excluir este período?' },
                     class: "btn btn-sm btn-outline-danger",
-                    form: { style: 'display: inline;' } do %>
+                    form: { style: 'display: inline;', onsubmit: "return confirm('Tem certeza que deseja excluir este período?')" } do %>
                   <i class="fas fa-trash"></i>
                   Excluir
                 <% end %>

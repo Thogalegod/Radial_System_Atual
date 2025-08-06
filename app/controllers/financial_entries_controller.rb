@@ -26,12 +26,6 @@ class FinancialEntriesController < ApplicationController
     # Resultado Previsto
     @expected_result = @receivables_total - @payables_total
 
-    # Dados para o Gráfico de Fluxo de Caixa
-    @cash_flow_data = [
-      { name: 'Receitas', data: monthly_entries.receivable.group_by_day(:due_date).sum(:amount) },
-      { name: 'Despesas', data: monthly_entries.payable.group_by_day(:due_date).sum(:amount) }
-    ]
-
     # ---- Lógica da Tabela de Transações ----
     if params[:reference_id].present? && params[:reference_type].present?
       # Se há parâmetros de referência, mostrar todos os lançamentos dessa referência

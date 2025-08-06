@@ -199,9 +199,9 @@ class Equipment < ApplicationRecord
 
   # Métodos de busca
   def self.search(query)
-    where("serial_number ILIKE ? OR notes ILIKE ?", "%#{query}%", "%#{query}%")
-      .or(joins(:equipment_type).where("equipment_types.name ILIKE ?", "%#{query}%"))
-      .or(where("location ILIKE ?", "%#{query}%"))
+    # Busca simples por número de série, notas e localização
+    where("serial_number ILIKE ? OR notes ILIKE ? OR location ILIKE ?", 
+          "%#{query}%", "%#{query}%", "%#{query}%")
   end
 
   private

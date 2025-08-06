@@ -8,11 +8,11 @@
       </h1>
       <div class="month-selector">
         <%= link_to "< #{@selected_month.prev_month.strftime('%B/%Y')}", 
-            financial_dashboard_index_path(month: @selected_month.prev_month.strftime('%Y-%m')), 
+            financial_dashboard_path(month: @selected_month.prev_month.strftime('%Y-%m')), 
             class: "month-nav" %>
         <span class="current-month"><%= @selected_month.strftime('%B/%Y') %></span>
         <%= link_to "#{@selected_month.next_month.strftime('%B/%Y')} >", 
-            financial_dashboard_index_path(month: @selected_month.next_month.strftime('%Y-%m')), 
+            financial_dashboard_path(month: @selected_month.next_month.strftime('%Y-%m')), 
             class: "month-nav" %>
       </div>
     </div>

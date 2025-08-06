@@ -51,7 +51,7 @@
                 <button class="btn btn-secondary btn-icon" onclick="openEditModal('<%= client.id %>')" title="Editar">
                   ✏️
                 </button>
-                <%= form_with url: client_path(client), method: :delete, local: true, style: "display: inline;", html: { onsubmit: "return confirmDelete('#{client.name}')" } do |form| %>
+                <%= form_with url: client_path(client), method: :delete, local: true, style: "display: inline;", data: { confirm: "Tem certeza que deseja excluir o cliente '#{client.name}'?" }, html: { onsubmit: "return confirm('Tem certeza que deseja excluir o cliente \"#{client.name}\"?')" } do |form| %>
                   <%= form.submit '🗑️', class: 'btn btn-danger btn-icon', title: 'Excluir' %>
                 <% end %>
               </div>

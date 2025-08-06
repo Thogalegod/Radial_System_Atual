@@ -126,11 +126,12 @@
                     <i class="fas fa-eye"></i>
                   <% end %>
                   
-                  <%= link_to rental_path(rental), 
-                      turbo_method: :delete, 
+                  <%= button_to rental_path(rental), 
+                      method: :delete, 
                       data: { confirm: "Tem certeza que deseja remover esta locação?" },
                       class: "btn btn-sm btn-outline-danger",
-                      title: "Remover" do %>
+                      title: "Remover",
+                      form: { style: 'display: inline;', onsubmit: "return confirm('Tem certeza que deseja remover esta locação?')" } do %>
                     <i class="fas fa-trash"></i>
                   <% end %>
                 </div>

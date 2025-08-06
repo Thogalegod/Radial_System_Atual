@@ -68,6 +68,18 @@
             Número da nota de remessa (opcional)
           </small>
         </div>
+
+        <div class="form-group">
+          <%= form.label :status, "Status", class: "form-label" %>
+          <%= form.select :status, 
+              [['Ativo', 'ativo'], ['Concluído', 'concluido']], 
+              { selected: 'ativo' }, 
+              { class: "form-select", required: true } %>
+          <small class="form-help">
+            <i class="fas fa-info-circle"></i>
+            Status inicial da locação
+          </small>
+        </div>
       </div>
 
       <!-- Seção 2: Equipamentos -->

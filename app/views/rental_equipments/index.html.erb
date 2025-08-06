@@ -38,13 +38,12 @@
               
               <div class="equipment-actions">
                 <%= button_to rental_rental_equipment_path(@rental, rental_equipment.equipment), 
-                    turbo_method: :delete, 
+                    method: :delete, 
                     data: { 
                       confirm: 'Tem certeza que deseja remover este equipamento da locação?'
                     },
                     class: "btn btn-sm btn-danger",
-                    form: { style: 'display: inline;' },
-                    onclick: "return confirmDelete(event, 'Tem certeza que deseja remover este equipamento da locação?')" do %>
+                    form: { style: 'display: inline;', onsubmit: "return confirm('Tem certeza que deseja remover este equipamento da locação?')" } do %>
                   <i class="fas fa-times"></i> Remover
                 <% end %>
               </div>
@@ -89,7 +88,7 @@
               
               <div class="equipment-actions">
                 <%= button_to rental_rental_equipments_path(@rental), 
-                    turbo_method: :post,
+                    method: :post,
                     params: { equipment_id: equipment.id },
                     class: "btn btn-sm btn-primary",
                     form: { style: 'display: inline;' } do %>
