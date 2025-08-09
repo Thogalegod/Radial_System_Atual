@@ -126,7 +126,7 @@ class RentalBillingPeriod < ApplicationRecord
     return if financial_entry.present?
     
     FinancialEntry.create!(
-      description: "Período de Faturamento: #{name} - #{rental.display_name}",
+      description: rental.generate_debit_note_number(self),
       amount: amount,
       due_date: end_date,
       status: 'pending',
@@ -140,7 +140,7 @@ class RentalBillingPeriod < ApplicationRecord
     if financial_entry.present?
       # Atualizar o lançamento existente em vez de recriar
       financial_entry.update!(
-        description: "Período de Faturamento: #{name} - #{rental.display_name}",
+        description: rental.generate_debit_note_number(self),
         amount: amount,
         due_date: end_date
       )
@@ -196,8 +196,8 @@ class RentalBillingPeriod < ApplicationRecord
   def update_financial_entry_description
     return unless financial_entry.present?
     
-    # Atualizar apenas a descrição quando o período for editado
-    financial_entry.update_column(:description, "Período de Faturamento: #{name} - #{rental.display_name}")
+    # Atualizar a descrição para refletir o número da Nota de Débito
+    financial_entry.update_column(:description, rental.generate_debit_note_number(self))
   end
 
   def end_date_after_start_date

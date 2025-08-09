@@ -12,6 +12,16 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div class="space-y-4">
           <div>
+            <label class="block text-sm font-medium text-gray-500">Cliente</label>
+            <p class="mt-1 text-lg text-gray-900">
+              <% if @financial_entry.client %>
+                <%= link_to @financial_entry.client.display_name, client_path(@financial_entry.client), class: "text-blue-600 hover:text-blue-800" %>
+              <% else %>
+                N/A
+              <% end %>
+            </p>
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-500">Descrição</label>
             <p class="mt-1 text-lg text-gray-900"><%= @financial_entry.description %></p>
           </div>
@@ -79,12 +89,12 @@
               <% if @financial_entry.reference %>
                 <% begin %>
                   <% if @financial_entry.reference.is_a?(RentalBillingPeriod) %>
-                    <%= link_to @financial_entry.reference.class.name, rental_rental_billing_period_path(@financial_entry.reference.rental, @financial_entry.reference), class: "text-blue-600 hover:text-blue-800" %>
+                    <%= link_to 'Período de Locação', rental_rental_billing_period_path(@financial_entry.reference.rental, @financial_entry.reference), class: "text-blue-600 hover:text-blue-800" %>
                   <% else %>
-                    <%= link_to @financial_entry.reference.class.name, polymorphic_path(@financial_entry.reference), class: "text-blue-600 hover:text-blue-800" %>
+                    <%= link_to (@financial_entry.reference.model_name.human rescue @financial_entry.reference.class.name), polymorphic_path(@financial_entry.reference), class: "text-blue-600 hover:text-blue-800" %>
                   <% end %>
                 <% rescue NoMethodError, ActionController::UrlGenerationError %>
-                  <span class="text-gray-600"><%= @financial_entry.reference.class.name %></span>
+                  <span class="text-gray-600"><%= (@financial_entry.reference.model_name.human rescue @financial_entry.reference.class.name) %></span>
                 <% end %>
               <% else %>
                 N/A

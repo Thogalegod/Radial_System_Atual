@@ -24,7 +24,8 @@ module ApplicationHelper
     dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa']
     especiais = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove']
     
-    def converter_centenas(num)
+    # Usa uma lambda para capturar as variáveis acima no escopo (unidades/dezenas/especiais)
+    converter_centenas = lambda do |num|
       return "" if num == 0
       
       if num < 10
@@ -41,29 +42,29 @@ module ApplicationHelper
         if num == 100
           "cem"
         elsif num < 200
-          "cento e #{converter_centenas(num % 100)}"
+          "cento e #{converter_centenas.call(num % 100)}"
         else
-          "#{unidades[num / 100]}centos#{num % 100 > 0 ? ' e ' + converter_centenas(num % 100) : ''}"
+          "#{unidades[num / 100]}centos#{num % 100 > 0 ? ' e ' + converter_centenas.call(num % 100) : ''}"
         end
       else
         milhares = num / 1000
         resto = num % 1000
         
         if milhares == 1
-          "mil#{resto > 0 ? ' e ' + converter_centenas(resto) : ''}"
+          "mil#{resto > 0 ? ' e ' + converter_centenas.call(resto) : ''}"
         else
-          "#{converter_centenas(milhares)} mil#{resto > 0 ? ' e ' + converter_centenas(resto) : ''}"
+          "#{converter_centenas.call(milhares)} mil#{resto > 0 ? ' e ' + converter_centenas.call(resto) : ''}"
         end
       end
     end
     
     # Converte reais
-    texto_reais = converter_centenas(reais)
+    texto_reais = converter_centenas.call(reais)
     texto_reais = "zero" if texto_reais.empty?
     
     # Converte centavos
     if centavos > 0
-      texto_centavos = converter_centenas(centavos)
+      texto_centavos = converter_centenas.call(centavos)
       "#{texto_reais} reais e #{texto_centavos} centavos"
     else
       "#{texto_reais} reais"

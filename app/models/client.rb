@@ -1,6 +1,7 @@
 class Client < ApplicationRecord
   has_many :contacts, dependent: :destroy
   has_many :rentals, dependent: :destroy
+  has_many :financial_entries
   accepts_nested_attributes_for :contacts, allow_destroy: true, reject_if: :all_blank
 
   # Validações

@@ -171,7 +171,7 @@
                     <% rental.equipments.limit(2).each do |equipment| %>
                       <div class="equipment-item">
                         <i class="fas fa-cog"></i>
-                        <%= equipment.display_name %>
+                        <%= link_to equipment.display_name, equipment_path(equipment), class: "contract-link" %>
                       </div>
                     <% end %>
                     <% if rental.equipments.count > 2 %>

@@ -66,35 +66,108 @@
     </div>
     
     <div class="toolbar-right">
+      <% active_filters_count = [params[:q], params[:payment_state], params[:start_date], params[:end_date]].count(&:present?) %>
+      <!-- Botões Recebimentos / Despesas -->
+      <div class="toggle-type">
+        <%= link_to 'Recebimentos', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: 'receivable', client_id: params[:client_id], page: params[:page], per_page: params[:per_page]), class: "btn btn-segment receivables #{params[:type] == 'payable' ? '' : 'active'}" %>
+        <%= link_to 'Despesas', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: 'payable', client_id: params[:client_id], page: params[:page], per_page: params[:per_page]), class: "btn btn-segment payables #{params[:type] == 'payable' ? 'active' : ''}" %>
+      </div>
+      
+      <!-- Busca rápida -->
+      <%= form_with url: financial_entries_path, method: :get, local: true, html: { class: 'search-box desktop-only' } do %>
+        <%= hidden_field_tag :month, @selected_month.strftime('%Y-%m') %>
+        <%= hidden_field_tag :type, params[:type] %>
+        <%= hidden_field_tag :payment_state, params[:payment_state] %>
+        <%= text_field_tag :q, params[:q], class: 'form-control search-input', placeholder: 'Buscar por pedido, cliente ou descrição' %>
+      <% end %>
+
+      <!-- Busca para Mobile -->
+      <%= form_with url: financial_entries_path, method: :get, local: true, html: { class: 'search-box mobile-only' } do %>
+        <%= hidden_field_tag :month, @selected_month.strftime('%Y-%m') %>
+        <%= hidden_field_tag :type, params[:type] %>
+        <%= hidden_field_tag :payment_state, params[:payment_state] %>
+        <%= text_field_tag :q, params[:q], class: 'form-control search-input', placeholder: 'Buscar por pedido, cliente ou descrição' %>
+      <% end %>
+
+      <!-- Nova transação à esquerda do layout (alinhada com os botões) -->
+      <%= link_to new_financial_entry_path(entry_type: params[:type], client_id: params[:client_id]), class: "btn btn-primary new-transaction-left" do %>
+        <i class="fas fa-plus"></i>
+        Nova transação
+      <% end %>
       <!-- Seletor de Mês -->
       <div class="month-selector">
-        <%= link_to financial_entries_path(month: (@selected_month - 1.month).strftime('%Y-%m')), class: "btn btn-outline-secondary btn-sm" do %>
+        <%= link_to financial_entries_path(month: (@selected_month - 1.month).strftime('%Y-%m'), type: params[:type], q: params[:q], payment_state: params[:payment_state], page: params[:page], per_page: params[:per_page]), class: "btn btn-outline-secondary btn-sm" do %>
           <i class="fas fa-chevron-left"></i>
         <% end %>
         <span class="current-month"><%= l(@selected_month, format: '%B de %Y').capitalize %></span>
-        <%= link_to financial_entries_path(month: (@selected_month + 1.month).strftime('%Y-%m')), class: "btn btn-outline-secondary btn-sm" do %>
+        <%= link_to financial_entries_path(month: (@selected_month + 1.month).strftime('%Y-%m'), type: params[:type], q: params[:q], payment_state: params[:payment_state], page: params[:page], per_page: params[:per_page]), class: "btn btn-outline-secondary btn-sm" do %>
           <i class="fas fa-chevron-right"></i>
         <% end %>
       </div>
-      
-      <!-- Filtros -->
+      <!-- Filtros rápidos de situação -->
+      <div class="status-quick">
+        <% cur = params[:payment_state] %>
+        <%= link_to 'Todos', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], q: params[:q]), class: "btn btn-light btn-sm #{'active' if cur.blank?}" %>
+        <%= link_to 'Pagas', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], q: params[:q], payment_state: (cur == 'paid' ? nil : 'paid')), class: "btn btn-light btn-sm #{'active' if cur == 'paid'}" %>
+        <%= link_to 'Não pagas', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], q: params[:q], payment_state: (cur == 'not_paid' ? nil : 'not_paid')), class: "btn btn-light btn-sm #{'active' if cur == 'not_paid'}" %>
+        <%= link_to 'A vencer hoje', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], q: params[:q], payment_state: (cur == 'due_today' ? nil : 'due_today')), class: "btn btn-light btn-sm #{'active' if cur == 'due_today'}" %>
+        <%= link_to 'Vencidas', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], q: params[:q], payment_state: (cur == 'overdue' ? nil : 'overdue')), class: "btn btn-light btn-sm #{'active' if cur == 'overdue'}" %>
+      </div>
+
+      <!-- Filtros (menu popup estilo dropdown) -->
+      <button type="button" id="filterBtn" class="btn btn-outline-secondary filter-toggle-btn" onclick="toggleFilterMenu(event)">
+        <i class="fas fa-sliders-h"></i>
+        Filtrar
+        <% if active_filters_count > 0 %>
+          <span class="filter-badge"><%= active_filters_count %></span>
+        <% end %>
+      </button>
+
+      <!-- Popup de filtros -->
+      <div id="filterMenu" class="filter-menu" style="display:none;">
+        <div class="filter-menu-header">
+          <%= link_to 'Limpar', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type]), class: 'btn btn-link btn-sm filter-clear' %>
+          <span class="filter-title">Filtros</span>
+          <button class="btn btn-primary btn-sm filter-done" onclick="submitFilterForm()">Concluído</button>
+        </div>
+        <%= form_with url: financial_entries_path, method: :get, local: true, html: { id: 'filterForm' } do |f| %>
+          <%= hidden_field_tag :month, @selected_month.strftime('%Y-%m') %>
+          <%= hidden_field_tag :type, params[:type] %>
+          <div class="filter-item">
+            <label class="filter-check">
+              <input type="checkbox" id="enableDate" onchange="toggleDateFields()" <%= (params[:start_date].present? || params[:end_date].present?) ? 'checked' : '' %> >
+              <span>Data</span>
+            </label>
+            <div class="filter-controls" id="dateControls">
+              <%= date_field_tag :start_date, params[:start_date], class: 'form-control', placeholder: 'Início' %>
+              <%= date_field_tag :end_date, params[:end_date], class: 'form-control', placeholder: 'Fim' %>
+            </div>
+          </div>
+          <div class="filter-item">
+            <label class="filter-check">
+              <input type="checkbox" id="enableStatus" onchange="toggleStatusField()" <%= params[:payment_state].present? ? 'checked' : '' %> >
+              <span>Situação do pagamento</span>
+            </label>
+            <div class="filter-controls" id="statusControls">
+              <%= select_tag :payment_state, options_for_select([["Todos", nil], ["Pago", 'paid'], ["Não pagas", 'not_paid'], ["A vencer hoje", 'due_today'], ["Vencidas (Em atraso)", 'overdue']], params[:payment_state]), class: 'form-control' %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Exportações -->
       <div class="filters-dropdown">
         <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-          <i class="fas fa-filter"></i>
-          Filtros
+          <i class="fas fa-file-csv"></i>
+          Exportar
         </button>
         <ul class="dropdown-menu">
-          <li><%= link_to "Todos", financial_entries_path(month: @selected_month.strftime('%Y-%m')), class: "dropdown-item" %></li>
-          <li><%= link_to "Recebimentos", financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: 'receivable'), class: "dropdown-item" %></li>
-          <li><%= link_to "Despesas", financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: 'payable'), class: "dropdown-item" %></li>
+          <li>
+            <%= link_to "Detalhado (CSV)", financial_entries_path(format: :csv, month: @selected_month.strftime('%Y-%m'), type: params[:type], q: params[:q], payment_state: params[:payment_state]), class: "dropdown-item" %>
+          </li>
         </ul>
       </div>
       
-      <!-- Nova Transação -->
-      <%= link_to new_financial_entry_path, class: "btn btn-primary" do %>
-        <i class="fas fa-plus"></i>
-        Nova Transação
-      <% end %>
     </div>
   </div>
 
@@ -106,44 +179,30 @@
       <table class="table table-hover financial-table">
         <thead>
           <tr>
-            <th>AÇÕES</th>
-            <th>VENCIMENTO</th>
-            <th>PAGAMENTO</th>
+            <th>DATA</th>
             <th>DESCRIÇÃO</th>
             <th>VALOR</th>
+            <th>PAGO?</th>
+            <th>CLIENTE</th>
             <th>REFERÊNCIA</th>
-            <th>STATUS</th>
+            <th>AÇÕES</th>
           </tr>
         </thead>
         <tbody>
           <% @financial_entries.each do |entry| %>
             <tr class="financial-row <%= 'overdue' if entry.is_overdue? %>">
-              <!-- Ações -->
-              <td class="actions-cell">
-                <div class="action-buttons">
-                  <%= link_to edit_financial_entry_path(entry), class: "btn btn-sm btn-outline-primary", title: "Editar" do %>
-                    <i class="fas fa-edit"></i>
-                  <% end %>
-                  
-                  <%= link_to financial_entry_path(entry), class: "btn btn-sm btn-outline-info", title: "Visualizar" do %>
-                    <i class="fas fa-eye"></i>
-                  <% end %>
-                  
-                  <%= button_to financial_entry_path(entry), 
-                      method: :delete, 
-                      data: { confirm: "Tem certeza que deseja remover esta transação?" },
-                      class: "btn btn-sm btn-outline-danger",
-                      title: "Remover",
-                      form: { style: 'display: inline;', onsubmit: "return confirm('Tem certeza que deseja remover esta transação?')" } do %>
-                    <i class="fas fa-trash"></i>
-                  <% end %>
-                </div>
-              </td>
-              
-              <!-- Data de Vencimento -->
+              <!-- Data -->
               <td class="due-date-cell">
                 <div class="date-info">
-                  <div class="date-main"><%= entry.formatted_due_date %></div>
+                  <div class="date-row"><span class="date-label">Vencimento:</span> <span class="date-value"><%= entry.formatted_due_date %></span></div>
+                  <div class="date-row">
+                    <span class="date-label">Pagamento:</span>
+                    <% if entry.has_paid_date? %>
+                      <span class="date-value paid"><%= entry.formatted_paid_date %></span>
+                    <% else %>
+                      <span class="date-value unpaid">—</span>
+                    <% end %>
+                  </div>
                   <% if entry.is_overdue? %>
                     <div class="overdue-alert">
                       <small class="text-danger">
@@ -153,34 +212,6 @@
                     </div>
                   <% end %>
                 </div>
-              </td>
-              
-              <!-- Data de Pagamento -->
-              <td class="paid-date-cell">
-                <% if entry.has_paid_date? %>
-                  <div class="paid-date-info">
-                    <div class="date-main text-success"><%= entry.formatted_paid_date %></div>
-                    <% if entry.was_paid_on_time? %>
-                      <div class="payment-status">
-                        <small class="text-success">
-                          <i class="fas fa-check-circle"></i>
-                          No prazo
-                        </small>
-                      </div>
-                    <% else %>
-                      <div class="payment-status">
-                        <small class="text-warning">
-                          <i class="fas fa-clock"></i>
-                          <%= pluralize(entry.days_to_pay.abs, 'dia') %> <%= entry.days_to_pay > 0 ? 'atrasado' : 'antecipado' %>
-                        </small>
-                      </div>
-                    <% end %>
-                  </div>
-                <% else %>
-                  <div class="no-payment">
-                    <span class="text-muted">-</span>
-                  </div>
-                <% end %>
               </td>
               
               <!-- Descrição -->
@@ -201,25 +232,8 @@
                   <strong><%= number_to_currency(entry.amount) %></strong>
                 </div>
               </td>
-              
-              <!-- Referência -->
-              <td class="reference-cell">
-                <% if entry.reference %>
-                  <% begin %>
-                    <% if entry.reference.is_a?(RentalBillingPeriod) %>
-                      <%= link_to entry.reference.class.name, rental_rental_billing_period_path(entry.reference.rental, entry.reference), class: "reference-link" %>
-                    <% else %>
-                      <%= link_to entry.reference.class.name, polymorphic_path(entry.reference), class: "reference-link" %>
-                    <% end %>
-                  <% rescue NoMethodError, ActionController::UrlGenerationError %>
-                    <span class="reference-text"><%= entry.reference.class.name %></span>
-                  <% end %>
-                <% else %>
-                  <span class="text-muted">N/A</span>
-                <% end %>
-              </td>
-              
-              <!-- Status -->
+
+              <!-- Status Pago? -->
               <td class="status-cell">
                 <% if entry.is_paid? %>
                   <%= button_to update_status_financial_entry_path(entry, month: @selected_month.strftime('%Y-%m'), type: params[:type]), 
@@ -245,6 +259,54 @@
                     </span>
                   </button>
                 <% end %>
+              </td>
+
+              <!-- Cliente (Recebido de) -->
+              <td class="client-cell">
+                <% if entry.client %>
+                  <%= link_to entry.client.display_name, client_path(entry.client), class: "reference-link" %>
+                <% else %>
+                  <span class="text-muted">N/A</span>
+                <% end %>
+              </td>
+              
+              <!-- Referência -->
+              <td class="reference-cell">
+                <% if entry.reference %>
+                  <% begin %>
+                    <% if entry.reference.is_a?(RentalBillingPeriod) %>
+                      <%= link_to 'Período de Locação', rental_rental_billing_period_path(entry.reference.rental, entry.reference), class: "reference-link" %>
+                    <% else %>
+                      <%= link_to (entry.reference.model_name.human rescue entry.reference.class.name), polymorphic_path(entry.reference), class: "reference-link" %>
+                    <% end %>
+                  <% rescue NoMethodError, ActionController::UrlGenerationError %>
+                    <span class="reference-text"><%= (entry.reference.model_name.human rescue entry.reference.class.name) %></span>
+                  <% end %>
+                <% else %>
+                  <span class="text-muted">N/A</span>
+                <% end %>
+              </td>
+
+              <!-- Ações -->
+              <td class="actions-cell">
+                <div class="action-buttons">
+                  <%= link_to edit_financial_entry_path(entry), class: "btn btn-sm btn-outline-primary", title: "Editar" do %>
+                    <i class="fas fa-edit"></i>
+                  <% end %>
+                  
+                  <%= link_to financial_entry_path(entry), class: "btn btn-sm btn-outline-info", title: "Visualizar" do %>
+                    <i class="fas fa-eye"></i>
+                  <% end %>
+                  
+                  <%= button_to financial_entry_path(entry), 
+                      method: :delete, 
+                      data: { confirm: "Tem certeza que deseja remover esta transação?" },
+                      class: "btn btn-sm btn-outline-danger",
+                      title: "Remover",
+                      form: { style: 'display: inline;', onsubmit: "return confirm('Tem certeza que deseja remover esta transação?')" } do %>
+                    <i class="fas fa-trash"></i>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>
@@ -296,6 +358,27 @@
     </div>
   </div>
 </div>
+
+<!-- Paginação -->
+<% if @total_pages && @total_pages > 1 %>
+  <div class="pagination-container">
+    <nav>
+      <ul class="pagination">
+        <li class="page-item <%= 'disabled' if @page <= 1 %>"><%= link_to '«', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], client_id: params[:client_id], page: (@page - 1), per_page: @per_page, start_date: params[:start_date], end_date: params[:end_date], payment_state: params[:payment_state], amount_min: params[:amount_min], amount_max: params[:amount_max]), class: 'page-link' %></li>
+        <% ([1, @page-2, @page-1, @page, @page+1, @page+2, @total_pages].uniq.select { |p| p > 0 && p <= @total_pages }).each do |p| %>
+          <% if p == @page %>
+            <li class="page-item active"><a class="page-link"><%= p %></a></li>
+          <% else %>
+            <li class="page-item"><%= link_to p, financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], client_id: params[:client_id], page: p, per_page: @per_page, start_date: params[:start_date], end_date: params[:end_date], payment_state: params[:payment_state], amount_min: params[:amount_min], amount_max: params[:amount_max]), class: 'page-link' %></li>
+          <% end %>
+        <% end %>
+        <li class="page-item <%= 'disabled' if @page >= @total_pages %>"><%= link_to '»', financial_entries_path(month: @selected_month.strftime('%Y-%m'), type: params[:type], client_id: params[:client_id], page: (@page + 1), per_page: @per_page, start_date: params[:start_date], end_date: params[:end_date], payment_state: params[:payment_state], amount_min: params[:amount_min], amount_max: params[:amount_max]), class: 'page-link' %></li>
+      </ul>
+    </nav>
+  </div>
+<% end %>
+
+<!-- Removido: chips de filtros e somatório por cliente para simplificação da tela -->
 
 <!-- Formulário oculto para envio -->
 <form id="paymentForm" method="post" style="display: none;">
@@ -403,6 +486,9 @@
   padding: 15px 20px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0; /* fixa no topo ao rolar */
+  z-index: 100;
 }
 
 .page-title {
@@ -422,6 +508,14 @@
   align-items: center;
   gap: 15px;
 }
+.search-box { display: inline-flex; }
+.search-input { min-width: 260px; }
+.status-quick { display: flex; gap: 6px; align-items: center; }
+.status-quick .btn.active { border-color: #0d6efd; color: #0d6efd; background: #e7f1ff; }
+.new-transaction-left { margin-left: 10px; }
+.filter-toggle-btn { display: none; }
+.desktop-only { display: block; }
+.mobile-only { display: none; }
 
 .month-selector {
   display: flex;
@@ -481,13 +575,14 @@
 .date-info {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
-.date-main {
-  font-weight: 500;
-  color: #495057;
-}
+.date-row { display: flex; gap: 6px; align-items: center; font-size: 0.95rem; }
+.date-label { color: #6b7280; font-weight: 600; }
+.date-value { color: #374151; font-weight: 500; }
+.date-value.paid { color: #059669; }
+.date-value.unpaid { color: #9ca3af; }
 
 .description-content {
   display: flex;
@@ -616,16 +711,39 @@
   margin-bottom: 15px;
 }
 
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+.sum-by-client {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 16px 20px;
+  margin-top: 20px;
+}
+
+.chips { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+.chip { background: #eef2f7; border: 1px solid #d9e2ef; color: #334155; padding: 6px 10px; border-radius: 999px; font-size: 0.85rem; display: inline-flex; gap: 8px; align-items: center; }
+.chip-close { color: #6b7280; text-decoration: none; font-weight: 700; }
+.chip-close:hover { color: #ef4444; }
+
 @media (max-width: 768px) {
   .toolbar {
     flex-direction: column;
     gap: 15px;
+    top: 0;
   }
   
   .toolbar-right {
     flex-wrap: wrap;
     justify-content: center;
   }
+  .mobile-only { display: block; width: 100%; }
+  .search-box.mobile-only { order: 3; }
+  .search-input { width: 100%; min-width: 0; }
   
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -635,6 +753,8 @@
     flex-direction: column;
     gap: 5px;
   }
+  .filter-toggle-btn { display: inline-flex; }
+  .desktop-only { display: none; }
 }
 
 /* Modal Styles */
@@ -650,6 +770,18 @@
   justify-content: center;
   z-index: 1000;
 }
+
+/* Filter popup */
+.filter-menu { position: absolute; right: 20px; top: 100%; margin-top: 8px; width: 360px; background: #fff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 12px; z-index: 1200; }
+.filter-menu-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 8px 10px; border-bottom: 1px solid #e5e7eb; margin-bottom: 10px; }
+.filter-title { font-weight: 600; }
+.filter-item { padding: 8px 4px; border-bottom: 1px solid #f1f3f5; }
+.filter-item:last-child { border-bottom: none; }
+.filter-check { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #374151; }
+.filter-controls { display: flex; gap: 8px; margin-top: 8px; }
+.filter-menu .form-control { flex: 1; }
+.filter-clear { color: #6b7280 !important; }
+.filter-done { padding: 6px 10px; }
 
 .modal-content {
   background: white;
@@ -695,6 +827,14 @@
 .modal-close:hover {
   background: #f3f4f6;
 }
+/* Painel lateral de filtros */
+.side-filter-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; z-index: 1100; }
+.side-filter-panel { position: fixed; top: 0; right: -340px; width: 320px; height: 100vh; background: #fff; box-shadow: -4px 0 12px rgba(0,0,0,0.1); z-index: 1110; transition: right .25s ease; display: flex; flex-direction: column; }
+.side-filter-header { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-bottom: 1px solid #e5e7eb; }
+.side-filter-body { padding: 16px; overflow-y: auto; }
+.side-filter-close { background: none; border: none; font-size: 1.5rem; color: #6b7280; }
+.side-filters-open #sideFilterOverlay { display: block; }
+.side-filters-open #sideFilterPanel { right: 0; }
 
 .modal-body {
   padding: 20px;
@@ -774,6 +914,59 @@
   font-size: 0.875rem;
   color: #6b7280;
 }
+
+.toggle-type {
+  display: inline-flex;
+  gap: 10px; /* separação entre os botões */
+  background: transparent;
+}
+
+.btn-segment {
+  padding: 8px 16px;
+  border-radius: 999px; /* formato pill */
+  font-weight: 600;
+  transition: all .2s ease;
+  line-height: 1.2;
+}
+
+/* Recebimentos: verde */
+.btn-segment.receivables {
+  background: #ffffff;
+  color: #059669; /* verde 600 */
+  border: 1px solid #059669;
+}
+.btn-segment.receivables:hover { filter: brightness(0.98); }
+.btn-segment.receivables.active {
+  background: #10b981; /* verde 500 */
+  color: #ffffff;
+  border-color: #10b981;
+}
+
+/* Despesas: vermelho */
+.btn-segment.payables {
+  background: #ffffff;
+  color: #dc2626; /* vermelho 600 */
+  border: 1px solid #dc2626;
+}
+.btn-segment.payables:hover { filter: brightness(0.98); }
+.btn-segment.payables.active {
+  background: #ef4444; /* vermelho 500 */
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 6px;
+  margin-left: 6px;
+}
 </style>
 
 <script>
@@ -822,6 +1015,54 @@ document.addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
     closePaymentModal();
+  }
+});
+</script>
+<script>
+function openSideFilters() { document.body.classList.add('side-filters-open'); }
+function closeSideFilters() { document.body.classList.remove('side-filters-open'); }
+
+// Popup de filtros
+function toggleFilterMenu(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('filterMenu');
+  menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+  // Inicializa estados dos controles conforme checkboxes
+  toggleDateFields();
+  toggleStatusField();
+}
+
+function submitFilterForm() {
+  document.getElementById('filterForm').submit();
+}
+
+function toggleDateFields() {
+  const enabled = document.getElementById('enableDate').checked;
+  document.getElementById('dateControls').style.display = enabled ? 'flex' : 'none';
+  if (!enabled) {
+    // Limpa campos ao desabilitar
+    const url = new URL(window.location.href);
+    url.searchParams.delete('start_date');
+    url.searchParams.delete('end_date');
+  }
+}
+
+function toggleStatusField() {
+  const enabled = document.getElementById('enableStatus').checked;
+  document.getElementById('statusControls').style.display = enabled ? 'flex' : 'none';
+  if (!enabled) {
+    const select = document.querySelector('#statusControls select');
+    if (select) select.value = '';
+  }
+}
+
+// Fecha o popup clicando fora
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('filterMenu');
+  const btn = document.getElementById('filterBtn');
+  if (!menu) return;
+  if (menu.style.display === 'block' && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.style.display = 'none';
   }
 });
 </script>

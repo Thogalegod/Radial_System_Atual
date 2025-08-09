@@ -10,9 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_05_233740) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_000002) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
+  enable_extension "uuid-ossp"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -192,6 +194,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_05_233740) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.date "paid_date"
+    t.bigint "client_id"
+    t.index ["client_id"], name: "index_financial_entries_on_client_id"
     t.index ["due_date"], name: "index_financial_entries_on_due_date"
     t.index ["entry_type"], name: "index_financial_entries_on_entry_type"
     t.index ["reference_type", "reference_id"], name: "index_financial_entries_on_reference_type_and_reference_id"
@@ -307,6 +311,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_05_233740) do
   add_foreign_key "equipment_values", "equipment_features"
   add_foreign_key "equipment_values", "equipments", column: "equipments_id"
   add_foreign_key "equipments", "equipment_types"
+  add_foreign_key "financial_entries", "clients"
   add_foreign_key "notifications", "users"
   add_foreign_key "receipts", "rental_periods"
   add_foreign_key "rental_billing_periods", "rentals"

@@ -272,7 +272,7 @@ class Rental < ApplicationRecord
     
     rental_billing_periods.includes(:financial_entry).each do |period|
       if period.financial_entry.present?
-        new_description = "Período de Faturamento: #{period.name} - #{display_name}"
+        new_description = generate_debit_note_number(period)
         period.financial_entry.update_column(:description, new_description)
       end
     end
