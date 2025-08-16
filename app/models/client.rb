@@ -63,7 +63,7 @@ class Client < ApplicationRecord
     return nil if total_rentals.zero?
     
     total_days = rentals.joins(:rental_billing_periods).sum(
-      "EXTRACT(DAY FROM (rental_billing_periods.end_date - rental_billing_periods.start_date + INTERVAL '1 day'))"
+      "(rental_billing_periods.end_date - rental_billing_periods.start_date + 1)"
     )
     total_days / total_rentals
   end

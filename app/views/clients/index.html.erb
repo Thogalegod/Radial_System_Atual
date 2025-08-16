@@ -48,6 +48,9 @@
             </td>
             <td>
               <div style="display: flex; gap: 8px;">
+                <%= link_to client_path(client), class: 'btn btn-info btn-icon', title: 'Ver Detalhes' do %>
+                  👁️
+                <% end %>
                 <button class="btn btn-secondary btn-icon" onclick="openEditModal('<%= client.id %>')" title="Editar">
                   ✏️
                 </button>
