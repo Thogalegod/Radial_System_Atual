@@ -40,7 +40,7 @@
         </div>
         <div class="info-item">
           <label>Características:</label>
-          <span class="badge badge-secondary"><%= @equipment_features.count %></span>
+          <span class="badge badge-secondary"><%= @equipment_features&.count || 0 %></span>
         </div>
       </div>
     </div>
@@ -95,7 +95,8 @@
         </div>
 
         <div id="featuresContainer" class="features-container">
-          <% @equipment_features.each_with_index do |feature, index| %>
+          <% if @equipment_features.present? %>
+            <% @equipment_features.each_with_index do |feature, index| %>
             <div class="feature-item" data-feature-id="<%= feature.id %>" data-feature-name="<%= feature.name %>">
               <div class="feature-header">
                 <div class="feature-toggle" onclick="toggleFeatureDetails(this)">
@@ -172,6 +173,12 @@
               </div>
             </div>
           </div>
+            <% end %>
+          <% else %>
+            <div class="no-features-message">
+              <p>Nenhuma característica cadastrada para este tipo de equipamento.</p>
+              <p>Clique em "Adicionar Característica" para começar.</p>
+            </div>
           <% end %>
         </div>
       </div>
@@ -600,14 +607,33 @@
   border-radius: 8px;
 }
 
-.form-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e5e7eb;
-  margin-top: 2rem;
-}
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    margin-top: 2rem;
+  }
+
+  .no-features-message {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    color: #6b7280;
+  }
+
+  .no-features-message p {
+    margin: 0.5rem 0;
+    font-size: 1.1rem;
+  }
+
+  .no-features-message p:first-child {
+    font-weight: 600;
+    color: #374151;
+  }
 
 .btn {
   padding: 0.75rem 1.5rem;
@@ -685,29 +711,33 @@
 
 <script>
 // Color presets
-document.querySelectorAll('.color-preset').forEach(preset => {
-  preset.addEventListener('click', function() {
-    const color = this.dataset.color;
-    document.querySelector('input[type="color"]').value = color;
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.color-preset').forEach(preset => {
+    preset.addEventListener('click', function() {
+      const color = this.dataset.color;
+      document.querySelector('input[type="color"]').value = color;
+    });
   });
 });
 
 // Feature type change
-document.querySelectorAll('.feature-type').forEach(select => {
-  select.addEventListener('change', function() {
-    const featureItem = this.closest('.feature-item');
-    const optionsSection = featureItem.querySelector('.options-section');
-    
-    if (this.value === 'select') {
-      if (!optionsSection) {
-        const newOptionsSection = createOptionsSection();
-        featureItem.querySelector('.feature-options').appendChild(newOptionsSection);
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.feature-type').forEach(select => {
+    select.addEventListener('change', function() {
+      const featureItem = this.closest('.feature-item');
+      const optionsSection = featureItem.querySelector('.options-section');
+      
+      if (this.value === 'select') {
+        if (!optionsSection) {
+          const newOptionsSection = createOptionsSection();
+          featureItem.querySelector('.feature-options').appendChild(newOptionsSection);
+        }
+      } else {
+        if (optionsSection) {
+          optionsSection.remove();
+        }
       }
-    } else {
-      if (optionsSection) {
-        optionsSection.remove();
-      }
-    }
+    });
   });
 });
 
@@ -723,6 +753,15 @@ function createOptionsSection() {
     </div>
     <div class="options-list"></div>
   `;
+  
+  // Adicionar event listener para o botão de adicionar opção
+  const addButton = div.querySelector('button');
+  if (addButton) {
+    addButton.addEventListener('click', function() {
+      addOption(this);
+    });
+  }
+  
   return div;
 }
 
@@ -735,6 +774,12 @@ function addFeature() {
     return;
   }
   
+  // Remover mensagem de "nenhuma característica" se existir
+  const noFeaturesMessage = container.querySelector('.no-features-message');
+  if (noFeaturesMessage) {
+    noFeaturesMessage.remove();
+  }
+  
   // Criar nova característica
   const featureItem = document.createElement('div');
   featureItem.className = 'feature-item';
@@ -742,13 +787,13 @@ function addFeature() {
   // HTML da nova característica
   featureItem.innerHTML = `
     <div class="feature-header">
-      <div class="feature-toggle" onclick="toggleFeatureDetails(this)">
+      <div class="feature-toggle">
         <i class="fas fa-chevron-right toggle-icon"></i>
         <span class="feature-title">Nova Característica</span>
         <span class="feature-type-badge">Texto</span>
       </div>
       <div class="feature-actions">
-        <button type="button" class="btn-icon btn-outline" onclick="removeFeature(this)">
+        <button type="button" class="btn-icon btn-outline remove-feature-btn">
           <i class="fas fa-trash"></i>
         </button>
       </div>
@@ -757,14 +802,14 @@ function addFeature() {
     <div class="feature-details collapsed">
       <div class="feature-inputs">
         <input type="text" placeholder="Nome da característica" class="form-control feature-name">
-                          <select class="form-control feature-type">
-                    <option value="string">Texto</option>
-                    <option value="integer">Número Inteiro</option>
-                    <option value="float">Número Decimal</option>
-                    <option value="select">Seleção</option>
-                    <option value="boolean">Sim/Não</option>
-                    <option value="date">Data</option>
-                  </select>
+        <select class="form-control feature-type">
+          <option value="string">Texto</option>
+          <option value="integer">Número Inteiro</option>
+          <option value="float">Número Decimal</option>
+          <option value="select">Seleção</option>
+          <option value="boolean">Sim/Não</option>
+          <option value="date">Data</option>
+        </select>
       </div>
       
       <div class="feature-options">
@@ -809,6 +854,22 @@ function addFeature() {
       updateFeatureType(this);
     });
   }
+  
+  // Adicionar event listener para o toggle
+  const toggleElement = featureItem.querySelector('.feature-toggle');
+  if (toggleElement) {
+    toggleElement.addEventListener('click', function() {
+      toggleFeatureDetails(this);
+    });
+  }
+  
+  // Adicionar event listener para o botão de remover
+  const removeButton = featureItem.querySelector('.remove-feature-btn');
+  if (removeButton) {
+    removeButton.addEventListener('click', function() {
+      removeFeature(this);
+    });
+  }
 }
 
 function removeFeature(button) {
@@ -823,11 +884,38 @@ function removeFeature(button) {
       // Se é uma característica nova, remover imediatamente
       featureItem.remove();
     }
+    
+    // Verificar se não há mais características visíveis
+    const container = document.getElementById('featuresContainer');
+    if (container) {
+      const visibleFeatures = container.querySelectorAll('.feature-item:not(.to-delete)');
+      if (visibleFeatures.length === 0) {
+        // Mostrar mensagem de "nenhuma característica"
+        const noFeaturesMessage = document.createElement('div');
+        noFeaturesMessage.className = 'no-features-message';
+        noFeaturesMessage.innerHTML = `
+          <p>Nenhuma característica cadastrada para este tipo de equipamento.</p>
+          <p>Clique em "Adicionar Característica" para começar.</p>
+        `;
+        container.appendChild(noFeaturesMessage);
+      }
+    }
   }
 }
 
 function addOption(button) {
-  const optionsList = button.closest('.options-section').querySelector('.options-list');
+  const optionsSection = button.closest('.options-section');
+  if (!optionsSection) {
+    console.error('Seção de opções não encontrada');
+    return;
+  }
+  
+  const optionsList = optionsSection.querySelector('.options-list');
+  if (!optionsList) {
+    console.error('Lista de opções não encontrada');
+    return;
+  }
+  
   const optionItem = document.createElement('div');
   optionItem.className = 'option-item';
   optionItem.innerHTML = `
@@ -844,7 +932,9 @@ function addOption(button) {
   
   // Focar no campo de valor da nova opção
   const valueInput = optionItem.querySelector('.option-value');
-  valueInput.focus();
+  if (valueInput) {
+    valueInput.focus();
+  }
   
   // Adicionar efeito visual para destacar a nova opção
   optionItem.style.backgroundColor = '#f0f9ff';
@@ -857,7 +947,12 @@ function addOption(button) {
 
 function removeOption(button) {
   if (confirm('Tem certeza que deseja remover esta opção?')) {
-    button.closest('.option-item').remove();
+    const optionItem = button.closest('.option-item');
+    if (optionItem) {
+      optionItem.remove();
+    } else {
+      console.error('Elemento da opção não encontrado');
+    }
   }
 }
 
@@ -866,6 +961,11 @@ function toggleFeatureDetails(toggleElement) {
   console.log('Alternando detalhes da característica...');
   
   const featureItem = toggleElement.closest('.feature-item');
+  if (!featureItem) {
+    console.error('Elemento da característica não encontrado');
+    return;
+  }
+  
   const detailsElement = featureItem.querySelector('.feature-details');
   const toggleIcon = toggleElement.querySelector('.toggle-icon');
   
@@ -898,7 +998,17 @@ function toggleFeatureDetails(toggleElement) {
 // Função para atualizar o título da característica quando o nome mudar
 function updateFeatureTitle(input) {
   const featureItem = input.closest('.feature-item');
+  if (!featureItem) {
+    console.error('Elemento da característica não encontrado');
+    return;
+  }
+  
   const titleElement = featureItem.querySelector('.feature-title');
+  if (!titleElement) {
+    console.error('Elemento do título não encontrado');
+    return;
+  }
+  
   const name = input.value || 'Nova Característica';
   titleElement.textContent = name;
 }
@@ -906,8 +1016,23 @@ function updateFeatureTitle(input) {
 // Função para atualizar o tipo da característica quando mudar
 function updateFeatureType(select) {
   const featureItem = select.closest('.feature-item');
+  if (!featureItem) {
+    console.error('Elemento da característica não encontrado');
+    return;
+  }
+  
   const typeBadge = featureItem.querySelector('.feature-type-badge');
+  if (!typeBadge) {
+    console.error('Elemento do badge de tipo não encontrado');
+    return;
+  }
+  
   const selectedOption = select.options[select.selectedIndex];
+  if (!selectedOption) {
+    console.error('Opção selecionada não encontrada');
+    return;
+  }
+  
   typeBadge.textContent = selectedOption.textContent;
   
   // Mostrar/esconder seção de opções baseado no tipo
@@ -915,7 +1040,10 @@ function updateFeatureType(select) {
   if (select.value === 'select') {
     if (!optionsSection) {
       const newOptionsSection = createOptionsSection();
-      featureItem.querySelector('.feature-options').appendChild(newOptionsSection);
+      const featureOptions = featureItem.querySelector('.feature-options');
+      if (featureOptions) {
+        featureOptions.appendChild(newOptionsSection);
+      }
     }
   } else {
     if (optionsSection) {
@@ -928,6 +1056,11 @@ function updateFeatureType(select) {
 function collectFeaturesData() {
   const features = [];
   const featureItems = document.querySelectorAll('.feature-item');
+  
+  // Se não há características, retornar array vazio
+  if (featureItems.length === 0) {
+    return features;
+  }
   
   featureItems.forEach((item, index) => {
     // Pular características marcadas para exclusão
@@ -1000,18 +1133,25 @@ function collectFeaturesData() {
 // Interceptar envio do formulário
 document.addEventListener('DOMContentLoaded', function() {
   console.log('DOM carregado - JavaScript inicializado');
-  // Adicionar event listeners para características existentes
-  document.querySelectorAll('.feature-name').forEach(input => {
-    input.addEventListener('input', function() {
-      updateFeatureTitle(this);
-    });
-  });
   
-  document.querySelectorAll('.feature-type').forEach(select => {
-    select.addEventListener('change', function() {
-      updateFeatureType(this);
+  // Adicionar event listeners para características existentes (se houver)
+  const existingFeatures = document.querySelectorAll('.feature-name');
+  if (existingFeatures.length > 0) {
+    existingFeatures.forEach(input => {
+      input.addEventListener('input', function() {
+        updateFeatureTitle(this);
+      });
     });
-  });
+  }
+  
+  const existingFeatureTypes = document.querySelectorAll('.feature-type');
+  if (existingFeatureTypes.length > 0) {
+    existingFeatureTypes.forEach(select => {
+      select.addEventListener('change', function() {
+        updateFeatureType(this);
+      });
+    });
+  }
   
   const form = document.querySelector('form');
   if (form) {

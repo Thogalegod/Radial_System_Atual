@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_09_000002) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_09_010555) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -195,7 +195,9 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_09_000002) do
     t.datetime "updated_at", null: false
     t.date "paid_date"
     t.bigint "client_id"
+    t.string "company"
     t.index ["client_id"], name: "index_financial_entries_on_client_id"
+    t.index ["company"], name: "index_financial_entries_on_company"
     t.index ["due_date"], name: "index_financial_entries_on_due_date"
     t.index ["entry_type"], name: "index_financial_entries_on_entry_type"
     t.index ["reference_type", "reference_id"], name: "index_financial_entries_on_reference_type_and_reference_id"

@@ -56,6 +56,11 @@ class FinancialEntriesController < ApplicationController
         base_scope = base_scope.where(client_id: params[:client_id])
       end
 
+      # Filtro por empresa (Fontes Energia / Aradial Equipamentos)
+      if params[:company].present?
+        base_scope = base_scope.where(company: params[:company])
+      end
+
       # Filtro por situação do pagamento (layout semelhante à imagem)
       case params[:payment_state]
       when 'paid'
@@ -182,6 +187,6 @@ class FinancialEntriesController < ApplicationController
   end
 
   def financial_entry_params
-    params.require(:financial_entry).permit(:description, :amount, :due_date, :paid_date, :status, :entry_type, :notes, :reference_id, :reference_type, :client_id)
+    params.require(:financial_entry).permit(:description, :amount, :due_date, :paid_date, :status, :entry_type, :notes, :reference_id, :reference_type, :client_id, :company, attachments: [])
   end
 end

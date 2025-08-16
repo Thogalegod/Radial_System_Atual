@@ -46,6 +46,11 @@
                 {}, 
                 class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
           </div>
+
+          <div class="form-group">
+            <%= form.label :company, "Empresa", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= form.select :company, options_for_select(['Fontes Energia', 'Radial Equipamentos'], @financial_entry.company), { include_blank: 'Selecione a empresa' }, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          </div>
           
           <div class="form-group">
             <%= form.label :status, "Status", class: "block text-sm font-medium text-gray-700 mb-2" %>
@@ -64,6 +69,22 @@
         <div class="form-group">
           <%= form.label :notes, "Observações", class: "block text-sm font-medium text-gray-700 mb-2" %>
           <%= form.text_area :notes, rows: 3, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent", placeholder: "Observações adicionais..." %>
+        </div>
+        
+        <div class="form-group">
+          <%= form.label :attachments, "Anexos (comprovantes)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= form.file_field :attachments, multiple: true, direct_upload: true, class: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" %>
+          <small class="text-gray-500">Você pode adicionar ou substituir anexos.</small>
+          <% if @financial_entry.attachments.attached? %>
+            <div class="mt-2 space-y-1">
+              <% @financial_entry.attachments.each do |file| %>
+                <div>
+                  <i class="fas fa-paperclip"></i>
+                  <%= link_to file.filename.to_s, url_for(file), target: "_blank", class: "text-blue-600 hover:text-blue-800" %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
         
         <div class="flex justify-end space-x-4 pt-6">

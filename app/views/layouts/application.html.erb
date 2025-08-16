@@ -123,6 +123,8 @@
         text-decoration: none;
         transition: all 0.2s;
         position: relative;
+        cursor: pointer;
+        flex-wrap: wrap;
       }
 
       .nav-item:hover {
@@ -136,14 +138,214 @@
         border-right: 3px solid #3b82f6;
       }
 
+      /* Menu de Equipamentos */
+      .equipment-menu {
+        position: relative;
+        user-select: none;
+        cursor: default;
+      }
+
+      .equipment-menu .menu-arrow {
+        margin-left: auto;
+        color: #9ca3af;
+        transition: transform 0.3s ease;
+        font-size: 12px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        background: transparent;
+      }
+
+      .equipment-menu .menu-arrow:hover {
+        background: #f3f4f6;
+        color: #6b7280;
+        transform: scale(1.1);
+      }
+
+      .equipment-menu.expanded .menu-arrow {
+        transform: rotate(90deg);
+        color: #6b7280;
+        background: #eff6ff;
+      }
+
+      .equipment-submenu {
+        display: none;
+        margin-left: 32px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-left: 2px solid #e5e7eb;
+        padding-left: 16px;
+      }
+
+      .equipment-menu.expanded .equipment-submenu {
+        display: block;
+        animation: slideDown 0.3s ease;
+      }
+
+      /* Menu Financeiro */
+      .financial-menu {
+        position: relative;
+        user-select: none;
+        cursor: default;
+      }
+
+      .financial-menu .menu-arrow {
+        margin-left: auto;
+        color: #9ca3af;
+        transition: transform 0.3s ease;
+        font-size: 12px;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        background: transparent;
+      }
+
+      .financial-menu .menu-arrow:hover {
+        background: #f3f4f6;
+        color: #6b7280;
+        transform: scale(1.1);
+      }
+
+      .financial-menu.expanded .menu-arrow {
+        transform: rotate(90deg);
+        color: #6b7280;
+        background: #eff6ff;
+      }
+
+      .financial-submenu {
+        display: none;
+        margin-left: 32px;
+        margin-top: 8px;
+        margin-bottom: 8px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        border-left: 2px solid #e5e7eb;
+        padding-left: 16px;
+      }
+
+      .financial-menu.expanded .financial-submenu {
+        display: block;
+        animation: slideDown 0.3s ease;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .equipment-submenu .submenu-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        color: #6b7280;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        border-radius: 6px;
+        margin: 4px 0;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        position: relative;
+        min-height: 40px;
+        border-left: 3px solid transparent;
+      }
+
+      .equipment-submenu .submenu-item:hover {
+        background: #f3f4f6;
+        color: #374151;
+        transform: translateX(4px);
+        border-left-color: #3b82f6;
+      }
+
+      .equipment-submenu .submenu-item.active {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border-left-color: #1d4ed8;
+      }
+
+      .equipment-submenu .submenu-item .nav-icon {
+        margin-right: 12px;
+        font-size: 16px;
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+      }
+
+      .equipment-submenu .submenu-item:hover .nav-icon {
+        opacity: 1;
+      }
+
+      .financial-submenu .submenu-item {
+        display: flex;
+        align-items: center;
+        padding: 10px 16px;
+        color: #6b7280;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        font-size: 14px;
+        border-radius: 6px;
+        margin: 4px 0;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        position: relative;
+        min-height: 40px;
+        border-left: 3px solid transparent;
+      }
+
+      .financial-submenu .submenu-item:hover {
+        background: #f3f4f6;
+        color: #374151;
+        transform: translateX(4px);
+        border-left-color: #3b82f6;
+      }
+
+      .financial-submenu .submenu-item.active {
+        background: #dbeafe;
+        color: #1d4ed8;
+        border-left-color: #1d4ed8;
+      }
+
+      .financial-submenu .submenu-item .nav-icon {
+        margin-right: 12px;
+        font-size: 16px;
+        opacity: 0.8;
+        transition: opacity 0.2s ease;
+      }
+
+      .financial-submenu .submenu-item:hover .nav-icon {
+        opacity: 1;
+      }
+
+      /* Outros submenus */
       .submenu {
         margin-left: 32px;
         margin-top: 8px;
         display: none;
       }
 
-      .nav-item:hover .submenu,
-      .nav-item.active .submenu {
+      .nav-item:hover .submenu:not(.equipment-submenu):not(.financial-submenu),
+      .nav-item.active .submenu:not(.equipment-submenu):not(.financial-submenu) {
         display: block;
       }
 
@@ -572,10 +774,13 @@
           <% end %>
           
           <% if show_menu_item?('equipments', 'read') %>
-            <div class="nav-item <%= 'active' if ['equipments', 'equipment_types', 'equipment_features'].include?(controller_name) %>">
+            <div class="nav-item equipment-menu <%= 'active' if ['equipments', 'equipment_types', 'equipment_features'].include?(controller_name) %>">
               <div class="nav-icon">⚡</div>
               <span>Equipamentos</span>
-              <div class="submenu">
+              <div class="menu-arrow" onclick="toggleEquipmentMenu(event)">
+                <i class="fas fa-chevron-right"></i>
+              </div>
+              <div class="submenu equipment-submenu">
                 <% if show_menu_item?('equipments', 'read') %>
                   <a href="<%= select_type_equipments_path %>" class="submenu-item <%= 'active' if controller_name == 'equipments' && action_name == 'select_type' %>">
                     <div class="nav-icon">📦</div>
@@ -615,17 +820,20 @@
             <span>Fichas de Ensaio</span>
           </a>
           
-          <div class="nav-item <%= 'active' if ['financial_entries', 'financial_dashboard'].include?(controller_name) %>">
+          <div class="nav-item financial-menu <%= 'active' if ['financial_entries', 'financial_dashboard'].include?(controller_name) %>">
             <div class="nav-icon">💰</div>
             <span>Financeiro</span>
-            <div class="submenu">
+            <div class="menu-arrow" onclick="toggleFinancialMenu(event)">
+              <i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="submenu financial-submenu">
               <a href="<%= financial_dashboard_path %>" class="submenu-item <%= 'active' if controller_name == 'financial_dashboard' %>">
-                <i class="fas fa-chart-line"></i>
-                Dashboard Financeiro
+                <div class="nav-icon">📊</div>
+                <span>Dashboard Financeiro</span>
               </a>
               <a href="<%= financial_entries_path %>" class="submenu-item <%= 'active' if controller_name == 'financial_entries' %>">
-                <i class="fas fa-list"></i>
-                Lançamentos
+                <div class="nav-icon">📋</div>
+                <span>Lançamentos</span>
               </a>
             </div>
           </div>
@@ -673,6 +881,53 @@
       document.addEventListener('click', function(e) {
         if (e.target.classList.contains('modal-overlay')) {
           e.target.classList.remove('show');
+        }
+      });
+
+      // Toggle Equipment Menu
+      function toggleEquipmentMenu(event) {
+        event.stopPropagation();
+        const equipmentMenu = event.currentTarget.closest('.equipment-menu');
+        if (equipmentMenu) {
+          equipmentMenu.classList.toggle('expanded');
+          
+          // Salvar estado no localStorage para persistir entre navegações
+          const isExpanded = equipmentMenu.classList.contains('expanded');
+          localStorage.setItem('equipmentMenuExpanded', isExpanded);
+        }
+      }
+
+      // Toggle Financial Menu
+      function toggleFinancialMenu(event) {
+        event.stopPropagation();
+        const financialMenu = event.currentTarget.closest('.financial-menu');
+        if (financialMenu) {
+          financialMenu.classList.toggle('expanded');
+          
+          // Salvar estado no localStorage para persistir entre navegações
+          const isExpanded = financialMenu.classList.contains('expanded');
+          localStorage.setItem('financialMenuExpanded', isExpanded);
+        }
+      }
+
+      // Restaurar estado dos menus ao carregar a página
+      document.addEventListener('DOMContentLoaded', function() {
+        // Restaurar menu de equipamentos
+        const equipmentMenu = document.querySelector('.equipment-menu');
+        if (equipmentMenu) {
+          const isExpanded = localStorage.getItem('equipmentMenuExpanded') === 'true';
+          if (isExpanded) {
+            equipmentMenu.classList.add('expanded');
+          }
+        }
+
+        // Restaurar menu financeiro
+        const financialMenu = document.querySelector('.financial-menu');
+        if (financialMenu) {
+          const isExpanded = localStorage.getItem('financialMenuExpanded') === 'true';
+          if (isExpanded) {
+            financialMenu.classList.add('expanded');
+          }
         }
       });
 

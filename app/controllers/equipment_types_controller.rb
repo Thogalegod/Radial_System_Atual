@@ -178,6 +178,7 @@ class EquipmentTypesController < ApplicationController
 
   def manage
     @equipment_type = EquipmentType.find(params[:id])
+    @equipment_features = @equipment_type.equipment_features
   end
 
   def update_manage
@@ -192,6 +193,7 @@ class EquipmentTypesController < ApplicationController
     end
     
     @equipment_type = EquipmentType.find(params[:id])
+    @equipment_features = @equipment_type.equipment_features
     
     respond_to do |format|
       format.html do

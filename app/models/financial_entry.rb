@@ -2,6 +2,9 @@ class FinancialEntry < ApplicationRecord
   # Associações
   belongs_to :client, optional: true
   belongs_to :reference, polymorphic: true, optional: true
+  
+  # Anexos (comprovantes, notas, etc.)
+  has_many_attached :attachments
 
   # Validações
   # Exigir cliente apenas na criação para não bloquear atualizações de status
@@ -11,6 +14,7 @@ class FinancialEntry < ApplicationRecord
   validates :due_date, presence: true
   validates :status, presence: true, inclusion: { in: %w[pending paid overdue cancelled] }
   validates :entry_type, presence: true, inclusion: { in: %w[receivable payable] }
+  validates :company, inclusion: { in: ['Fontes Energia', 'Radial Equipamentos'], allow_blank: true }
 
   # Scopes
   scope :for_client, ->(client_id) { where(client_id: client_id) }
@@ -23,6 +27,7 @@ class FinancialEntry < ApplicationRecord
   scope :by_due_date, -> { order(:due_date) }
   scope :recent, -> { order(created_at: :desc) }
   scope :for_month, ->(date) { where(due_date: date.all_month) }
+  scope :by_company, ->(name) { where(company: name) }
 
   # Métodos de status
   def is_pending?
@@ -103,7 +108,7 @@ class FinancialEntry < ApplicationRecord
   def self.search(query)
     sanitized = "%#{sanitize_sql_like(query)}%"
     left_joins(:client)
-      .left_joins("LEFT JOIN rental_billing_periods rbp ON rbp.id = financial_entries.reference_id AND financial_entries.reference_type = 'RentalBillingPeriod'")
+      .joins("LEFT JOIN rental_billing_periods rbp ON rbp.id = financial_entries.reference_id AND financial_entries.reference_type = 'RentalBillingPeriod'")
       .where(
         "financial_entries.description ILIKE :q
          OR CAST(financial_entries.id AS TEXT) ILIKE :q

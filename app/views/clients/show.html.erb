@@ -8,39 +8,47 @@
     <h2 style="font-size: 20px; font-weight: 600; color: #1f2937;">Informações do Cliente</h2>
     <div style="display: flex; gap: 8px;">
       <%= link_to 'Editar', edit_client_path(@client), class: 'btn btn-secondary' %>
-      <%= link_to 'Voltar', clients_path, class: 'btn btn-secondary' %>
+      <%= link_to 'Voltar', :back, class: 'btn btn-secondary' %>
     </div>
   </div>
 
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+  <!-- Informações Básicas -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
     <div>
       <div class="form-group">
-        <label class="form-label">Nome Completo</label>
+        <label class="form-label">Nome / Razão Social</label>
         <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
           <%= @client.name %>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Email</label>
+        <label class="form-label">Tipo de Documento</label>
         <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-          <%= @client.email %>
+          <%= @client.document_type == 'CPF' ? 'CPF' : 'CNPJ' %>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="form-label">Telefone</label>
+        <label class="form-label">Número do Documento</label>
         <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-          <%= @client.phone %>
+          <%= @client.document_number.presence || 'Não informado' %>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">CEP</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <%= @client.zip_code.presence || 'Não informado' %>
         </div>
       </div>
     </div>
 
     <div>
       <div class="form-group">
-        <label class="form-label">CPF/CNPJ</label>
+        <label class="form-label">Inscrição Estadual</label>
         <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-          <%= @client.cpf_cnpj %>
+          <%= @client.state_registration.presence || 'Não informado' %>
         </div>
       </div>
 
@@ -57,6 +65,331 @@
           <%= @client.created_at.strftime('%d/%m/%Y às %H:%M') %>
         </div>
       </div>
+
+      <div class="form-group">
+        <label class="form-label">Última Atualização</label>
+        <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+          <%= @client.updated_at.strftime('%d/%m/%Y às %H:%M') %>
+        </div>
+      </div>
     </div>
   </div>
+
+  <!-- Seção de Contatos -->
+  <div class="contact-section">
+    <div class="contact-header">
+      <h3 class="contact-title">Pessoas de Contato</h3>
+      <span class="contact-count"><%= @client.contacts.count %> contato(s)</span>
+    </div>
+    
+    <% if @client.contacts.any? %>
+      <div class="contacts-grid">
+        <% @client.contacts.each_with_index do |contact, index| %>
+          <div class="contact-item">
+            <div class="contact-header-item">
+              <span class="contact-number">#<%= index + 1 %></span>
+              <% if index == 0 %>
+                <span class="contact-primary-badge">Principal</span>
+              <% end %>
+            </div>
+            <div class="contact-info">
+              <div class="contact-name"><%= contact.name %></div>
+              <div class="contact-details">
+                <div><strong>Email:</strong> <%= contact.email %></div>
+                <div><strong>Telefone:</strong> <%= contact.phone %></div>
+                <div><strong>Cargo:</strong> <%= contact.position %></div>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div style="text-align: center; padding: 20px; color: #6b7280;">
+        Nenhum contato cadastrado
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Estatísticas e Histórico -->
+  <div class="stats-section">
+    <h3 class="stats-title">Estatísticas e Histórico</h3>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <div class="stat-value"><%= @client.total_rentals %></div>
+          <div class="stat-label">Total de Locações</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+          <div class="stat-value"><%= @client.formatted_total_amount %></div>
+          <div class="stat-label">Valor Total Faturado</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📅</div>
+        <div class="stat-content">
+          <div class="stat-value"><%= @client.formatted_average_duration %></div>
+          <div class="stat-label">Duração Média</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🚚</div>
+        <div class="stat-content">
+          <div class="stat-value"><%= @client.active_rentals.count %></div>
+          <div class="stat-label">Locações Ativas</div>
+        </div>
+      </div>
+    </div>
+
+    <% if @client.last_rental_date %>
+      <div class="last-rental-info">
+        <strong>Última Locação:</strong> <%= @client.last_rental_date.strftime('%d/%m/%Y') %>
+        <% if @client.days_since_last_rental %>
+          <span class="days-since">(<%= @client.days_since_last_rental %> dias atrás)</span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Locações Recentes -->
+  <% if @client.rentals.any? %>
+    <div class="recent-rentals-section">
+      <h3 class="recent-rentals-title">Locações Recentes</h3>
+      
+      <div class="rentals-list">
+        <% @client.rentals.includes(:rental_billing_periods).order(created_at: :desc).limit(5).each do |rental| %>
+          <div class="rental-item">
+            <div class="rental-header">
+              <span class="rental-name"><%= rental.name %></span>
+              <span class="rental-status <%= rental.status %>"><%= rental.status.titleize %></span>
+            </div>
+            <div class="rental-details">
+              <span class="rental-date">Criada em: <%= rental.created_at.strftime('%d/%m/%Y') %></span>
+              <% if rental.remessa_note.present? %>
+                <span class="rental-note">Nota: <%= rental.remessa_note %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+      
+      <% if @client.rentals.count > 5 %>
+        <div style="text-align: center; margin-top: 16px;">
+          <%= link_to "Ver todas as locações", rentals_path(client_id: @client.id), class: 'btn btn-secondary' %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 </div>
+
+<style>
+.contact-section, .stats-section, .recent-rentals-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.contact-header, .stats-title, .recent-rentals-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.contact-title, .stats-title, .recent-rentals-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.contact-count {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.contacts-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.contact-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.contact-header-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.contact-number {
+  background: #3b82f6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.contact-primary-badge {
+  background: #10b981;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.contact-name {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.contact-details {
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  font-size: 24px;
+  width: 48px;
+  height: 48px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.last-rental-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.days-since {
+  color: #6b7280;
+  font-weight: normal;
+}
+
+.rentals-list {
+  display: grid;
+  gap: 12px;
+}
+
+.rental-item {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.rental-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.rental-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rental-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.rental-status.ativo {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.rental-status.completo {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.rental-status.cancelado {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.rental-details {
+  color: #6b7280;
+  font-size: 13px;
+  display: flex;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .rental-details {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+</style>

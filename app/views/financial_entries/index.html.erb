@@ -23,7 +23,10 @@
             <div class="progress-bar">
               <div class="progress-fill" style="width: <%= @receivable_progress %>%"></div>
             </div>
-            <small><%= number_to_percentage(@receivable_progress, precision: 1) %> recebido</small>
+            <small>
+              <%= number_to_percentage(@receivable_progress, precision: 1) %> recebido
+              (<%= number_to_currency(@receivables_paid) %>)
+            </small>
           </div>
         </div>
       </div>
@@ -39,7 +42,10 @@
             <div class="progress-bar">
               <div class="progress-fill warning" style="width: <%= @payable_progress %>%"></div>
             </div>
-            <small><%= number_to_percentage(@payable_progress, precision: 1) %> pago</small>
+            <small>
+              <%= number_to_percentage(@payable_progress, precision: 1) %> pago
+              (<%= number_to_currency(@payables_paid) %>)
+            </small>
           </div>
         </div>
       </div>
@@ -88,6 +94,22 @@
         <%= hidden_field_tag :payment_state, params[:payment_state] %>
         <%= text_field_tag :q, params[:q], class: 'form-control search-input', placeholder: 'Buscar por pedido, cliente ou descrição' %>
       <% end %>
+
+      <!-- Filtro por Empresa (Mobile) -->
+      <div class="company-filter mobile-only">
+        <% current_company = params[:company] %>
+        <%= link_to 'Todas', financial_entries_path(request.query_parameters.except(:company).merge(month: @selected_month.strftime('%Y-%m'))), class: "btn btn-light btn-sm #{'active' if current_company.blank?}" %>
+        <%= link_to 'Fontes Energia', financial_entries_path(request.query_parameters.merge(company: 'Fontes Energia', month: @selected_month.strftime('%Y-%m'))), class: "btn btn-sm company-pill fontes #{'active' if current_company == 'Fontes Energia'}" %>
+        <%= link_to 'Radial Equipamentos', financial_entries_path(request.query_parameters.merge(company: 'Radial Equipamentos', month: @selected_month.strftime('%Y-%m'))), class: "btn btn-sm company-pill radial #{'active' if current_company == 'Radial Equipamentos'}" %>
+      </div>
+
+      <!-- Filtro por Empresa -->
+      <div class="company-filter desktop-only">
+        <% current_company = params[:company] %>
+        <%= link_to 'Todas', financial_entries_path(request.query_parameters.except(:company).merge(month: @selected_month.strftime('%Y-%m'))), class: "btn btn-light btn-sm #{'active' if current_company.blank?}" %>
+        <%= link_to 'Fontes Energia', financial_entries_path(request.query_parameters.merge(company: 'Fontes Energia', month: @selected_month.strftime('%Y-%m'))), class: "btn btn-sm company-pill fontes #{'active' if current_company == 'Fontes Energia'}" %>
+        <%= link_to 'Radial Equipamentos', financial_entries_path(request.query_parameters.merge(company: 'Radial Equipamentos', month: @selected_month.strftime('%Y-%m'))), class: "btn btn-sm company-pill radial #{'active' if current_company == 'Radial Equipamentos'}" %>
+      </div>
 
       <!-- Nova transação à esquerda do layout (alinhada com os botões) -->
       <%= link_to new_financial_entry_path(entry_type: params[:type], client_id: params[:client_id]), class: "btn btn-primary new-transaction-left" do %>
@@ -176,16 +198,16 @@
   <!-- Tabela de Transações -->
   <div class="table-container">
     <div class="table-responsive">
-      <table class="table table-hover financial-table">
+      <table class="table table-hover financial-table compact">
         <thead>
           <tr>
-            <th>DATA</th>
-            <th>DESCRIÇÃO</th>
-            <th>VALOR</th>
-            <th>PAGO?</th>
-            <th>CLIENTE</th>
-            <th>REFERÊNCIA</th>
-            <th>AÇÕES</th>
+            <th class="col-date">DATA</th>
+            <th class="col-desc">DESCRIÇÃO</th>
+            <th class="col-amount">VALOR</th>
+            <th class="col-paid">PAGO?</th>
+            <th class="col-client">CLIENTE</th>
+            <th class="col-ref">REFERÊNCIA</th>
+            <th class="col-actions">AÇÕES</th>
           </tr>
         </thead>
         <tbody>
@@ -204,7 +226,7 @@
                     <% end %>
                   </div>
                   <% if entry.is_overdue? %>
-                    <div class="overdue-alert">
+                    <div class="overdue-alert inline">
                       <small class="text-danger">
                         <i class="fas fa-exclamation-circle"></i>
                         Vencido há <%= entry.days_overdue %> dias
@@ -218,9 +240,14 @@
               <td class="description-cell">
                 <div class="description-content">
                   <strong><%= entry.description %></strong>
-                  <div class="entry-type">
-                    <span class="badge <%= entry.entry_type == 'receivable' ? 'bg-success' : 'bg-danger' %>">
-                      <%= entry.entry_type == 'receivable' ? 'RECEBIMENTO' : 'DESPESA' %>
+                  <div class="entry-company">
+                    <% if entry.company.present? %>
+                      <span class="company-badge <%= entry.company == 'Fontes Energia' ? 'company-fontes' : 'company-aradial' %>"><%= entry.company %></span>
+                    <% else %>
+                      <span class="company-badge" style="background:#f3f4f6; color:#374151; border:1px solid #e5e7eb;">Sem empresa</span>
+                    <% end %>
+                    <span class="entry-pill <%= entry.entry_type == 'receivable' ? 'pill-receivable' : 'pill-payable' %>">
+                      <%= entry.entry_type == 'receivable' ? 'Recebimento' : 'Despesa' %>
                     </span>
                   </div>
                 </div>
@@ -239,6 +266,9 @@
                   <%= button_to update_status_financial_entry_path(entry, month: @selected_month.strftime('%Y-%m'), type: params[:type]), 
                       method: :patch, 
                       class: "status-toggle paid", 
+                      title: 'Pago – clique para marcar como pendente',
+                      role: 'switch',
+                      'aria-checked': true,
                       form: { style: 'display: inline;' } do %>
                     <div class="toggle-switch paid">
                       <div class="toggle-slider active"></div>
@@ -249,9 +279,11 @@
                   <% end %>
                 <% else %>
                   <button type="button" 
-                          class="status-toggle pending" 
+                          class="status-toggle <%= entry.is_overdue? ? 'overdue' : 'pending' %>" 
+                          title="Pendente – clique para registrar pagamento"
+                          role="switch" aria-checked="false"
                           onclick="openPaymentModal('<%= entry.id %>', '<%= entry.description %>', '<%= entry.formatted_due_date %>')">
-                    <div class="toggle-switch">
+                    <div class="toggle-switch <%= 'overdue' if entry.is_overdue? %>">
                       <div class="toggle-slider"></div>
                     </div>
                     <span class="status-text">
@@ -275,7 +307,7 @@
                 <% if entry.reference %>
                   <% begin %>
                     <% if entry.reference.is_a?(RentalBillingPeriod) %>
-                      <%= link_to 'Período de Locação', rental_rental_billing_period_path(entry.reference.rental, entry.reference), class: "reference-link" %>
+                      <%= link_to 'Locação', rental_rental_billing_period_path(entry.reference.rental, entry.reference), class: "reference-link" %>
                     <% else %>
                       <%= link_to (entry.reference.model_name.human rescue entry.reference.class.name), polymorphic_path(entry.reference), class: "reference-link" %>
                     <% end %>
@@ -515,6 +547,12 @@
 .new-transaction-left { margin-left: 10px; }
 .filter-toggle-btn { display: none; }
 .desktop-only { display: block; }
+.company-filter { display: flex; gap: 6px; align-items: center; }
+.company-pill { border: 1px solid transparent; border-radius: 999px; padding: 4px 10px; font-weight: 600; }
+.company-pill.fontes { color: #047857; border-color: #059669; background: #ecfdf5; }
+.company-pill.fontes.active { background: #059669; color: #fff; }
+.company-pill.radial { color: #4338ca; border-color: #6366f1; background: #eef2ff; }
+.company-pill.radial.active { background: #6366f1; color: #fff; }
 .mobile-only { display: none; }
 
 .month-selector {
@@ -543,6 +581,15 @@
   margin: 0;
 }
 
+/* Colunas mais compactas */
+.financial-table.compact .col-date { width: 22%; }
+.financial-table.compact .col-desc { width: 28%; }
+.financial-table.compact .col-amount { width: 12%; text-align: right; }
+.financial-table.compact .col-paid { width: 10%; text-align: center; }
+.financial-table.compact .col-client { width: 14%; }
+.financial-table.compact .col-ref { width: 10%; }
+.financial-table.compact .col-actions { width: 4%; text-align: right; }
+
 .financial-table th {
   background: #f8f9fa;
   border: none;
@@ -552,7 +599,7 @@
 }
 
 .financial-table td {
-  padding: 15px;
+  padding: 10px 12px;
   border: none;
   border-bottom: 1px solid #e9ecef;
   vertical-align: middle;
@@ -575,7 +622,7 @@
 .date-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .date-row { display: flex; gap: 6px; align-items: center; font-size: 0.95rem; }
@@ -590,9 +637,23 @@
   gap: 5px;
 }
 
-.entry-type {
-  margin-top: 5px;
+.entry-type { margin-top: 2px; }
+
+.company-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; margin-top: 4px; }
+.company-fontes { background: #ecfdf5; color: #047857; border: 1px solid #059669; }
+.company-aradial { background: #eef2ff; color: #4338ca; border: 1px solid #6366f1; }
+
+.entry-pill {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
+.pill-receivable { background: #e6f9f1; color: #0f766e; border: 1px solid #14b8a6; }
+.pill-payable { background: #ffe4e6; color: #be123c; border: 1px solid #f43f5e; }
 
 .amount-value {
   font-size: 1.1rem;
@@ -618,18 +679,26 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-content: center; /* centraliza quando não há texto */
   text-decoration: none;
   color: inherit;
-  padding: 8px 12px;
-  border-radius: 8px;
+  padding: 2px 4px; /* formato compacto, abraça o switch */
+  border-radius: 999px; /* pílula externa */
   transition: all 0.3s ease;
   border: 2px solid transparent;
+  min-width: unset; /* sem largura mínima */
 }
 
 .status-toggle.pending {
   background: #fff3cd;
   border-color: #ffc107;
   color: #856404;
+}
+
+.status-toggle.overdue {
+  background: #ffe5e5;
+  border-color: #ef4444;
+  color: #991b1b;
 }
 
 .status-toggle.pending:hover {
@@ -649,10 +718,10 @@
 }
 
 .toggle-switch {
-  width: 44px;
-  height: 24px;
+  width: 32px; /* compacto */
+  height: 18px; /* compacto */
   background: #e9ecef;
-  border-radius: 12px;
+  border-radius: 999px;
   position: relative;
   transition: background 0.3s ease;
   border: 2px solid #dee2e6;
@@ -664,8 +733,8 @@
 }
 
 .toggle-slider {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   background: white;
   border-radius: 50%;
   position: absolute;
@@ -676,24 +745,18 @@
 }
 
 .toggle-slider.active {
-  transform: translateX(20px);
+  transform: translateX(14px); /* ajusta ao novo tamanho */
 }
 
-.status-text {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  min-width: 80px;
-  text-align: center;
-}
+.status-text { display: none; }
 
 .overdue-alert {
   background: rgba(220, 53, 69, 0.1);
   border: 1px solid rgba(220, 53, 69, 0.3);
   border-radius: 4px;
-  padding: 4px 8px;
+  padding: 2px 6px; /* menor */
 }
+.overdue-alert.inline { display: inline-block; margin-top: 4px; }
 
 .overdue-alert small {
   font-weight: 600;
